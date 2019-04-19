@@ -386,7 +386,35 @@
       
         
           
-            
+            <p>这篇博客其实是我2017年的文章了，最近利用<a href="https://hexo.io/zh-cn/" target="_blank" rel="noopener">hexo</a>建了个个人博客，现把我简书的文章挨个转移过来。</p>
+<p>昨天公司项目要求继承一个SDK，我用cocoapods 来集成，但是因为我用的是新买的pro，所以呢之前的配置好的终端环境没有了。。。所以昨天下去3点一直在干这个。。在国内愣是没找着什么有效的命令行。到现在翻墙看到了 stackoverflow上看到了关于配置curl OpenSSL的文章，粘贴来给有需要的朋友。</p>
+<p>下面呢就是我粘过来的东西。</p>
+<p>I’ve seen this error happen when php is compiled with a version of cURL that usesApple’s Secure Transportunder Yosemite and the target of the URL request doesn’t support SSLv3 (which was probably disabled due to thePOODLE vulnerability). What is the output of this command? </p>
+<p>$ php -i|grep “SSL Version”  </p>
+<p>I suspect you’ll see this:</p>
+<p>SSLVersion=&gt;SecureTransport</p>
+<p>You can overcome this by installing a version of php which uses a version of cURL which uses OpenSSL instead of SecureTransport. This is most easily done withhomebrew. So install that first if you don’t already have it. If homebrew is installed but you haven’t runbrew updatesince upgrading to Yosemite, do that first. Also make sure you’ve installed XCode &gt;= 6.1 and the latest XCode command line tools.brew doctorwill tell you if you’ve done it all right.</p>
+<p>Add the Homebrew taps below that you will need in order to get brewed php installed. Skip this step if these repos are already tapped. If you’re unsure if these repos are already tapped, just run the commands below. Worst case scenario, you’ll get a harmlessWarning: Already tapped!</p>
+<p>$ brew tap homebrew/dupes</p>
+<p>$ brew tap homebrew/versions</p>
+<p>$ brew tap homebrew/php</p>
+<p>Then install curl with openssl:</p>
+<p>$ brew install–with-openssl curl</p>
+<p>Then install php using the curl you just installed and brewed openssl:</p>
+<p>$ brew install–with-homebrew-curl–with-httpd24 php55</p>
+<p>if using apache, make sure to addLoadModule php5_module    /usr/local/opt/php55/libexec/apache2/libphp5.soto your/etc/apache2/httpd.confand restart apache.</p>
+<p>if not using apache 2.4, you can remove–with-httpd24from the above command.</p>
+<p>if using nginx, follow the caveat instuctions for starting fpm:</p>
+<p>To launch php-fpm on startup:</p>
+<p>mkdir-p~/Library/LaunchAgentscp/usr/local/opt/php55/homebrew.mxcl.php55.plist~/Library/LaunchAgents/launchctl load-w~/Library/LaunchAgents/homebrew.mxcl.php55.plist</p>
+<p>Install any php extensions you’re going to need eg.mcrypt.</p>
+<p>$ brew install php55-mcrypt</p>
+<p>After you’re done, run this again:</p>
+<p>$ php -i|grep “SSL Version”</p>
+<p>And you should see:</p>
+<p>SSLVersion=&gt;OpenSSL/1.0.2h</p>
+<p>And now, re-test your application and theSSLRead() return error -9806should go away.</p>
+
           
         
       
@@ -619,7 +647,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">1</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
