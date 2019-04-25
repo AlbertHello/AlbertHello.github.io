@@ -263,6 +263,505 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://baidu.com/2019/04/25/runtime详解/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Albert">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="纳兰如若">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/04/25/runtime详解/" itemprop="url">runtime详解</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-25T18:37:03+08:00">
+                2019-04-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/iOS相关/" itemprop="url" rel="index">
+                    <span itemprop="name">iOS相关</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>###基本概念<br>Runtime 是一个底层的C语言的API，称为“运行时”。而OC在编译的时候并不知道要调用哪个方法函数，只有在运行的时候才知道调用的方法函数名称，来找到对应的方法函数进行调用。</p>
+<p>###类与对象的实质</p>
+<p>####对象的实质<br>1、对象是表示一个类的实例的结构体，是指向objc_object的结构体的指针。<br>2、objc_object这个结构体只有一个成员变量，即指向其类的isa指针。这<br>     样，当我们向一个Objective-C对象发送消息时，runtime会根据<br>     实例对象的isa指针找到这个实例对象所属的类。Runtime库会在类<br>     的方法列表及父类的方法列表中去寻找与消息对应的selector指向<br>     的方法，找到后即运行这个方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">这是objc_object结构体源码</span><br><span class="line">struct objc_object &#123;</span><br><span class="line">     Class _Nonnull isa  OBJC_ISA_AVAILABILITY;</span><br><span class="line">     &#125;;</span><br><span class="line">     typedef struct objc_object *id;</span><br></pre></td></tr></table></figure></p>
+<p>####类的实质<br>1、类实际上是一个指向objc_class的结构体指针<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">struct objc_class &#123;</span><br><span class="line">     Class _Nonnull isa  OBJC_ISA_AVAILABILITY;</span><br><span class="line">     </span><br><span class="line">     #if !__OBJC2__</span><br><span class="line">     Class _Nullable super_class                              OBJC2_UNAVAILABLE; 父类</span><br><span class="line">     const char * _Nonnull name                               OBJC2_UNAVAILABLE; 类名</span><br><span class="line">     long version                                             OBJC2_UNAVAILABLE;  类的版本信息，默认为0</span><br><span class="line">     long info                                                OBJC2_UNAVAILABLE; 类信息，供运行期使用的一些位标识</span><br><span class="line">     long instance_size                                       OBJC2_UNAVAILABLE; 该类的实例变量大小</span><br><span class="line">     struct objc_ivar_list * _Nullable ivars                  OBJC2_UNAVAILABLE; 该类的成员变量链表</span><br><span class="line">     struct objc_method_list * _Nullable * _Nullable methodLists   OBJC2_UNAVAILABLE;  方法定义的链表</span><br><span class="line">     struct objc_cache * _Nonnull cache                       OBJC2_UNAVAILABLE;  方法缓存</span><br><span class="line">     struct objc_protocol_list * _Nullable protocols          OBJC2_UNAVAILABLE;  协议链表</span><br><span class="line">     #endif</span><br><span class="line">     </span><br><span class="line">     &#125; OBJC2_UNAVAILABLE;</span><br></pre></td></tr></table></figure></p>
+<p>####元类<br>为了调用类方法，这个类的isa指针必须指向一个包含这些类方法的一个objc_class结构体。这就引出了meta-class的概念，meta-class中存储着一个类的所有类方法.所以，调用类方法的这个类对象的isa指针指向的就是meta-class,当我们向一个对象发送消息时，runtime会在这个对象所属的这个类的方法列表中查找方法；而向一个类发送消息时，会在这个类的meta-class的方法列表中查找。为了不让这种结构无限延伸下去，Objective-C的设计者让所有的meta-class的isa指向基类的meta-class，以此作为它们的所属类</p>
+<h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>####1、获取类的成员变量列表、属性列列表、方法列表、协议列表<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">1、获取成员变量</span><br><span class="line"> Ivar *ivarList = class_copyIvarList([self class], &amp;count);</span><br><span class="line">     for (unsigned int i=0; i&lt;count; i++) &#123;</span><br><span class="line">         Ivar myIvar = ivarList[i];</span><br><span class="line">         const char *ivarName = ivar_getName(myIvar);</span><br><span class="line">         NSLog(@&quot;Ivar----&gt;%@&quot;, [NSString stringWithUTF8String:ivarName]);</span><br><span class="line">     &#125;</span><br><span class="line">	class_copyIvarList</span><br><span class="line">	ivar_getName</span><br><span class="line">2、获取属性</span><br><span class="line">  unsigned int count;</span><br><span class="line">     //获取类的属性列表</span><br><span class="line">     objc_property_t *propertyList = class_copyPropertyList([self class], &amp;count);</span><br><span class="line">     for (unsigned int i=0; i&lt;count; i++) &#123;</span><br><span class="line">         const char *propertyName = property_getName(propertyList[i]);</span><br><span class="line">         NSLog(@&quot;property----&gt;%@&quot;, [NSString stringWithUTF8String:propertyName]);</span><br><span class="line">     &#125;</span><br><span class="line">	class_copyPropertyList</span><br><span class="line">	property_getName</span><br><span class="line">3、方法</span><br><span class="line"> Method *methodList = class_copyMethodList([self class], &amp;count);</span><br><span class="line">     for (unsigned int i=0; i&lt;count; i++) &#123;</span><br><span class="line">         Method method = methodList[i];</span><br><span class="line">         NSLog(@&quot;method----&gt;%@&quot;, NSStringFromSelector(method_getName(method)));</span><br><span class="line">     &#125;</span><br><span class="line">	class_copyMethodList</span><br><span class="line">	method_getName</span><br><span class="line">4、协议</span><br><span class="line"> __unsafe_unretained Protocol **protocolList = class_copyProtocolList([self class], &amp;count);</span><br><span class="line">     for (unsigned int i=0; i&lt;count; i++) &#123;</span><br><span class="line">         Protocol *myProtocal = protocolList[i];</span><br><span class="line">         const char *protocolName = protocol_getName(myProtocal);</span><br><span class="line">         NSLog(@&quot;protocol----&gt;%@&quot;, [NSString stringWithUTF8String:protocolName]);</span><br><span class="line">     &#125;</span><br><span class="line">	class_copyProtocolList</span><br><span class="line">	protocol_getName</span><br></pre></td></tr></table></figure></p>
+<p>####2、快速归档解档<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">1、原理就是通过runtime获取该类的所有成员变量或者属性，再进行一次性的归档或者解档。</span><br><span class="line">2、该类需遵守NSCoding协议</span><br><span class="line">	1、归档</span><br><span class="line">	 unsigned int count = 0;</span><br><span class="line">	     //获得该类所有属性</span><br><span class="line">	     objc_property_t *properties = class_copyPropertyList([self class], &amp;count);</span><br><span class="line">	     for (int i =0; i &lt; count; i ++) &#123;</span><br><span class="line">	         objc_property_t property = properties[i];</span><br><span class="line">	         const char *name = property_getName(property);//获得其属性的名称---&gt;C语言的字符串</span><br><span class="line">	         NSString *key = [NSString stringWithUTF8String:name];</span><br><span class="line">	         // 编码每个属性,利用kVC取出每个属性对应的数值</span><br><span class="line">	         [aCoder encodeObject:[self valueForKeyPath:key] forKey:key];</span><br><span class="line">	     &#125;</span><br><span class="line">		获得该类所有属性，利用kVC取出每个属性对应的值，最后归档每隔属性。</span><br><span class="line">	2、解档</span><br><span class="line">	 unsigned int count = 0;</span><br><span class="line">	         //获得指向该类所有属性的指针</span><br><span class="line">	         objc_property_t *properties = class_copyPropertyList([self class], &amp;count);//获取类属性列表</span><br><span class="line">	         for (int i =0; i &lt; count; i ++) &#123;</span><br><span class="line">	             objc_property_t property = properties[i];</span><br><span class="line">	             const char *name = property_getName(property);//获取类属性的名称---&gt;C语言的字符串</span><br><span class="line">	             NSString *key = [NSString stringWithUTF8String:name];</span><br><span class="line">	             [self setValue:[aDecoder decodeObjectForKey:key] forKeyPath:key];//解码每个属性,利用kVC取出每个属性对应的数值</span><br><span class="line">	         &#125;</span><br><span class="line">		获得该类所有属性，先解档每个属性，最后利用KVC取出每个属性的值。</span><br></pre></td></tr></table></figure></p>
+<p>####3、关联对象<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">分类原则上不允许添加属性，几遍添加了属性，编译器也不会自动生成getter和setter方法。这时候可利用runtime的关联作用手动实现属性的getter和setter方法。</span><br><span class="line">	绑定</span><br><span class="line">	 //第一个参数：被关联对象</span><br><span class="line">	     //第二个参数：一个静态常亮，这个key与第三个参数（关联对象）一一对应。这是只想关联对象的一个指针。</span><br><span class="line">	     //第三个参数：关联对象</span><br><span class="line">	     //第四个参数：关联策略</span><br><span class="line">	     //这个动态绑定有点像可变字典</span><br><span class="line">	     objc_setAssociatedObject(self, &amp;kName, age, OBJC_ASSOCIATION_COPY_NONATOMIC);</span><br><span class="line">	取值</span><br><span class="line">	 objc_getAssociatedObject(self, &amp;kName);</span><br></pre></td></tr></table></figure></p>
+<p>####4、访问私有变量<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Ivar ivar = class_getInstanceVariable([Model class], &quot;_str1&quot;);</span><br><span class="line">NSString * str1 = object_getIvar(model, ivar);</span><br></pre></td></tr></table></figure></p>
+<p>OC中没有真正意义上的私有变量和方法，要让成员变量私有，要放在.m文件中声明，不对外暴露。如果我们知道这个成员变量的名称，可以通过runtime获取成员变量，再通过getIvar来获取它的值</p>
+<p>####5、交换方法method Swizzling<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">1、每个类都维护一个方法（Method）列表，Method则包含SEL和其对应IMP的信息，方法交换做的事情就是把SEL和IMP的对应关系断开，并和新的IMP生成对应关系</span><br><span class="line">	使用场景1、字典和数组在保存的对象为nil时会产生崩溃。可以写个分类对addObject：这个方法进行交换。交换成自定义的方法。</span><br><span class="line">	使用场景2、判断每次调用imageWithNamed：图片是否加载成功。</span><br><span class="line">    使用场景不限这两个，啥都行，根据业务来定。</span><br><span class="line">2、代码写在类或者分类的+(void)load方法里。这个方法只是在类加载到内存的时候调用，只调用一次。</span><br><span class="line">	1、获取新旧两个方法</span><br><span class="line">		class_getInstanceMethod</span><br><span class="line">	2、交换连个方法的实现</span><br><span class="line">		method_exchangeImplementations</span><br></pre></td></tr></table></figure></p>
+<h4 id="6、消息的分发（函数调用的实质）"><a href="#6、消息的分发（函数调用的实质）" class="headerlink" title="6、消息的分发（函数调用的实质）"></a>6、消息的分发（函数调用的实质）</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">1、objc_msgSend 向一个类的实例发送消息，返回id类型数据。（这也是最常用的一个发送消息的方法）</span><br><span class="line">2、objc_msgSend_stret 向一个类的实例发送消息，返回结构体类型数据。</span><br><span class="line">3、objc_msgSendSuper 向一个类的实例的父类发送消息，返回id类型数据</span><br><span class="line">4、objc_msgSendSuper_stret 向一个类的实例的父类发送消息，返回结构体类型的数据。</span><br><span class="line">5、方法的调用过程：如果用实例对象调用实例方法，会到实例的isa指针指向的对象（也就是类对象）操作。如果调用的是类方法，就会到类对象的isa指针指向的对象（也就是元类对象）中操作。</span><br><span class="line">	1、首先，在相应操作的对象中的缓存方法列表中找调用的方法，如果找到，转向相应实现并执行</span><br><span class="line">	2、如果没找到，在相应操作的对象中的方法列表中找调用的方法，如果找到，转向相应实现执行</span><br><span class="line">	3、如果没找到，去父类指针所指向的对象中执行1，2.</span><br><span class="line">	4、以此类推，如果一直到根类还没找到，到崩溃之前还有三次拯救的机会，首先会调用动态分析方法resolveClassMethod或者resolveInstanceMethod</span><br><span class="line">	5、如果没有重写动态分析方法，会触发备用消息接收者方法，若没有处理就会调用消息转发的方法。要是都没有重写则崩溃</span><br><span class="line">		1、动态分析方法</span><br><span class="line">			1、调用未知类方法会触发+(BOOL)resolveClassMethod:(SEL)sel</span><br><span class="line">			2、调用未知实例方法会触发+(BOOL)resolveInstanceMethod:(SEL)sel</span><br><span class="line">		2、没有重写动态分析方法，会触发备用消息接收者方法，返回的对象不能是nil也不能self,如果返回的对象实现了(SEL)aSelector这个方法，那么返回的这个对象就成了消息的接收者，代替原来的对象执行那个方法。</span><br><span class="line">			触发-(id)forwardingTargetForSelector:(SEL)aSelector</span><br><span class="line">           3、触发消息转发方法-(void)forwardInvocation:(NSInvocation *)anInvocation 。forwardInvocation: 方法来对不能处理的消息做一些处理，也可以将消息转发给其他对象处理，而不抛出错误</span><br><span class="line">6、动态添加方法</span><br><span class="line">	可在重写resolveClassMethod:和resolveInstanceMethod:的方法里使用。为找不到方法做防崩溃处理</span><br><span class="line">		class_addMethod：由四个参数</span><br><span class="line">			1、第一个是要添加方法的类</span><br><span class="line">			2、第二个是要添加的方法名</span><br><span class="line">			3、第三个是这个方法的实现函数的指针（值的注意的是，这个函数必须显式地把self和_cmd这两个参数写出来）</span><br><span class="line">				class_getMethodImplementation 可获取OC方法的指针。</span><br><span class="line">			4、第四个是方法的参数数组，在这里它是用的类型编码的方式进行表示的，因为方法一定含有self和_cmd这两个参数，所以字符数组的第二个和第三个字符一定是&quot;@:&quot;,第一个字符代表返回值，这里为空用“v”来表示。</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/AlbertHello/RuntimePrac" target="_blank" rel="noopener">完整代码见GitHub</a></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://baidu.com/2019/04/25/2017年iOS面试题整理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Albert">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="纳兰如若">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/04/25/2017年iOS面试题整理/" itemprop="url">2017年iOS面试题整理</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-25T18:35:18+08:00">
+                2019-04-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/iOS相关/" itemprop="url" rel="index">
+                    <span itemprop="name">iOS相关</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p><img src="http://upload-images.jianshu.io/upload_images/2837588-39742f794a78ec74.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="78f87bfced337de9b9147a38ea7afead.jpg"></p>
+<p>#声明：本篇面试题整理的是来自于<a href="https://www.jianshu.com/p/56e40ea56813的题目。答案参照的是https://www.jianshu.com/p/dfc4ca0fdf47，在整理期间觉得自己的答案和参照的答案差不多的我就直接拷贝了过来，在此感谢出题者和解答者。这篇答案有自己的理解也有摘自网上其他人理解。再次感谢所有的知识分享者。对答案有不同见解的同学，留言即可，咱一起研究。现整理如下：" target="_blank" rel="noopener">https://www.jianshu.com/p/56e40ea56813的题目。答案参照的是https://www.jianshu.com/p/dfc4ca0fdf47，在整理期间觉得自己的答案和参照的答案差不多的我就直接拷贝了过来，在此感谢出题者和解答者。这篇答案有自己的理解也有摘自网上其他人理解。再次感谢所有的知识分享者。对答案有不同见解的同学，留言即可，咱一起研究。现整理如下：</a><br><img src="http://upload-images.jianshu.io/upload_images/2837588-e7eabaac3e47fdb3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="aa21f50b7385b7f1fd668f38448329cf.jpg"></p>
+<p>#基础部分</p>
+<p>##1、为什么说OC是一门动态语言？<br>答：动态语言是指程序在运行时可以改变其结构，新的函数可以被引进，已有的函数可以被删除等在结构上的变化。比如Ruby，Python等就是动态语言，而c，c++等语言则不属于动态语言。<br>Obejct-C 提供了 Objc Runtime 机制,将很多静态语言在编译和链接时期做的事放到了运行时来处理。<br>三个动态特征：<br>1.动态类型：如id类型。实际上静态类型因为其<br>固定性和可预知性而使用的特别广泛。静态类型是强类型，动态类型是弱类型，运行时决定接收者。<br>2.动态绑定：让代码在运行时判断需要<br>调用什么方法，而不是在编译时。与其他面向对象语言一样，方法调用和代码并没有在编译时连接在一起，而是在消息发送时才进行连接。运行时决定调用哪个方法。<br>3.动态载入。让程序在运行时添加代码模块以及其他资源。用户可以根据需要执行一些可执行代码和资源，而不是在启动时就加载所有<br>组件。可执行代码中可以含有和程序运行时整合的新类。</p>
+<p>##2、讲一下MVC和MVVM，MVP？<br>答：这三种架构模式都由以下三个实体组成：<br>Model：负责主要的数据或者操作数据的数据访问层。数据层<br>View：负责展示层<br>Controller/Presenter/ViewModel：负责协调 Model 和 View，通常根据用户在View上的动作在Model上作出对应的更改，同时将更改的信息返回到View上。<br>MVVM是Model-View-ViewModel的简写，和MVC模式一样主要目的就是分离view和model。<br>MVC回顾<br>MVC存在的问题：<br>模型代码很少；控制器代码会很多；不好测试。<br>MVVM：<br>1、View和Controller视为一个组件，view和controller都不能直接引用model，而是引用视图模型（V iewModel）.<br>2、viewModel 封装业务逻辑处理、封装网络处理，封装数据缓存等<br>使用注意：<br>1、view引用viewModel，但反过来不行。<br>2、vviewModel引用model，但反过来不行。<br>优点：<br>1、低耦合。view可以独立于model的变化和修改，一个viewModel可以绑定到不同的view上。<br>2、可重用性。可以把一个视图逻辑放到viewmodel里，让很多view重用这段逻辑<br>3、独立开发。开发人员可以专注于业务逻辑和数据的开发，设计人员可以专注于页面的设计。<br>4、可测性。通常界面是比较南测试的，而MVVM可以针对ViewModel来进行测试。</p>
+<p>##3、为什么代理要用weak？代理的delegate和dataSource有什么区别？block和代理的区别?<br> 答：weak修饰词表示对象对改属性指向的对象是一种非拥有关系，delegate的销毁由外部控制。  防止循环引用。<br>首先Delegate是委托的意思，在oc中则是一个类委托另一个类实现某个方法。当一个对象接受到某个事件或者通知的时候， 会向它的Delegate对象查询它是否能够响应这个事件或者通知，如果可以这个对象就会给它的Delegate对象发送一个消息。<br>Datasource字面是数据源，一般和Delegate伴生，这时数据源处理的数据就是Delegate中发送委托的类中的数据，并通过Datasource发送给接受委托的类。<br>区别：block 和 delegate 都可以通知外面。block 更轻型，使用更简单，能够直接访问上下文，这样类中不需要存储临时数据，使用 block 的代码通常会在同一个地方，这样读代码也连贯。delegate 更重一些，需要实现接口，它的方法分离开来，很多时候需要存储一些临时数据，另外相关的代码会被分离到各处，没有 block 好读。<br>通知：则多用于一对多的情况下在不需要拿到某些对象的时候的数据传递。<br>代理：通常一对一的数据传递，代理更注重过程的传递，比如网络请求中回调的是否开始、进度、成功、失败等。<br>Block：也是一对一的数据传递，相比代理写法简单，更注重结果的传输。</p>
+<p>##4、属性的实质是什么？包括哪几个部分？属性默认的关键字都有哪些？@dynamic关键字和@synthesize关键字是用来做什么的？<br>答：@property = ivar + getter + setter; 实例变量+get方法+set方法,也就是说使用@property 系统会自动生成setter和getter方法;对基本数据类型来说属性的默认关键字是（atomic，readwrite，assign），对对象来说默认值（atomic，readwrite，strong），MRC中strong为retain。<br>@dynamic告诉编译器不要自动生成属性的setter &amp; getter方法，由我们手动实现存取方法。<br>@synthesize (Xcode6以后省略这个了, 默认在 @implementation .m中添加这个@synthesize xxx = _xxx; 编译器期间，让编译器自动生成getter/setter方法。<br>当有自定义的存或取方法时，自定义会屏蔽自动生成该方法。</p>
+<p>##5、NSString为什么要用copy关键字，如果用strong会有什么问题？（注意：这里没有说用strong就一定不行。使用copy和strong是看情况而定的）。<br>答：因为NSString有对应的子类可变类型NSMutableString，且父类指针可以指向子类对象，如果不用copy而用strong，当传入的字符串是可变类型时， 并且这个字符串有改动时，就会导致属性的值也会改变。当然如果传入的字符串确定为不可变的，那么属性可以用strong修饰。 一些可变的类型如NSMutableString、NSMutabeArray、NSMutableDictionary一定得需要strong修饰，因为【object copy】返回的对象是不可变的，这时对可变对象进行修改就会崩溃。</p>
+<p>##6、如何令自己所写的对象具有拷贝功能?<br>答：首先要让自己写的类遵守NSCoping或者NSMutableCoping协议，并且实现</p>
+<p>##7、可变集合类 和 不可变集合类的 copy 和 mutablecopy有什么区别？如果是集合是内容复制的话，集合里面的元素也是内容复制么？<br>答：可变集合类（NSMutableArray、NSMutableDictionary）的copy返回的是不可变对象，但是是深拷贝；mutablecopy返回的是可变对象，而且是单层深拷贝。<br>不可变集合类（NSArray/NSDictionary）的copy返回的不可变对象，都是浅拷贝； mutablecopy返回的可变对象，都是深拷贝。<br>集合的内容赋值虽说是深复制，但其实只是集合对象本身的深复制，集合内的元素还是浅拷贝，这种现象（one-level-copy）单层深拷贝，要是完成集合的完全拷贝，可以把集合归档成data,再解档返回一个新集合，这时候才是完全深拷贝。</p>
+<p>##8、为什么IBOutlet修饰的UIView也适用weak关键字？<br>答：因为父控件的subviews数组已经对他有一个强引用，不需要再强引用一次。</p>
+<p>##9、nonatomic和atomic的区别？atomic是绝对的线程安全么？为什么？如果不是，那应该如何实现？<br>答：使用atomic会给属性的setter &amp; getter方法加锁，防止读写的时候被另外一个线程读取造成数据错乱，atomic只保证属性的存取方法是线程安全的，并不保证整个对象都是线程安全。不过atomic可并不能完全保证线程安全。如果线程 A 调了 getter，与此同时线程 B 、线程 C 都调了 setter——那最后线程 A get 到的值，3种都有可能：可能是 B、C set 之前原始的值，也可能是 B set 的值，也可能是 C set 的值。同时，最终这个属性的值，可能是 B set 的值，也有可能是 C set 的值。</p>
+<p>##10、UICollectionView自定义layout如何实现？<br>答：1、重写prepareLayout方法，在这个方法中做一些初始化操作，要调用【super prepareLayout】2、重写layoutAttributesForElementsInRect:方法，这个方法返回的是一个数组，元素时每个cell的布局属性。</p>
+<p>##11、用StoryBoard开发界面有什么弊端？如何避免？<br>答：优点：1、节省时间，效率高。2、各个界面间的切换关系一目了然，    逻辑清晰。3、可以使用静态cell，对于开发一些Cell不多，但每个Cell都不一样的列表类设置界面会比较方便。<br>缺点：1、xib 对版本管理是灾难。storyboard 实际上的多个 xib 的集合，所以更容易让多人编辑产生冲突。而虽然它们是 xml 格式，但是冲突解决起来还是不如代码那么容易。2、苹果对 xib, storyboard 的设计中带有当前电脑的操作系统版本和 Xcode 版本。所以如果两个协作的开发者电脑操作系统或 Xcode 有不一样的话，每次打开必定会修改这个文件。另外即使操作系统版本和 Xcode 版本一样，有些时候打开看也会造成一些自动的修改。</p>
+<p>##12、线程间通信？<br>答：<br>    1、GCD，更新UI时，在子线程回到主线程刷新UI，dispatch_async(dispatch_get_main_queue(), ^{//数据执行完毕回调到主线程操作UI更新数据});<br>    2、perfermselecter选择器实现线程通信， //数据请求完毕回调到主线程，更新UI资源信息  waitUntilDone    设置YES ，代表等待当前线程执行完毕，[self performSelectorOnMainThread:@selector(dothing:) withObject:@[@”1”] waitUntilDone:YES];//将当前的逻辑转到后台线程去执行[self performSelectorInBackground:@selector(dothing:) withObject:@[@”2”]];<br>   3、自己定义线程，将当前数据转移到指定的线程内去通信操作，[self performSelector:@selector(dothing:) onThread:thread withObject:nil waitUntilDone:YES];</p>
+<p>##13、GCD的一些常用的函数？（group，barrier，信号量，线程同步）<br>答：<br>    1、dispath_get_main_queue()主队列 串行；<br>    2、dispath_get_global_queue()全局队列 并行；<br>    3、dispatch_queue_create(&lt;#const char * _Nullable label#&gt;,&lt;#dispatch_queue_attr_t  _Nullable attr#&gt;)自定义队列 可自定义并行DISPATH_QUEUE_CONCURRENT串行DISPATH_QUEUE_SERIAL；<br>    4、dispatch_sync(&lt;#dispatch_queue_t  _Nonnull queue#&gt;, &lt;#^(void)block#&gt;) 同步添加任务到队列；<br>    5、dispatch_async(&lt;#dispatch_queue_t  _Nonnull queue#&gt;, &lt;#^(void)block#&gt;) 异步添加任务到队列；<br>    6、dispatch_suspend(&lt;#dispatch_object_t  _Nonnull object#&gt;)挂起队列；<br>    7、dispatch_resume(&lt;#dispatch_object_t  _Nonnull object#&gt;)恢复队列；<br>    8、dispatch_semaphore_create(&lt;#long value#&gt;)创建信号量；<br>    9、dispatch_semaphore_wait(&lt;#dispatch_semaphore_t  _Nonnull dsema#&gt;, &lt;#dispatch_time_t timeout#&gt;)等待信号量<br>    10、dispatch_semaphore_signal(&lt;#dispatch_semaphore_t  _Nonnull dsema#&gt;)发出信号量；<br>    11、dispatch_group_create() 创建队列组；<br>    12、dispatch_group_async(&lt;#dispatch_group_t  _Nonnull group#&gt;, &lt;#dispatch_queue_t  _Nonnull queue#&gt;, &lt;#^(void)block#&gt;)异步添加队列到组中<br>    13、dispatch_group_notify(&lt;#dispatch_group_t  _Nonnull group#&gt;, &lt;#dispatch_queue_t  _Nonnull queue#&gt;, &lt;#^(void)block#&gt;)队列组中任务完成时回调<br>    14、dispatch_barrier_sync(&lt;#dispatch_queue_t  _Nonnull queue#&gt;, &lt;#^(void)block#&gt;)和dispatch_barrier_async(&lt;#dispatch_queue_t  _Nonnull queue#&gt;, &lt;#^(void)block#&gt;)等待所有位于barrier前的函数执行完毕后执行，并在barrier函数执行完毕后执行后面的函数，只在并发自定义队列中可用（区别：dispatch_barrier_sync将自己的任务插入后需要等待自己的任务完成才会执行后面的函数，dispatch_barrier_async不需要等待自己的任务完成，插入后就可以执行后面的函数）。</p>
+<p>##15、如何使用队列来避免资源抢夺？<br>答：可以使用信号量。具体见GCD XCode 工程。</p>
+<p>##16、数据持久化的几个方案？<br>  答：plist，NSUserDefault（本质也是plist），归档解档，sqlite（FMDB），CoreData。</p>
+<p>##17、说一下AppDelegate的几个方法？从后台到前台调用了哪些方法？第一次启动调用了哪些方法？从前台到后台调用了哪些方法？<br>答：第一次启动调用的方法是didFinishLaunching（程序启动）之后是DidBecomeActive（活跃状态）；从前台到后台调用的方法是WillResignActive（将要结束活跃状态）之后是DidEnterBackground（已经进入后台）；后台进入前台调用的方法是WillEnterForeground（即将进入前台）之后是DidBecomeActive（进入活跃状态）</p>
+<p>##18、NSCache优于NSDictionary的几点？<br>答：1、NSCache是线程安全的，NSMutableDictionary线程不安全，NSCache线程是安全的，Mutable开发的类一般都是线程不安全的。2、当内存不足时NSCache会自动释放内存(所以从缓存中取数据的时候总要判断是否为空)3、NSCache可以指定缓存的限额，当缓存超出限额自动释放内存缓存限额。4、苹果给NSCache封装了更多的方法和属性,比NSMutableDictionary的功能要强大很多。</p>
+<p>##19、重写description的有什么好处？<br>答：NSLog中（或lldb中使用po obj）输出一个对象本质就是输出[obj description]的返回值，重写该方法可以改变输出内容便于调试。</p>
+<p>##20、objc使用什么机制管理对象内存？<br>答：引用计数。分为MRC和ARC 。 </p>
+<p>#中级</p>
+<p>##1、block的实质是什么？一共有几种block？都是什么情况下生成的？<br>答：OC中的block可以看作一个对象，因为block中含有isa指针，这个isa指针被初始化_NSConcreateStackBlock或者NSConcreateGlobalBlock类的地址；block根据在内存中的位置分为三种：NSGlobalBlock，NSStackBlock，NSMallocBlock。block中没有用到局部变量会初始化为NSConcreateGlobalBlock，如果用到局部变量，在MRC中会初始化为NSConcreateStackBlock，ARC中会初始化为NSConcreateMallocBlock。block作为属性时使用copy修饰以保证MRC下将block拷贝到堆中，ARC下不使用copy修饰也会自动拷贝到堆中。使用<strong>block修饰的变量可以在block中修改、重新赋值，使用</strong>block修饰的对象在block内不会被强引用一次，从而不会出现循环引用的问题。 某个类使用block作为属性，然后再block内使用了self；delegate使用strong或retain修饰（一般来讲，只要出现self-&gt;成员变量-&gt;block-&gt;self的闭环就会导致循环引用）。A页面进入B页面，在B中声明一个block属性，当B页面要消失的时候调用block传值给A，A在创建B页面实例时，实现b.block接收传入的参数进行处理。</p>
+<p>##2、runtime如何实现weak变量的自动置nil？<br>答：Runtime维护了一个weak表，用于存储指向某个对象的所有weak指针。weak表其实是一个hash（哈希）表，Key是所指对象的地址，Value是weak指针的地址（这个地址的值是所指对象指针的地址）数组。1、初始化时：runtime会调用objc_initWeak函数，初始化一个新的weak指针指向对象的地址。2、添加引用时：objc_initWeak函数会调用 objc_storeWeak() 函数， objc_storeWeak() 的作用是更新指针指向，创建对应的弱引用表。3、释放时，调用clearDeallocating函数。clearDeallocating函数首先根据对象地址获取所有weak指针地址的数组，然后遍历这个数组把其中的数据设为nil，最后把这个entry从weak表中删除，最后清理对象的记录。</p>
+<p>##3、runloop是来做什么的？runloop和线程有什么关系？主线程默认开启了runloop么？子线程呢？<br>答：进程是一家工厂，线程是一个流水线，Run Loop就是流水线上的主管；当工厂接到商家的订单分配给这个流水线时，Run Loop就启动这个流水线，让流水线动起来，生产产品；当产品生产完毕时，Run Loop就会暂时停下流水线，节约资源。<br>RunLoop管理流水线，流水线才不会因为无所事事被工厂销毁；而不需要流水线时，就会辞退RunLoop这个主管，即退出线程，把所有资源释放。<br>RunLoop并不是iOS平台的专属概念，在任何平台的多线程编程中，为控制线程的生命周期，接收处理异步消息都需要类似RunLoop的循环机制实现，Android的Looper就是类似的机制.<br>特性<br>•主线程的RunLoop在应用启动的时候就会自动创建<br>•其他线程则需要在该线程下自己启动<br>•不能自己创建RunLoop<br>•RunLoop并不是线程安全的，所以需要避免在其他线程上调用当前线程的RunLoop<br>•RunLoop负责管理autorelease pools<br>•RunLoop负责处理消息事件，即输入源事件和计时器事件<br>Run Loop Modes<br>Default：NSDefaultRunLoopMode，默认模式，在Run Loop没有指定Mode的时候，默认就跑在Default Mode下<br>Connection：NSConnectionReplyMode，用来监听处理网络请求NSConnection的事件<br>Modal：NSModalPanelRunLoopMode，OS X的Modal面板事件<br>Event tracking：UITrackingRunLoopMode，拖动事件<br>Common mode：NSRunLoopCommonModes，是一个模式集合，当绑定一个事件源到这个模式集合的时候就相当于绑定到了集合内的每一个模式.<br>RunLoop可以通过[acceptInputForMode:beforeDate:]和[runMode:beforeDate:]来指定在一段时间内的运行模式。如果不指定的话，RunLoop默认会运行在Default下（不断重复调用runMode:NSDefaultRunLoopMode beforDate:）.<br>在主线程启动一个计时器Timer，然后拖动UITableView或者UIScrollView，计时器不执行。这是因为，为了更好的用户体验，在主线程中Event tracking模式的优先级最高。在用户拖动控件时，主线程的Run Loop是运行在Event tracking Mode下，而创建的Timer是默认关联为Default Mode，因此系统不会立即执行Default Mode下接收的事件.</p>
+<p>#高级</p>
+<p>#1、UITableview的优化方法（缓存高度，异步绘制，减少层级，hide，避免离屏渲染）。<br>答：主要在以下三个方面分析：<br>一、基础的优化准则(高度缓存, cell 重用…)。<br>二、使用调试工具分析问题。<br>三、异步绘制。<br>一、基础的优化：<br>1、正确地使用UITableViewCell的重用机制。UITableViewCell的核心思想是cell的重用机制，UITableView只会创建一屏幕或者多一点的cell，当cell滑出屏幕后就会放到cell的复用池里，要显示新的cell的时候回会在复用池里寻找相同标识符的cell使用，若没有可用的才会再创建，这样极大的减少内存的开销，所以给每种不通过布局方式的cell设置不同的标识符。<br>2、缓存cell高度。UITableView有两个很重要的回调方法，- (UITableViewCell <em>)tableView:(UITableView </em>)tableView cellForRowAtIndexPath:(NSIndexPath <em>)indexPath和- (CGFloat)tableView:(UITableView </em>)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath;回调顺序会先多次调用heightForRowAtIndexPath：方法来确定cell的contentSize和cell位置，然后才会调用cellForRowAtIndexPath：进而显示到屏幕上。在滑动的时候heightForRowAtIndexPath：的方法也会调用所以在这个方法里一定不能重复着进行大量的计算，一个提前把高度计算好存储起来在回调时直接把高度返回。做法就是在请求到数据之后和刷新tableView之前就把每个cell的高度算好存到相对的Model中。<br>3、不要阻塞主线程。请求网络图片，通常使用的是SDWebImage，这个正常使用没有问题，并且也能够缓存图片。但是要是准求性能，我推荐使用YYWebImage，因为SD对动图的处理不好， 难免会拖慢速度。特别是 gif 的内存暴增问题，SD 一直没有一个较好的解决方案还有在快速滑动时，对性能要求比较高的情况下，YY 可以直接以 layer 作为图片的载体而不是以imageView这样减少了相当一部分资源消耗。题外话：UIImageView 显示 UIImage 时，内部处理逻辑更为复杂，它需要正确处理 UIImage 的 imageOrientation、scale、capInsets、resizingMode 等属性，如果有 images 或 CIImage 的话，它还要额外处理图片动画或滤镜。如果在某个场景下没有用到这些属性，那用 UIView.layer.contents 来显示 CGImage 是更高效的。所以如果没有性能问题，还是用 UIImageView 更好一些。两种方式最终都是用 layer.contents 来显示具体内容的，但 UIImageView 封装了更完善的逻辑。<br>4、重用开销大的对象。如NSDateFormatter 和 NSCalendar等对象初始化非常慢，我们可以把它加入类的属性当中，或者创建单例来使用。<br>5、尽量减少计算的复杂度。在计算cell中控件的宽高或者返回cell的高度时尽量用ceil()或者floor()函数取整，<br>6、不要动态的add 或者 remove 子控件。最好在初始化时就添加完，然后通过hidden来控制是否显示。</p>
+<p>二、使用调试工具分析问题。<br>常见的调试选项：1、Color Blended Layers 混合图层。<br>Blended Layer是因为控件的Layer是透明的(Transparent)，系统在渲染这些view时需要将该view和下层view混合(Blend)后才能计算出该像素点的实际颜色。解决办法就是检查该控件的opaque属性，记得设置成YES；检查backgroundColor属性是不是[UIColor clearColor]<br>2、Color Misaligned Images图片的缩放。这个选项检查了图片是否被放缩,像素是否对齐。被放缩的图片会被标记为黄色,像素不对齐则会标注为紫色。 如果不对齐此时系统需要对相邻的像素点做anti-aliasing反锯齿计算，会增加图形负担。当图片的size和显示图片View的size不同 或 图片的scale和屏幕的scale不同，就会发生像素不对齐的问题。要想像素对齐，必须保证image.size和显示图片view.size相等 且 image.scale和 [UIScreen mainScreen].scale相等。<br>解决办法：可以给UIImage写个分类专门处理这类图片尺寸和目标尺寸不符的情况，如：//创建上下文  参数：目标尺寸大小，设置opaque=YES，设置新图片的分辨率和屏幕分辨率相同<br>    UIGraphicsBeginImageContextWithOptions(size, YES, [UIScreen mainScreen].scale);<br>    //绘图<br>    [oldimage drawInRect:CGRectMake(0, 0, size.width, size.height)];<br>    //获取新图片<br>    UIImage * image = UIGraphicsGetImageFromCurrentImageContext();<br>    //关闭上下文<br>    UIGraphicsEndImageContext();</p>
+<p>3、Color Offscreen-Rendered 离屏渲染。<br>下面有关丽萍渲染的介绍摘自大神<a href="https://blog.ibireme.com/2015/11/12/smooth_user_interfaces_for_ios/#5" target="_blank" rel="noopener">YYModel的作者的iOS 保持界面流畅的技巧</a> 这是一位大神，开发了YYModel、YYKit、YYImage、YYWebImage、YYAsyncLayer等。<a href="https://blog.ibireme.com" target="_blank" rel="noopener">这是他的博客地址</a><br>屏幕渲染有以下两种方式：On-Screen Rendering 当前屏幕渲染，指的是在当前用于显示的屏幕缓冲区中进行渲染操作。Off-Screen Rendering。离屏渲染，指的是 GPU 或 CPU 在当前屏幕缓冲区以外新开辟一个缓冲区进行渲染操作。过程中需要切换 contexts (上下文环境),先从当前屏幕切换到离屏的contexts，渲染结束后，又要将 contexts 切换回来，所以这种Offscreen-Rendering会导致app的图形性能下降。大部分Offscreen-Rendering都是和视图Layer的Shadow和Mask相关。<br>下列情况会导致视图的Offscreen-Rendering：<br>使用Core Graphics (CG开头的类)；使用drawRect()方法，即使为空；将CALayer的属性shouldRasterize设置为YES；使用了CALayer的setMasksToBounds(masks)和setShadow*(shadow)方法。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/2837588-b7096ba555d42d7f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="电子枪扫描屏幕示意图"></p>
+<p>屏幕显示图像的原理：CRT 的电子枪按照上面方式，从上到下一行行扫描，扫描完成后显示器就呈现一帧画面，随后电子枪回到初始位置继续下一次扫描。为了把显示器的显示过程和系统的视频控制器进行同步，显示器（或者其他硬件）会用硬件时钟产生一系列的定时信号。当电子枪换到新的一行，准备进行扫描时，显示器会发出一个水平同步信号（horizonal synchronization），简称 HSync；而当一帧画面绘制完成后，电子枪回复到原位，准备画下一帧前，显示器会发出一个垂直同步信号（vertical synchronization），简称 VSync。显示器通常以固定频率进行刷新，这个刷新率就是 VSync 信号产生的频率。尽管现在的设备大都是液晶显示屏了，但原理仍然没有变。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/2837588-1fb930cc716d2349.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="屏幕显示原理图"></p>
+<p>计算机系统中 CPU、GPU、显示器是以上面这种方式协同工作的。CPU 计算好显示内容提交到 GPU，GPU 渲染完成后将渲染结果放入帧缓冲区，随后视频控制器会按照 VSync 信号逐行读取帧缓冲区的数据，经过可能的数模转换传递给显示器显示。</p>
+<p>￼<img src="https://upload-images.jianshu.io/upload_images/2837588-d3795c6d5f612c78.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="掉帧示意图"></p>
+<p>在 VSync 信号到来后，系统图形服务会通过 CADisplayLink 等机制通知 App，App 主线程开始在 CPU 中计算显示内容，比如视图的创建、布局计算、图片解码、文本绘制等。随后 CPU 会将计算好的内容提交到 GPU 去，由 GPU 进行变换、合成、渲染。随后 GPU 会把渲染结果提交到帧缓冲区去，等待下一次 VSync 信号到来时显示到屏幕上。由于垂直同步的机制，如果在一个 VSync 时间内，CPU 或者 GPU 没有完成内容提交，则那一帧就会被丢弃，等待下一次机会再显示，而这时显示屏会保留之前的内容不变。这就是界面卡顿的原因。<br>解决方案：1、shadows（阴影) 。<br>设置阴影后，设置CALayer的 shadowPath。view.layer.shadowPath = [UIBezierPath pathWithCGRect:view.bounds].CGPath;<br>2、圆角。<br>cornerRadius 的文档中明确说明对 cornerRadius 的设置只对 CALayer 的backgroundColor 和 borderWidth&amp;borderColor 起作用，如果 contents 有内容或者内容的背景不是透明的话，只有设置 masksToBounds 为 true 才能起作用，此时两个属性相结合，产生离屏渲染。此时的解决方案是后台绘制圆角图片，前台进行设置；<br>对于 contents 无内容或者内容的背景透明(无涉及到圆角以外的区域)的layer，直接设置layer的 backgroundColor 和 cornerRadius 属性来绘制圆角，比如label.layer.backgroundColor = aColor,label.layer.cornerRadius = 5;<br>使用混合图层，在layer上方叠加相应mask形状的半透明layer,sublayer.contents = (id)[UIImage imageNamed:@”xxx”].CGImage;<br>[view.layer addSublayer:sublayer];<br>3、光栅化shouldRasterize(光栅化)为YES。<br>将图转化为一个个栅格组成的图象。 光栅化特点：每个元素对应帧缓冲区中的一像素。shouldRasterize = YES在其它属性触发离屏渲染的同时,会将光栅化后的内容缓存起来,如果对应的layer或者 sublayers没有发生改变,在下一帧的时候可以直接复用,从而减少渲染的频率。<br>三、异步绘制<br>待续。。。</p>
+<p>##2、SDWebImage的缓存策略？<br>答：SDWebImage用到了内存和磁盘双缓存，sd_setImageWithURL方法调用时会先从内存中查询图片缓存，如果找不到就会从磁盘中查找缓存，如果找到了会把图片再次设置到内存缓存中以提升效率，缓存查询成功就直接返回缓存数据，查询失败则发起网络请求，请求成功后会返回图片数据并写入缓存</p>
+<p>##3、AFN为什么添加一条常驻线程？<br>答：AFNetworking内部创建了一个单例线程。这个线程将会常驻内存，用来处理AFN发起的所有请求任务。当然，线程也跟随着一个runloop，AFN将这个 runloop的模式设置为NSDefaultRunLoopMode，不会在这个线程处理connection完成后的UI刷新等工作，而是会将数据抛给主线程，让主线程去完成UI的刷新</p>
+<p>##4、KVO的使用？实现原理？（为什么要创建子类来实现）？<br>答：当观察某对象A时，KVO机制动态创建一个对象A当前类的子类NSKVONotifying_A，并为这个新的子类重写了被观察属性keyPath的setter 方法。setter 方法随后负责通知观察对象属性的改变状况。NSKVONotifying_A类剖析：在这个过程，被观察对象的 isa 指针从指向原来的A类，被KVO机制修改为指向系统新创建的子类 NSKVONotifying_A类，来实现当前类属性值改变的监听；子类setter方法剖析：KVO的键值观察通知依赖于 NSObject 的两个方法:willChangeValueForKey:和 didChangevlueForKey:，在存取数值的前后分别调用2个方法：<br>被观察属性发生改变之前，willChangeValueForKey:被调用，通知系统该 keyPath 的属性值即将变更；当改变发生后， didChangeValueForKey: 被调用，通知系统该 keyPath 的属性值已经变更；<br>之后observeValueForKey:ofObject:change:context: 也会被调用。且重写观察属性的setter 方法这种继承方式的注入是在运行时而不是编译时实现的。KVC(键值编码)，即 Key-Value Coding，一个非正式的 Protocol，使用字符串(键)访问一个对象实例变量的机制。而不是通过调用 Setter、Getter 方法等显式的存取方式去访问。KVO(键值监听)，即 Key-Value Observing，它提供一种机制,当指定的对象的属性被修改后,对象就会接受到通知，前提是执行了 setter 方法、或者使用了 KVC 赋值。notification 比 KVO 多了发送通知的一步。<br>两者都是一对多，但是对象之间直接的交互，notification 明显得多，需要notificationCenter 来做为中间交互。而 KVO 如我们介绍的，设置观察者-&gt;处理属性变化，至于中间通知这一环，则隐秘多了，只留一句“交由系统通知”，具体的可参照以上实现过程的剖析。notification 的优点是监听不局限于属性的变化，还可以对多种多样的状态变化进行监听，监听范围广，例如键盘、前后台等系统通知的使用也更显灵活方便。</p>
+<p>##5、KVC的使用？实现原理？（KVC拿到key以后，是如何赋值的？知不知道集合操作符，能不能访问私有属性，能不能直接访问_ivar？<br>答：KVC（Key-value coding）键值编码，顾名思义。额，简单来说，是可以通过对象属性名称（Key）直接给属性值（value）编码（coding）“编码”可以理解为“赋值”。这样可以免去我们调用getter和setter方法，从而简化我们的代码，也可以用来修改系统控件内部属性（这个黑魔法且用且珍惜）。也可以字典转模型：setValuesForKeysWithDictionary。<br>赋值原理：</p>
+<ul>
+<li>（1）去模型中查找有没有setIcon方法,就直接调用这个set方法,给模型这个属性赋值[self setIcon:dict[@”icon”]];</li>
+<li>（2）如果找不到set方法，接着又会去寻找_icon成员变量,如果有,直接_icon = dict[@”icon”];</li>
+<li>（3）如果找不到_icon成员变量，接着就会去寻找有没有icon属性,如果有,就直接访问模型中icon = dict[@”icon”];</li>
+<li>（4）如果都找不到就会报错[<flag 0x7fb74bc7a2c0> setValue:forUndefinedKey: </flag></li>
+</ul>
+<p>集合操作符：<br>     简单集合操作符<br>     @count: 返回一个值为集合中对象总数的NSNumber对象。<br>     @sum:   首先把集合中的每个对象都转换为double类型，然后计算其总，最后返回一个值为这个总和的NSNumber对象。<br>     @avg:   首先把集合中的每个对象都转换为double类型，然后计算其均分，最后返回一个值为这个总和的NSNumber对象。<br>     @max:   使用compare:方法来确定最大值。所以为了让其正常工作，集合中所有的对象都必须支持和另一个对象的比较。<br>     @min:   和@max一样，但是返回的是集合中的最小值。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://baidu.com/2019/04/25/常见的排序算法和大O表示法/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Albert">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="纳兰如若">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/04/25/常见的排序算法和大O表示法/" itemprop="url">常见的排序算法和大O表示法</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-25T18:17:37+08:00">
+                2019-04-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/算法/" itemprop="url" rel="index">
+                    <span itemprop="name">算法</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>提到算法就会自然而然的联想到时间复杂度和空间复杂度的概念，一个问题往往有多种解决办法，又得解决办法效率更高，比其他的方法需要更少的时间和更少的空间，那么到底怎么分析一个算法的效率最高呢？那就是用数学来分析，程序的时间复杂度分析仅是一个极其简单的数学方法，这种方法就是分析一个算法对于给定数量的输入需要多长时间来完成任务。这通常定义为大O表示法。大O表示法就是将算法的所有步骤转换为代数项，然后排除不会对问题的整体复杂度产生较大影响的较低阶常数和系数。就是时间复杂度主要看自变量n的变化。<br>简而言之，我所表达的就是：我们只关注表达式中对表达式最终结果会产生最大影响的因子。（当常数非常大而n很小的时候并不是这样的，但是我们现在不要担心这种情况）。</p>
+<p>下面是大O复杂度的排序，从上至下时间复杂度依次增大。</p>
+<p>####O(1)—常量时间：给定一个大小为n的输入，概算法只需要一步就可以完成任务。</p>
+<p>####O(log n)— 对数时间：给定大小为n的输入，该算法每执行一步，它完成任务所需要的步骤数目会以一定的因子减少。</p>
+<p>####O(n)— 线性时间：给定大小为n的输入，该算法完成任务所需要的步骤直接和n相关（1对1的关系）。</p>
+<p>####O(n²)—二次方时间：给定大小为n的输入，完成任务所需要的步骤是n的平方。</p>
+<p>####O(C^n)— 指数时间：给定大小为n的输入，完成任务所需要的步骤是一个常数的n次方（非常大的数字）。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/2837588-dfc679c7e415fac0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="时间复杂度比较"></p>
+<p>至此你对大O表示法有点了解了吧。下面开始排序算法：</p>
+<p>###冒泡排序<br>对以下数据进行降序排序 24, 17, 85, 13, 9, 54, 76, 45, 5, 63<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">-(void)Bubble_Sort</span><br><span class="line">&#123;</span><br><span class="line">    /**</span><br><span class="line">     算法原理：</span><br><span class="line">     冒泡排序算法的运作如下：（从后往前）</span><br><span class="line">     1、比较相邻的元素。如果第一个比第二个大，就交换他们两个。</span><br><span class="line">     2、对每一对相邻元素作同样的工作，从开始第一对到结尾的最后一对。在这一点，最后的元素应该会是最大的数。</span><br><span class="line">     3、针对所有的元素重复以上的步骤，除了最后一个。</span><br><span class="line">     4、持续每次对越来越少的元素重复上面的步骤，直到没有任何一对数字需要比较。</span><br><span class="line">     </span><br><span class="line">     冒泡排序就是把小的元素往前调或者把大的元素往后调。比较是相邻的两个元素比较，交换也发生在这两个元素之间。所以，如果两个元素相等，我想你是不会再无聊地把他们俩交换一下的；如果两个相等的元素没有相邻，那么即使通过前面的两两交换把两个相邻起来，这时候也不会交换，所以相同元素的前后顺序并没有改变，所以冒泡排序是一种稳定排序算法。</span><br><span class="line">     */</span><br><span class="line">    </span><br><span class="line">    int array[10] = &#123;24, 17, 85, 13, 9, 54, 76, 45, 5, 63&#125;;</span><br><span class="line">    int num = sizeof(array)/sizeof(int);</span><br><span class="line">    printArray(array, num,0);</span><br><span class="line">    //算法</span><br><span class="line">    for(int i = 0; i &lt; num-1; i++) &#123;</span><br><span class="line">        for(int j = 0; j &lt; num - 1 - i; j++) &#123;</span><br><span class="line">            if(array[j] &lt; array[j+1]) &#123;</span><br><span class="line">                int tmp = array[j];</span><br><span class="line">                array[j] = array[j+1];</span><br><span class="line">                array[j+1] = tmp;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    printArray(array, num,1);</span><br><span class="line">    </span><br><span class="line">    /**</span><br><span class="line">     若文件的初始状态是正序的，一趟扫描即可完成排序。所需的关键字比较次数C和记录移动次数M均达到最小值</span><br><span class="line">     C=n-1; M=0.</span><br><span class="line">     所以，冒泡排序最好的时间复杂度为O(n)。</span><br><span class="line">     </span><br><span class="line">     若初始文件是反序的，需要进行n-1趟排序。每趟排序要进行n-i次关键字的比较(1≤i≤n-1)，且每次比较都必须移动记录三次来达到交换记录位置。在这种情况下，比较和移动次数均达到最大值：</span><br><span class="line">     C=n*(n-1)/2=O(n^2); M=3n*(n-1)/2=O(n^2).</span><br><span class="line">     冒泡排序的最坏时间复杂度为O(n^2).</span><br><span class="line">     </span><br><span class="line">     综上，因此冒泡排序总的平均时间复杂度为O(n^2).</span><br><span class="line">     */</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>####选择排序<br>对以下一组数据进行升序排序（选择排序）。“86, 37, 56, 29, 92, 73, 15, 63, 30, 8”<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">-(void)Selection_sort&#123;</span><br><span class="line">    /**</span><br><span class="line">     选择排序的基本思想是：每一趟在n-i+1（i=1，2，…n-1）个记录中选取关键字最小的记录作为有序序列中第i个记录。基于此思想的算法主要有简单选择排序、树型选择排序和堆排序.</span><br><span class="line">     简单选择排序的基本思想：第1趟，在待排序记录r[1]~r[n]中选出最小的记录，将它与r[1]交换；第2趟，在待排序记录r[2]~r[n]中选出最小的记录，将它与r[2]交换；以此类推，第i趟在待排序记录r[i]~r[n]中选出最小的记录，将它与r[i]交换，使有序序列不断增长直到全部排序完毕。</span><br><span class="line">     */</span><br><span class="line">    int numArr[10] = &#123;86, 37, 56, 29, 92, 73, 15, 63, 30, 8&#125;;</span><br><span class="line">    int n=sizeof(numArr)/sizeof(int);</span><br><span class="line">    printArray(numArr, n, 0);</span><br><span class="line">    int i, j, index;</span><br><span class="line">    for(i = 0; i &lt; n - 1; i++) &#123;</span><br><span class="line">        index = i;</span><br><span class="line">        for(j = i + 1; j &lt; n; j++) &#123;</span><br><span class="line">            if(numArr[index] &gt; numArr[j]) &#123;</span><br><span class="line">                index = j;//在一趟的俩数比较中选出最小的那个数对应的下标。</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        if(index != i) &#123;//若是一趟比较下来，index的值变了表示找到了一个更小的值，那么就替换。这就是简单选择排序的思想。</span><br><span class="line">            int temp = numArr[i];</span><br><span class="line">            numArr[i] = numArr[index];</span><br><span class="line">            numArr[index] = temp;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    printArray(numArr, n, 1);</span><br><span class="line">    /**</span><br><span class="line">     简单选择排序过程中需要进行的比较次数与初始状态下待排序的记录序列的排列情况无关。当i=1时，需进行n-1次比较；当i=2时，需进行n-2次比较；依次类推，共需要进行的比较次数是∑ =(n-1)+(n-2)+…+2+1=n(n-1)/2，即进行比较操作的时间复杂度为O(n2)。</span><br><span class="line">     */</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>####插入排序<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">-(void)inSort</span><br><span class="line">&#123;</span><br><span class="line">    int number[10]=&#123;86, 37, 56, 29, 92, 73, 15, 63, 30, 8&#125;;</span><br><span class="line">    int len=10;</span><br><span class="line">    int i, j, k, tmp;</span><br><span class="line">    for(j = 1; j &lt; len; j++) &#123;</span><br><span class="line">        tmp = number[j];</span><br><span class="line">        i = j - 1;</span><br><span class="line">        while(tmp &lt; number[i]) &#123;</span><br><span class="line">            number[i+1] = number[i];</span><br><span class="line">            i--;</span><br><span class="line">            if(i == -1)</span><br><span class="line">                break;</span><br><span class="line">        &#125;</span><br><span class="line">        number[i+1] = tmp;</span><br><span class="line">        </span><br><span class="line">        printf(&quot;第 %d 次排序：&quot;, j);</span><br><span class="line">        for(k = 0; k &lt; len; k++)</span><br><span class="line">            printf(&quot;%d &quot;, number[k]);</span><br><span class="line">        printf(&quot;\n&quot;);   </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>####快速排序<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">-(void)quickSort&#123;</span><br><span class="line">    /**</span><br><span class="line">     快速排序是当遇到较大数据时,排序快,高效的方法.</span><br><span class="line">     该方法的基本思想是：</span><br><span class="line">     </span><br><span class="line">     1．先从数列中取出一个数作为基准数。</span><br><span class="line">     </span><br><span class="line">     2．分区过程，将比这个数大的数全放到它的右边，小于或等于它的数全放到它的左边。</span><br><span class="line">     3．再对左右区间重复第二步，直到各区间只有一个数。</span><br><span class="line">     简单地理解就是,找一个基准数(待排序的任意数,一般都是选定首元素),把比小于等于基准数的元素放到基准数的左边,把大于基准数的元素放在基准数的右边.排完之后,在把基准数的左边和右边各看成一个整体,  左边:继续选择基准数把小于等于基准数的元素放到基准数的左边,把大于基准数的元素放在基准数的右边,右边也是一样..直到各区间只有一个数位置。</span><br><span class="line">     快速排序之所比较快，因为相比冒泡排序，每次交换是跳跃式的。每次排序的时候设置一个基准点，将小于等于基准点的数全部放到基准点的左边，将大于等于基准点的数全部放到基准点的右边。这样在每次交换的时候就不会像冒泡排序一样每次只能在相邻的数之间进行交换，交换的距离就大的多了。因此总的比较和交换次数就少了，速度自然就提高了。当然在最坏的情况下，仍可能是相邻的两个数进行了交换。因此快速排序的最差时间复杂度和冒泡排序是一样的都是O(n2)，它的平均时间复杂度为O(nlogn)。</span><br><span class="line">     */</span><br><span class="line">    int a[10]=&#123;86, 37, 56, 29, 92, 73, 73, 63, 30, 8&#125;;</span><br><span class="line">    int num=sizeof(a)/sizeof(int);</span><br><span class="line">    printArray(a, num, 0);</span><br><span class="line">//    quicksort1(a, 0, num-1);</span><br><span class="line">    quicksort2(a, 0, num-1);</span><br><span class="line">    printArray(a, num, 1);</span><br><span class="line">&#125;</span><br><span class="line">//快速排序1</span><br><span class="line">void quicksort1(int a[] ,int left, int right)&#123;</span><br><span class="line">    </span><br><span class="line">    int i, j, t, temp;</span><br><span class="line">    if(left &gt; right)&#123;   //开始位置坐标大于结束位置坐标时,直接return,结束下面的操作</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    temp = a[left]; //temp中存的就是基准数(基准数是随机的,但一般都是第一个元素)</span><br><span class="line">    i = left;</span><br><span class="line">    j = right;</span><br><span class="line">    while(i != j)</span><br><span class="line">    &#123;</span><br><span class="line">        </span><br><span class="line">        //顺序很重要，要先从右边开始找</span><br><span class="line">        while(a[j] &gt;= temp &amp;&amp; i&lt;j)&#123;</span><br><span class="line">            j--;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        //再找左边的</span><br><span class="line">        while(a[i] &lt;= temp &amp;&amp; i&lt;j)&#123;</span><br><span class="line">            i++;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        //交换两个数在数组中的位置</span><br><span class="line">        if(i &lt; j)&#123;</span><br><span class="line">            t = a[i];</span><br><span class="line">            a[i] = a[j];</span><br><span class="line">            a[j] = t;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    //此时i = j,最终将基准数归位</span><br><span class="line">    a[left] = a[i];</span><br><span class="line">    a[i] = temp;</span><br><span class="line">    </span><br><span class="line">    //递归调用</span><br><span class="line">    quicksort1( a,left, i-1);//继续处理左边的，这里是一个递归的过程</span><br><span class="line">    quicksort1( a,i+1, right);//继续处理右边的 ，这里是一个递归的过程</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>#####快速排序2<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">void quicksort2(int *a, int left, int right) &#123;</span><br><span class="line">    </span><br><span class="line">    if(left &gt;= right) &#123;</span><br><span class="line">        return ;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    int i = left;</span><br><span class="line"></span><br><span class="line">    int j = right;</span><br><span class="line"></span><br><span class="line">    int key = a[left];//取基准数</span><br><span class="line"></span><br><span class="line">    while (i &lt; j)</span><br><span class="line">    &#123;</span><br><span class="line">        </span><br><span class="line">        while (i &lt; j &amp;&amp; key &lt;= a[j]) &#123;//先从右边比较，大的方右边，小的放左边</span><br><span class="line">            j--;</span><br><span class="line">        &#125;</span><br><span class="line">        a[i] = a[j];</span><br><span class="line">        while (i &lt; j &amp;&amp; key &gt;= a[i]) &#123;</span><br><span class="line">            i++;</span><br><span class="line">        &#125;</span><br><span class="line">        a[j] = a[i];</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    a[i] = key;</span><br><span class="line">    quicksort2(a, left, i-1);</span><br><span class="line">    quicksort2(a, i+1, right);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> 二分插入排序是稳定的与二分查找的复杂度相同；</span><br><span class="line"> 最好的情况是当插入的位置刚好是二分位置 所用时间为O(log₂n);</span><br><span class="line"> 最坏的情况是当插入的位置不在二分位置 所需比较次数为O(n)，无限逼近线性查找的复杂度。</span><br><span class="line"> 平均时间O(n^2)</span><br><span class="line"> 折半插入排序适合记录数较多的场景，与直接插入排序相比，折半插入排序在寻找插入位置上面所花的时间大大减少，但是折半插入排序在记录移动次数方面和直接插入排序是一样的，所以其时间复杂度为O(n^2)。</span><br><span class="line"> </span><br><span class="line"> 算法思想简单描述：</span><br><span class="line"> 在插入第i个元素时，对前面的0～i-1元素进行折半，先跟他们</span><br><span class="line"> 中间的那个元素比，如果小，则对前半再进行折半，否则对后半</span><br><span class="line"> 进行折半，直到left&gt;right，然后再把第i个元素前1位与目标位置之间</span><br><span class="line"> 的所有元素后移，再把第i个元素放在目标位置上。</span><br><span class="line"> </span><br><span class="line"> */</span><br><span class="line">-(void)BinarySearch</span><br><span class="line">&#123;</span><br><span class="line">    int a[15]=&#123;12,3,4,6,98,123,3,56,78,11,65,455,324,0,1&#125;;</span><br><span class="line">    int len = sizeof(a)/sizeof(a[0]);</span><br><span class="line">    printArray(a, len, 0);</span><br><span class="line">    int i;</span><br><span class="line">    int first;</span><br><span class="line">    int last;</span><br><span class="line">    int iSave;</span><br><span class="line">    </span><br><span class="line">    for(i=1; i&lt;len; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        first = 0;</span><br><span class="line">        last = i - 1;</span><br><span class="line">        iSave = a[i];</span><br><span class="line">        </span><br><span class="line">        while(first &lt;= last)</span><br><span class="line">        &#123;</span><br><span class="line">            if(a[i] &gt;= a[(first + last)/2])</span><br><span class="line">            &#123;</span><br><span class="line">                first = (first + last)/2 + 1;</span><br><span class="line">            &#125;</span><br><span class="line">            else</span><br><span class="line">            &#123;</span><br><span class="line">                last = (first + last)/2 - 1;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        for(int j=i-1; j&gt;=first; j--)</span><br><span class="line">        &#123;</span><br><span class="line">            /* 将排序码大于ki的记录后移 */</span><br><span class="line">            a[j+1] = a[j];</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        a[first] = iSave;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    printArray(a, len, 1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>####二分查找<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;time.h&gt;</span><br><span class="line">#define LEN 10</span><br><span class="line"></span><br><span class="line">int main(void)&#123;</span><br><span class="line">    </span><br><span class="line">    srand((unsigned)time(NULL));</span><br><span class="line"></span><br><span class="line">    int arr[LEN];</span><br><span class="line">    /* 借用随机数填充数组元素 */</span><br><span class="line">    printf(&quot;old array:\n&quot;);</span><br><span class="line">    for(int i = 0; i &lt; LEN; i += 1)&#123;</span><br><span class="line">	arr[i] = rand() % (LEN * LEN) + 1;</span><br><span class="line">	printf(&quot;%d &quot;, arr[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;\n&quot;);</span><br><span class="line">    </span><br><span class="line">    /* 用选择法排序先将数组排序 */</span><br><span class="line">    for(int j = 0; j &lt; LEN - 1; j += 1)&#123;</span><br><span class="line">	int min = j;</span><br><span class="line">	for(int i = j + 1; i &lt; LEN; i += 1)&#123;</span><br><span class="line">	    if(arr[i] &lt; arr[min])&#123;</span><br><span class="line">		min = i;</span><br><span class="line">	    &#125;</span><br><span class="line">	&#125;</span><br><span class="line">	if(min != j)&#123;</span><br><span class="line">	    int temp;</span><br><span class="line">	    temp = arr[j];</span><br><span class="line">	    arr[j] = arr[min];</span><br><span class="line">	    arr[min] = temp;</span><br><span class="line">	&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    /* 排序完毕后输出所有元素看看 */</span><br><span class="line">    printf(&quot;new array:\n&quot;);</span><br><span class="line">    for(int i = 0; i &lt; LEN; i += 1)&#123;</span><br><span class="line">	printf(&quot;%d &quot;, arr[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;\n&quot;);</span><br><span class="line"></span><br><span class="line">    /* 提示输入需要在数组中查找的元素 */</span><br><span class="line">    int num;</span><br><span class="line">    printf(&quot;enter:\n&quot;);</span><br><span class="line">    scanf(&quot;%d&quot;, &amp;num);</span><br><span class="line">    </span><br><span class="line">    /* 开始折半查找 */</span><br><span class="line">    int left = 0;/* 左边界 */</span><br><span class="line">    int right = LEN - 1; /* 右边界 */</span><br><span class="line">    int wz = -1; /* 记录查找元素的位置，初始假定为-1，与0～LEN，不冲突 */</span><br><span class="line">    int mid;/* 折半查找中拿出来比较的中间那个元素 */</span><br><span class="line"></span><br><span class="line">    while(wz == -1 &amp;&amp; left &lt;= right)&#123;/* 如果没有找到，也没有找完就循环找 */</span><br><span class="line">        mid = (left + right) / 2; /* 取中间的元素标号 */</span><br><span class="line">        /* 比较待查找的数和取出的中间元素 */</span><br><span class="line">        if(num &lt; arr[mid])&#123;</span><br><span class="line">            right = mid - 1; /* 如果小，则右边界移动到mid - 1 */</span><br><span class="line">        &#125;else if(num &gt; arr[mid])&#123; </span><br><span class="line">            left = mid + 1;/* 如果大，则左边界移动到mid + 1*/</span><br><span class="line">        &#125;else&#123;</span><br><span class="line">            wz = mid; /* 如果相等，那这就是要找的元素了，记下它的位置 */</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /* 根据wz的值来判定是否找到此元素，输出相应的结果*/</span><br><span class="line">    if(wz != -1)&#123;</span><br><span class="line">	printf(&quot;oh, find on %d\n&quot;, wz);</span><br><span class="line">    &#125;else&#123;</span><br><span class="line">	printf(&quot;ai, no exist.\n&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://baidu.com/2019/04/23/MacCocoaPods安装/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -859,7 +1358,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -870,7 +1369,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-count">3</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -881,7 +1380,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-count">3</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
