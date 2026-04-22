@@ -1,0 +1,989 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="webrtc下载+编译+运行本机环境本机为Mac M2 os14.4版本，iphone12mini-iOS16.4，vpn 下载首先python2 和 python3 都得安装。去官网下载安装包。  macos 自带Python3，默认安装在 &#x2F;usr&#x2F;bin&#x2F;pyhon3，手动下载的Python2安装包，最终会把Python2安装在 &#x2F;usr&#x2F;local&#x2F;bin&#x2F;python  下载depot_">
+<meta property="og:type" content="article">
+<meta property="og:title" content="webrtc 源码获取&amp;编译&amp;运行">
+<meta property="og:url" content="http://example.com/2026/04/22/webrtc-%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96-%E7%BC%96%E8%AF%91-%E8%BF%90%E8%A1%8C/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="webrtc下载+编译+运行本机环境本机为Mac M2 os14.4版本，iphone12mini-iOS16.4，vpn 下载首先python2 和 python3 都得安装。去官网下载安装包。  macos 自带Python3，默认安装在 &#x2F;usr&#x2F;bin&#x2F;pyhon3，手动下载的Python2安装包，最终会把Python2安装在 &#x2F;usr&#x2F;local&#x2F;bin&#x2F;python  下载depot_">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/webrtc-%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96-%E7%BC%96%E8%AF%91-%E8%BF%90%E8%A1%8C/python.jpg">
+<meta property="og:image" content="http://example.com/media/17322828630572.jpg">
+<meta property="og:image" content="http://example.com/media/16851723261025.jpg">
+<meta property="og:image" content="http://example.com/media/16851725466270.jpg">
+<meta property="og:image" content="http://example.com/media/Snipaste_2023-05-06_19-22-12.png">
+<meta property="og:image" content="http://example.com/media/16835493353458.jpg">
+<meta property="og:image" content="http://example.com/media/16835497385042.jpg">
+<meta property="og:image" content="http://example.com/media/Snipaste_2023-05-08_20-39-41.png">
+<meta property="og:image" content="http://example.com/media/16835498819109.jpg">
+<meta property="og:image" content="http://example.com/media/16835501057880.jpg">
+<meta property="og:image" content="http://example.com/media/16835504281158.jpg">
+<meta property="og:image" content="http://example.com/media/16835504017117.jpg">
+<meta property="og:image" content="http://example.com/media/16835518922019.jpg">
+<meta property="og:image" content="http://example.com/media/16835525892884.jpg">
+<meta property="og:image" content="http://example.com/media/16835527741147.jpg">
+<meta property="og:image" content="http://example.com/media/17100816604221.jpg">
+<meta property="og:image" content="http://example.com/media/16835546228125.jpg">
+<meta property="og:image" content="http://example.com/media/16835548315996.jpg">
+<meta property="og:image" content="http://example.com/media/16836211770351.jpg">
+<meta property="og:image" content="http://example.com/media/17554320141661.jpg">
+<meta property="article:published_time" content="2026-04-22T06:42:23.000Z">
+<meta property="article:modified_time" content="2026-04-22T06:48:57.190Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="webrtc">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/webrtc-%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96-%E7%BC%96%E8%AF%91-%E8%BF%90%E8%A1%8C/python.jpg">
+  
+  
+  
+  <title>webrtc 源码获取&amp;编译&amp;运行 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="webrtc 源码获取&amp;编译&amp;运行"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-22 14:42" pubdate>
+          2026年4月22日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          14k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          119 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">webrtc 源码获取&amp;编译&amp;运行</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="webrtc下载-编译-运行"><a href="#webrtc下载-编译-运行" class="headerlink" title="webrtc下载+编译+运行"></a>webrtc下载+编译+运行</h2><p>本机环境<br>本机为Mac M2 os14.4版本，iphone12mini-iOS16.4，vpn</p>
+<h3 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h3><p>首先python2 和 python3 都得安装。去<a target="_blank" rel="noopener" href="https://www.python.org/downloads/macos/">官网下载</a>安装包。</p>
+<ul>
+<li><p>macos 自带Python3，默认安装在 <code>/usr/bin/pyhon3</code>，手动下载的Python2安装包，最终会把Python2安装在 <code>/usr/local/bin/python</code><br><img src="/./webrtc-%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96-%E7%BC%96%E8%AF%91-%E8%BF%90%E8%A1%8C/python.jpg" srcset="/img/loading.gif" lazyload alt="Python2 和 Python3 安装目录"></p>
+</li>
+<li><p>下载depot_tools</p>
+<ul>
+<li><code>git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git</code></li>
+</ul>
+</li>
+<li><p>设置环境变量</p>
+<ul>
+<li><code>export PATH=$PWD/depot_tools:$PATH</code></li>
+</ul>
+</li>
+<li><p>下载webrtc源码</p>
+<ul>
+<li><code>mkdir webrtc </code></li>
+<li><code>cd webrtc</code></li>
+<li><code>fetch --nohooks webrtc_ios</code> 时间很长，需要上外网</li>
+<li><code>gclient sync -D</code> 时间也不短，这几句命令过后下载的就是webrtc的最新代码</li>
+</ul>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://webrtc.googlesource.com/src/+/refs/heads/main">官网查看最新源码</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://chromiumdash.appspot.com/branches">查看所有 release 版本</a></p>
+</li>
+<li><p>碰到编译失败的情况可现在官网搜一下<a target="_blank" rel="noopener" href="https://issues.chromium.org/issues?q=">官网搜issue</a></p>
+</li>
+<li><p>webrtc 从 m79 版本之后不再以此种形式命名，m79 最后一笔提交已经是五年前了：2019 年 11 月。<a target="_blank" rel="noopener" href="https://webrtc.googlesource.com/src.git/+log/refs/branch-heads/m79">M79</a>。我用的是[6261]即 M122 版本：2024 年 2 月<br> <img src="/media/17322828630572.jpg" srcset="/img/loading.gif" lazyload alt="webrtc 版本"></p>
+</li>
+<li><p>查看可用版本分支 <code>git branch -r</code></p>
+</li>
+<li><p>切换到某个分支，比如m79分支 <code>git checkout branch-heads/m79</code> 再 <code>gclient sync -D</code></p>
+</li>
+<li><p>或者强制切换到指定commit（b484ec0082948ae086c2ba4142b4d2bf8bc4dd4b是m79最后一次提交的commit id）<br><code>gclient sync -r b484ec0082948ae086c2ba4142b4d2bf8bc4dd4b --force</code></p>
+</li>
+</ul>
+<hr>
+<h4 id="执行-fetch-–nohooks-webrtc-ios可能出现的错误"><a href="#执行-fetch-–nohooks-webrtc-ios可能出现的错误" class="headerlink" title="执行 fetch –nohooks webrtc_ios可能出现的错误"></a>执行 fetch –nohooks webrtc_ios可能出现的错误</h4><ul>
+<li>.cipd_bin&#x2F;vpython3: No such file or directory<br><img src="/media/16851723261025.jpg" srcset="/img/loading.gif" lazyload alt=".cipd_bin&#x2F;vpython3: No such file or directory"><br>是代理的原因，终端执行如下命令：</li>
+<li>export http_proxy&#x3D;”<a target="_blank" rel="noopener" href="http://127.0.0.1:7890/">http://127.0.0.1:7890</a>“</li>
+<li>export https_proxy&#x3D;”<a target="_blank" rel="noopener" href="http://127.0.0.1:7890/">http://127.0.0.1:7890</a>“<ul>
+<li>其中端口就是你vpn的端口，打开你vpn的设置去找端口</li>
+<li>比如这样<br>  <img src="/media/16851725466270.jpg" srcset="/img/loading.gif" lazyload alt="vpn 设置"></li>
+</ul>
+</li>
+<li>查看设置的代理<ul>
+<li>echo $http_proxy</li>
+</ul>
+</li>
+<li>取消设置的代理<ul>
+<li>unset http_proxy</li>
+<li>unset https_proxy</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h4 id="执行gclient-sync时可能出现的错误："><a href="#执行gclient-sync时可能出现的错误：" class="headerlink" title="执行gclient sync时可能出现的错误："></a>执行gclient sync时可能出现的错误：</h4><p><img src="/media/Snipaste_2023-05-06_19-22-12.png" srcset="/img/loading.gif" lazyload alt="update.py脚本更新clang失败"></p>
+<p>把update.py脚本用PyCharm IDE打开跑一下，发现报错如下：<br><img src="/media/16835493353458.jpg" srcset="/img/loading.gif" lazyload alt="python请求https地址失败"></p>
+<hr>
+<p>使用如下命令可以解决</p>
+<ul>
+<li>python3 -m pip install certifi</li>
+<li>再打开spot light输入Install Certificates.command然后启动</li>
+<li><img src="/media/16835497385042.jpg" srcset="/img/loading.gif" lazyload alt="Install Certificates.command"><br>启动的是一个进程，加载完后是这样：<br><img src="/media/Snipaste_2023-05-08_20-39-41.png" srcset="/img/loading.gif" lazyload alt="Install Certificates.command加载完成"></li>
+</ul>
+<p>这个命令就会更新ssl 的证书到一个目录下：<br><img src="/media/16835498819109.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>&#x2F;Library&#x2F;Frameworks&#x2F;Python.framework&#x2F;Versions&#x2F;3.11&#x2F;etc&#x2F;openssl 在执行Install Certificates.command命令前，该目录下是空的。执行命令后就会看到一个cert.pem</p>
+<p>解决后再继续gclient sync就可以跑完了，跑完后的样子是这样：<br><img src="/media/16835501057880.jpg" srcset="/img/loading.gif" lazyload alt="gclient sync完成"></p>
+<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><h4 id="mac平台的支持h264的debug版本"><a href="#mac平台的支持h264的debug版本" class="headerlink" title="mac平台的支持h264的debug版本"></a>mac平台的支持h264的debug版本</h4><p>下载完后的目录结构是这样：<br><img src="/media/16835504281158.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>开始执行编译命令：</p>
+<ul>
+<li><p>cd src</p>
+</li>
+<li><p>编译一个mac平台的支持h264的debug版本</p>
+<ul>
+<li>gn gen out&#x2F;mac-debug –args&#x3D;’target_os&#x3D;”mac” target_cpu&#x3D;”x64” is_debug&#x3D;true use_rtti&#x3D;true is_component_build&#x3D;false rtc_use_h264&#x3D;true rtc_include_tests&#x3D;false’ –ide&#x3D;xcode</li>
+<li>其中out&#x2F;mac-debug表示会在src&#x2F;out目录下创建一个mac-debug目录</li>
+<li>执行完成后的样子：<br>  <img src="/media/16835504017117.jpg" srcset="/img/loading.gif" lazyload></li>
+</ul>
+</li>
+<li><p>生成一个可以运行调试的工程</p>
+<ul>
+<li>ninja -C out&#x2F;mac-debug</li>
+<li>该命令执行如下所示<br>  <img src="/media/16835518922019.jpg" srcset="/img/loading.gif" lazyload alt="ninja -C out&#x2F;mac-debug"></li>
+<li>执行完成如下所示：<br>  <img src="/media/16835525892884.jpg" srcset="/img/loading.gif" lazyload alt="ninja -C out&#x2F;mac-debug执行完成"><br>  目录如下<br>  <img src="/media/16835527741147.jpg" srcset="/img/loading.gif" lazyload><br>其中AppRTCMobile.app可以直接打开，也可以打开all工程调试代码了。</li>
+</ul>
+</li>
+</ul>
+<h5 id="运行-Mac-的-AppRTCMobile-工程"><a href="#运行-Mac-的-AppRTCMobile-工程" class="headerlink" title="运行 Mac 的 AppRTCMobile 工程"></a>运行 Mac 的 AppRTCMobile 工程</h5><ul>
+<li><p>首先需要给该demo添加plist文件:</p>
+<ul>
+<li>plist文件目录在webrtc&#x2F;src&#x2F;examples&#x2F;objc&#x2F;AppRTCMobile&#x2F;mac&#x2F;Info.plist</li>
+<li>在build settings中搜索info.plist，默认显示info.plist目录时空的，把上面的目录填上，如下图<br>   <img src="/media/17100816604221.jpg" srcset="/img/loading.gif" lazyload></li>
+</ul>
+</li>
+<li><p>修改info.plist的bundle ID</p>
+<ul>
+<li>需要注意的是info.plist的bundle ID必须和all-AppRTCMobile-General中的bundle id一致，否则编译出错。</li>
+</ul>
+<hr>
+</li>
+</ul>
+<h4 id="ios平台的不支持h264的release版本"><a href="#ios平台的不支持h264的release版本" class="headerlink" title="ios平台的不支持h264的release版本"></a>ios平台的不支持h264的release版本</h4><p>编译：</p>
+<blockquote>
+<p>gn gen out&#x2F;ios-release –args&#x3D;’target_os&#x3D;”ios” target_cpu&#x3D;”arm64” is_debug&#x3D;false use_rtti&#x3D;true is_component_build&#x3D;false ios_enable_code_signing&#x3D;false proprietary_codecs&#x3D;false rtc_use_h264&#x3D;false rtc_include_tests&#x3D;false’ –ide&#x3D;xcode</p>
+</blockquote>
+<p><img src="/media/16835546228125.jpg" srcset="/img/loading.gif" lazyload></p>
+<blockquote>
+<p>ninja -C out&#x2F;ios-release</p>
+</blockquote>
+<p><img src="/media/16835548315996.jpg" srcset="/img/loading.gif" lazyload></p>
+<hr>
+<h4 id="ios平台的支持h264的release-code-signing版本"><a href="#ios平台的支持h264的release-code-signing版本" class="headerlink" title="ios平台的支持h264的release code signing版本"></a>ios平台的支持h264的release code signing版本</h4><ul>
+<li>获取本机Xcode带有的所有可用的开发者账号<ul>
+<li>security find-identity -v -p codesigning 打印如下：<br>  <img src="/media/16836211770351.jpg" srcset="/img/loading.gif" lazyload></li>
+</ul>
+</li>
+<li><code>gn gen out/ios-release-sign --args=&#39;target_os=&quot;ios&quot; target_cpu=&quot;arm64&quot; is_debug=false use_rtti=true is_component_build=false ios_code_signing_identity_description=&quot;2417xxxx&quot; proprietary_codecs=false rtc_use_h264=true rtc_include_tests=false&#39; --ide=xcode</code></li>
+<li>ios_code_signing_identity_description 用来指定用哪个开发者账号。只能是开发者账号全称字符串的子串。</li>
+</ul>
+<h3 id="编译出mac端的sdk"><a href="#编译出mac端的sdk" class="headerlink" title="编译出mac端的sdk"></a>编译出mac端的sdk</h3><p>目录结构</p>
+<figure class="highlight ada"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs ada">.<br><span class="hljs-comment">--depot_tools</span><br><span class="hljs-comment">--webrtc</span><br><span class="hljs-comment">----src</span><br><span class="hljs-comment">----build.sh</span><br></code></pre></td></tr></table></figure>
+<h4 id="脚本"><a href="#脚本" class="headerlink" title="脚本"></a>脚本</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">#</span><span class="language-bash">!/bin/bash</span><br><br>set -e<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">进入 src 目录，这是 gn 需要的 <span class="hljs-built_in">source</span> root</span><br>cd src<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">1. 生成ninja构建文件</span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">输出目录会是 webrtc/src/out/mac_arm64_static</span><br>gn gen out/mac_arm64_static --args=&#x27;<br>target_os=&quot;mac&quot;<br>target_cpu=&quot;arm64&quot;<br>is_component_build=false<br>rtc_use_h264=true<br>is_debug=false<br>rtc_libvpx_build_vp9=true<br>enable_stripping=true<br>rtc_enable_protobuf=false<br>&#x27;<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">2. 编译webrtc静态库</span><br>ninja -C out/mac_arm64_static webrtc<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">编译完成后，返回到项目根目录</span><br>cd ..<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">3. 创建最终的输出目录</span><br>OUTPUT_DIR=&quot;webrtc_mac_arm64&quot;<br>rm -rf &quot;$OUTPUT_DIR&quot;<br>mkdir -p &quot;$OUTPUT_DIR/lib&quot;<br>mkdir -p &quot;$OUTPUT_DIR/include&quot;<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">4. 拷贝静态库</span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">路径需要从根目录开始，所以是 src/out/...</span><br>cp src/out/mac_arm64_static/obj/libwebrtc.a &quot;$OUTPUT_DIR/lib/&quot;<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">5. 拷贝头文件</span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">使用子shell进入src目录执行find，避免影响当前目录</span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">rsync的-R会保留目录结构，目标路径 ../<span class="hljs-string">&quot;<span class="hljs-variable">$OUTPUT_DIR</span>/include/&quot;</span> 是相对于src目录的</span><br>(cd src &amp;&amp; find api \<br>     rtc_base \<br>     modules \<br>     common_audio \<br>     common_video \<br>     p2p \<br>     pc \<br>     media \<br>     system_wrappers \<br>     -name &quot;*.h&quot; \<br>     -exec rsync -R &#123;&#125; ../&quot;$OUTPUT_DIR/include/&quot; \;)<br><br>echo &quot;✅ Build finished successfully. Output in $OUTPUT_DIR&quot;<br><br></code></pre></td></tr></table></figure>
+
+<h3 id="编译出Linux端的sdk"><a href="#编译出Linux端的sdk" class="headerlink" title="编译出Linux端的sdk"></a>编译出Linux端的sdk</h3><p>目录结构</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs stylus">.<br><span class="hljs-attr">--depot_tools</span><br><span class="hljs-attr">--webrtc</span><br>--<span class="hljs-attr">--src</span><br>--<span class="hljs-attr">--build</span><span class="hljs-selector-class">.sh</span><br>--<span class="hljs-attr">--Dockerfile</span><br></code></pre></td></tr></table></figure>
+<h4 id="Dockerfile"><a href="#Dockerfile" class="headerlink" title="Dockerfile"></a>Dockerfile</h4><figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs docker"><span class="hljs-keyword">FROM</span> --platform=linux/amd64 ubuntu:<span class="hljs-number">22.04</span><br><span class="hljs-keyword">ENV</span> DEBIAN_FRONTEND=noninteractive<br><span class="hljs-comment"># Add python3-pip to install python packages</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> apt-get update &amp;&amp; apt-get install -y \</span><br><span class="language-bash">    git python3 python3-distutils python3-pip build-essential ninja-build pkg-config curl clang \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">rm</span> -rf /var/lib/apt/lists/*</span><br><br><span class="hljs-comment"># Install depot_tools</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> git <span class="hljs-built_in">clone</span> https://chromium.googlesource.com/chromium/tools/depot_tools.git /opt/depot_tools</span><br><span class="hljs-keyword">ENV</span> PATH=<span class="hljs-string">&quot;/opt/depot_tools:$&#123;PATH&#125;&quot;</span><br><br><span class="hljs-comment"># Install python dependencies for depot_tools before running it</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> pip3 install httplib2</span><br><br><span class="hljs-comment"># Bootstrap depot_tools to ensure all helper tools are downloaded</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> python3 /opt/depot_tools/gclient.py --version</span><br></code></pre></td></tr></table></figure>
+
+<h4 id="脚本-1"><a href="#脚本-1" class="headerlink" title="脚本"></a>脚本</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">#</span><span class="language-bash">!/usr/bin/env bash</span><br>set -e<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">1. 使用 buildx 构建镜像，确保 --platform 标志生效</span><br>docker buildx build --platform linux/amd64 -t webrtc-build-env --load .<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">2. 运行编译 (同样指定平台)</span><br>docker run --rm --platform linux/amd64 \<br>  -v &quot;$(pwd)&quot;:/webrtc \<br>  -v &quot;$(pwd)/output&quot;:/output \<br>  webrtc-build-env \<br>  bash -c &quot;<br>    set -e<br>    cd /webrtc<br><br>    # ------------------- 重要说明：编译模式选择 -------------------<br>    #<br>    # 【模式一：首次编译或更新分支】<br>    # 运行下面的 &#x27;gclient sync&#x27;。它会完整同步所有依赖，但速度较慢。<br>    # echo &#x27;Syncing dependencies for a full build...&#x27;<br>    # gclient sync --with_branch_heads --force<br><br>    # 【模式二：日常增量编译】<br>    # 为了快速编译，请注释掉上面的 &#x27;gclient sync&#x27;，<br>    # 然后取消下面 &#x27;gclient runhooks&#x27; 的注释。<br>    # &#x27;runhooks&#x27; 会跳过缓慢的依赖检查，只执行必要的环境设置，速度很快。<br>    #<br>    echo &#x27;Running hooks for an incremental build...&#x27;<br>    gclient runhooks<br><br>    # --- 后续步骤都在 /webrtc/src 目录中执行 ---<br>    cd /webrtc/src<br><br>    # c. 安装 sysroot<br>    echo &#x27;Installing sysroot...&#x27;<br>    build/linux/sysroot_scripts/install-sysroot.py --arch=amd64<br><br>    # d. 编译<br>    echo &#x27;Generating build files...&#x27;<br>    gn gen out/linux --args=&#x27;is_debug=false is_component_build=false is_clang=true rtc_include_tests=false rtc_use_h264=true use_rtti=true use_custom_libcxx=true treat_warnings_as_errors=false target_os=\&quot;linux\&quot; target_cpu=\&quot;x64\&quot;&#x27;<br>    <br>    echo &#x27;Building WebRTC...&#x27;<br>    ninja -C out/linux webrtc<br><br>    # e. 合并所有 .a 文件成一个大的 libwebrtc.a<br>    echo &#x27;Combining archives...&#x27;<br>    # 创建一个 MRI 脚本来执行合并操作<br>    echo \&quot;create /output/libwebrtc.a\&quot; &gt; /tmp/archive.mri<br>    find out/linux/obj -name \&quot;*.a\&quot; -exec echo \&quot;addlib &#123;&#125;\&quot; \; &gt;&gt; /tmp/archive.mri<br>    echo \&quot;save\&quot; &gt;&gt; /tmp/archive.mri<br>    echo \&quot;end\&quot; &gt;&gt; /tmp/archive.mri<br>    ar -M &lt; /tmp/archive.mri<br><br>    # f. 拷产物<br>    echo &#x27;Copying artifacts...&#x27;<br>    mkdir -p /output/include<br>    find api rtc_base modules common_audio common_video p2p pc call video audio logging media system_wrappers -name &#x27;*.h&#x27; -exec cp --parents -t /output/include/ &#123;&#125; +<br>  &quot;<br>echo &quot;✅ Linux 版 libwebrtc.a 已生成在 $(pwd)/output/&quot;<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="1-创建库文件"><a href="#1-创建库文件" class="headerlink" title="1. 创建库文件"></a>1. 创建库文件</h3><p>静态库和动态库在底层原理上的区别：</p>
+<ul>
+<li>生成静态库 ( .a ) ：这一步我们称之为 归档 (Archiving) 。 ar 命令做的事情相对“简单”，它就像一个打包工具，把成百上千个编译好的 .o 文件不加处理地塞进一个大文件里。这个过程主要是 磁盘 I&#x2F;O 密集型 的，因为它需要读取大量文件。</li>
+<li>生成动态库 ( .so ) ：这一步我们称之为 链接 (Linking) 。链接器（ ld ）做的事情要复杂得多。它不仅要读取所有的 .o 文件，还需要：<ul>
+<li>解析符号 ：检查所有函数调用和变量引用，确保它们都能找到对应的定义。</li>
+<li>重定位 ：处理代码和数据的位置，使库可以在运行时被加载到内存的任意地址。</li>
+<li>生成元数据 ：创建复杂的内部结构，比如符号表、导出表等，供操作系统在加载时使用。这个过程不仅是 磁盘 I&#x2F;O 密集型 的，更是 CPU 和内存密集型的。<br>简单来说 ：</li>
+</ul>
+</li>
+<li>创建 .a 文件像把一堆零件（ .o 文件）都扔进一个大箱子里。</li>
+<li>创建 .so 文件则像把这些零件精密地组装成一台可以运转的引擎。</li>
+</ul>
+<hr>
+<ul>
+<li><p>静态库 ( .a )：只归档，不链接</p>
+<ul>
+<li>这一步， ar 命令只是简单地把成百上千个 .o 文件（就像一个个独立的零件）打包成一个 .a 文件（一个大零件盒）。</li>
+<li>它 完全不关心 这些零件之间是如何配合的。比如 A 零件调用了 B 零件的一个功能， ar 对此一无所知，也不会去检查。所以这一步非常快，主要是磁盘读写。</li>
+<li>链接器在处理静态库时，只会把最终程序用到的那部分代码（以 .o 目标文件为单位）拷贝进去，任何没有被用到的代码都会被舍弃。</li>
+<li>这正是静态库的一个巨大优势，通常被称为<strong>按需链接或死代码剥离 (Dead Code Stripping)</strong>。</li>
+</ul>
+</li>
+<li><p>动态库 ( .so )：归档，并且链接  </p>
+<ul>
+<li>这一步，链接器 ( ld ) 不仅要把所有 .o 文件打包，还要做大量的“内部整理”工作。</li>
+<li>它会检查并 解析所有内部符号 ，确保库内部的函数调用都能找到彼此。它会把这些零件预先组装成一个可以独立运转的“半成品引擎”。</li>
+<li>这个过程非常复杂，耗时也更长。</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-使用库文件，编译你的最终程序时"><a href="#2-使用库文件，编译你的最终程序时" class="headerlink" title="2. 使用库文件，编译你的最终程序时"></a>2. 使用库文件，编译你的最终程序时</h3><p>这是“链接”这个词真正发挥作用的地方，也是静态库和动态库体现出最大不同的时候。</p>
+<ul>
+<li>使用静态库 ( .a )<ul>
+<li>当你编译自己的 main.cpp 并链接 libwebrtc.a 时，链接器会打开 libwebrtc.a 这个大零件盒。</li>
+<li>它会仔细分析你的 main.cpp 需要哪些零件（ .o 文件），然后只把这些被用到的零件的机器码，原封不动地复制到你的最终可执行文件中 。</li>
+<li>结果 ：你的可执行文件体积很大，因为它包含了所有它需要的 WebRTC 代码。</li>
+</ul>
+</li>
+<li>使用动态库 ( .so )<ul>
+<li>当你编译自己的 main.cpp 并链接 libwebrtc.so 时，链接器做的工作非常少。</li>
+<li>它只是在你的可执行文件里记下一个“小纸条”：“我需要 libwebrtc.so 这个文件才能运行”。它 完全不复制任何代码。专业上我们称之为 符号存根 (Symbol Stubs) 或 导入表 (Import Table) 。这些“纸条”上写着：“我需要一个叫 webrtc::CreatePeerConnectionFactory 的函数，它在 libwebrtc.so 这个文件里”。</li>
+<li>工作交给操作系统 ：当你运行你的程序时，操作系统里的动态链接器 (Dynamic Linker&#x2F;Loader) 会看到这些“小纸条”。它会去系统指定的路径下查找 libwebrtc.so 文件，把它加载到内存里。然后，它会把你程序里所有指向 CreatePeerConnectionFactory 的调用，都正确地指向内存中 libwebrtc.so 里的真实函数地址。</li>
+<li>共享与效率 ：这种方式最大的好处是共享。如果你的系统上有 10 个程序都用到了 libwebrtc.so ，内存中只需要加载一份 libwebrtc.so 的代码，所有程序都可以共享使用它。这也意味着，如果 libwebrtc.so 有个 bug 需要修复，你只需要更新这一个 .so 文件，所有依赖它的程序就都自动用上新版本了，无需重新编译。</li>
+<li>结果 ：你的可执行文件体积很小。但它在运行时，必须能找到 libwebrtc.so 文件，由操作系统把它和你的程序一起加载到内存中，这时才真正完成“链接”。</li>
+</ul>
+</li>
+</ul>
+<h2 id="部署AppRTC-Server"><a href="#部署AppRTC-Server" class="headerlink" title="部署AppRTC Server"></a>部署AppRTC Server</h2><p>下载的源码里面可以看到有很多appr.tc的域名<br><img src="/media/17554320141661.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>这是demo与appr.tc的后端进行交互，请求stun&#x2F;turn服务地址，还有加入房间和离开房间等一些房间逻辑。由于官方不再维护appr.tc官网，推荐使用docker本地部署，就可以进行本地调试了。</p>
+<h3 id="构建-apprtc-server-的-docker-镜像"><a href="#构建-apprtc-server-的-docker-镜像" class="headerlink" title="构建 apprtc server 的 docker 镜像"></a>构建 apprtc server 的 docker 镜像</h3><ol>
+<li>仓库地址：<code>https://gitee.com/damn_code/apprtc-server.git</code> 这是 fork 的谷歌apprtc server仓库。我的仓库已经对仓库中的部分源代码文件进行了修改简化。</li>
+<li>进入到apprtc-server目录，修改dockerfile</li>
+</ol>
+<figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><code class="hljs docker"><span class="hljs-comment">####### 最终生产版：修复了所有已知问题 #######</span><br><br><span class="hljs-keyword">FROM</span> golang:<span class="hljs-number">1.17</span>.<span class="hljs-number">5</span>-alpine3.<span class="hljs-number">15</span><br><br><span class="hljs-keyword">ARG</span> CACHE_BUSTER<br><span class="hljs-keyword">RUN</span><span class="language-bash"> sed -i <span class="hljs-string">&#x27;s/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g&#x27;</span> /etc/apk/repositories</span><br><span class="hljs-comment"># (关键修复) 安装 go get 命令所必需的 git 工具。</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> apk add --no-cache git curl python2 build-base openssl-dev openssl</span><br><br><span class="hljs-comment"># --- 缓存重量级依赖 ---</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-367.0.0-linux-x86_64.tar.gz --output gcloud.tar.gz \</span><br><span class="language-bash">    &amp;&amp; tar -xf gcloud.tar.gz -C / \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">rm</span> -f gcloud.tar.gz \</span><br><span class="language-bash">    &amp;&amp; /google-cloud-sdk/bin/gcloud components install app-engine-python-extras app-engine-python --quiet</span><br><span class="hljs-keyword">ENV</span> STUNNEL_VERSION <span class="hljs-number">5.60</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> curl https://www.stunnel.org/archive/5.x/stunnel-<span class="hljs-variable">$&#123;STUNNEL_VERSION&#125;</span>.tar.gz --output /tmp/stunnel.tar.gz\</span><br><span class="language-bash">    &amp;&amp; tar -xf /tmp/stunnel.tar.gz -C /tmp \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">cd</span> /tmp/stunnel-<span class="hljs-variable">$&#123;STUNNEL_VERSION&#125;</span> \</span><br><span class="language-bash">    &amp;&amp; ./configure --prefix=/usr &amp;&amp; make &amp;&amp; make install \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">rm</span> -rf /tmp/stunnel*</span><br><br><span class="hljs-comment"># --- 克隆并构建代码 ---</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;Cache buster: <span class="hljs-variable">$&#123;CACHE_BUSTER&#125;</span>&quot;</span> &amp;&amp; git <span class="hljs-built_in">clone</span> https://gitee.com/damn_code/apprtc-server.git /apprtc</span><br><span class="hljs-keyword">WORKDIR</span><span class="language-bash"> /apprtc</span><br><br><span class="hljs-keyword">ENV</span> GOPATH /go<br><span class="hljs-keyword">ENV</span> GO111MODULE off<br><span class="hljs-comment"># (关键修复) 在编译前，强制、显式地安装最关键的 websocket 依赖。</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> go get -v golang.org/x/net/websocket</span><br><br><span class="hljs-keyword">RUN</span><span class="language-bash"> <span class="hljs-built_in">mkdir</span> -p <span class="hljs-variable">$GOPATH</span>/src \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">cp</span> -r src/collider/collider <span class="hljs-variable">$GOPATH</span>/src/ \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">cp</span> -r src/collider/collidermain <span class="hljs-variable">$GOPATH</span>/src/ \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">cp</span> -r src/collider/collidertest <span class="hljs-variable">$GOPATH</span>/src/ \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">cd</span> <span class="hljs-variable">$GOPATH</span>/src/collidermain \</span><br><span class="language-bash">    &amp;&amp; go install .</span><br><br><span class="hljs-keyword">RUN</span><span class="language-bash"> python build/build_app_engine_package.py src/ out/</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> curl -L https://webrtc.github.io/adapter/adapter-latest.js --output src/web_app/js/adapter.js</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> <span class="hljs-built_in">cp</span> src/web_app/js/*.js out/js/</span><br><br><span class="hljs-comment"># --- 配置和启动 ---</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> <span class="hljs-built_in">mkdir</span> /cert</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> openssl req -x509 -out /cert/cert.crt -keyout /cert/key.pem \</span><br><span class="language-bash">  -newkey rsa:2048 -nodes -sha256 \</span><br><span class="language-bash">  -subj <span class="hljs-string">&#x27;/CN=appr.tc&#x27;</span> -extensions EXT -config &lt;( \</span><br><span class="language-bash">   <span class="hljs-built_in">printf</span> <span class="hljs-string">&quot;[dn]\nCN=appr.tc\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:appr.tc\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth&quot;</span>) \</span><br><span class="language-bash">  &amp;&amp; <span class="hljs-built_in">cat</span> /cert/key.pem &gt; /cert/cert.pem \</span><br><span class="language-bash">  &amp;&amp; <span class="hljs-built_in">cat</span> /cert/cert.crt &gt;&gt; /cert/cert.pem \</span><br><span class="language-bash">  &amp;&amp; <span class="hljs-built_in">chmod</span> 600 /cert/cert.pem /cert/key.pem /cert/cert.crt</span><br><br><span class="hljs-keyword">RUN</span><span class="language-bash"> <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;foreground=yes&#x27;</span> &gt; /usr/etc/stunnel/stunnel.conf \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;[AppRTC GAE]&#x27;</span> &gt;&gt; /usr/etc/stunnel/stunnel.conf \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;accept=0.0.0.0:443&#x27;</span> &gt;&gt; /usr/etc/stunnel/stunnel.conf \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;connect=0.0.0.0:8080&#x27;</span> &gt;&gt; /usr/etc/stunnel/stunnel.conf \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;cert=/cert/cert.pem&#x27;</span> &gt;&gt; /usr/etc/stunnel/stunnel.conf</span><br><br><span class="hljs-comment"># 恢复为正常的、所有服务都在后台运行的启动脚本。</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;#!/bin/sh&#x27;</span> &gt; /go/start.sh \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;/google-cloud-sdk/bin/dev_appserver.py --host 0.0.0.0 --addn_host appr.tc /apprtc/out/app.yaml &amp;&#x27;</span> &gt;&gt; /go/start.sh \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;/go/bin/collidermain -port=8089 -tls=false -room-server=http://localhost:8080 &amp;&#x27;</span> &gt;&gt; /go/start.sh \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;/usr/bin/stunnel &amp;&#x27;</span> &gt;&gt; /go/start.sh \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;wait -n&#x27;</span> &gt;&gt; /go/start.sh \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;exit $?&#x27;</span> &gt;&gt; /go/start.sh \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">chmod</span> +x /go/start.sh</span><br><br><span class="hljs-keyword">CMD</span><span class="language-bash"> /go/start.sh</span><br></code></pre></td></tr></table></figure>
+<ol>
+<li>脚本：</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">#</span><span class="language-bash">!/bin/bash</span><br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">当任何命令失败时，立即退出脚本</span><br>set -e<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">--- 变量定义 ---</span><br>IMAGE_NAME=&quot;nmrtc_docker&quot;<br>CONTAINER_NAME=&quot;apprtc-server&quot;<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">--- 1. 构建 Docker 镜像 ---</span><br>echo &quot;正在构建 Docker 镜像 (强制重新拉取代码)...&quot;<br><span class="hljs-meta prompt_"># </span><span class="language-bash">我们传递一个每次都不同的 CACHE_BUSTER 参数，来强制 Docker 重新执行 git <span class="hljs-built_in">clone</span> 步骤。</span><br>docker build --build-arg CACHE_BUSTER=$(date +%s) . -t $IMAGE_NAME<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">--- 2. 停止并移除旧容器 (如果存在) ---</span><br>echo &quot;正在清理旧的容器...&quot;<br>docker stop $CONTAINER_NAME &gt; /dev/null 2&gt;&amp;1 || true<br>docker rm $CONTAINER_NAME &gt; /dev/null 2&gt;&amp;1 || true<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">--- 3. 在后台启动新容器 ---</span><br>echo &quot;正在启动新容器: $CONTAINER_NAME...&quot;<br>docker run -d -p 443:443 -p 8089:8089 --name $CONTAINER_NAME $IMAGE_NAME<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">--- 4. 等待容器启动并拷贝新证书 ---</span><br>echo &quot;正在等待容器初始化...&quot;<br>sleep 5 # 等待5秒，确保容器内的服务已启动<br><br>echo &quot;正在从容器中拷贝新生成的证书...&quot;<br>docker cp $CONTAINER_NAME:/cert/cert.crt .<br><br>echo &quot;&quot;<br>echo &quot;--- 脚本执行完毕 ---&quot;<br>echo &quot;一份全新的证书 &#x27;cert.crt&#x27; 已被拷贝到当前目录。&quot;<br>echo &quot;请您手动在 macOS 的“钥匙串访问”中，删除所有旧的 appr.tc 证书，然后添加并信任这个新的证书。&quot;<br>echo &quot;&quot;<br>echo &quot;服务正在后台运行。如果您想查看实时日志，请打开新终端并执行：&quot;<br>echo &quot;docker logs -f $CONTAINER_NAME&quot;<br>echo &quot;&quot;<br>echo &quot;当您测试完毕后，请在终端执行以下命令来停止服务：&quot;<br>echo &quot;docker stop $CONTAINER_NAME&quot;<br><br><br></code></pre></td></tr></table></figure>
+<ol start="3">
+<li>修改constants.py文件，使用自己的stun&#x2F;turn服务器</li>
+</ol>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs py">ICE_SERVER_OVERRIDE = [<br>    &#123;<span class="hljs-string">&#x27;urls&#x27;</span>: [<span class="hljs-string">&#x27;stun:stun.nmrtc.cn:10086&#x27;</span>]&#125;,<br>    &#123;<br>        <span class="hljs-string">&#x27;urls&#x27;</span>: [<span class="hljs-string">&#x27;turn:turn.nmrtc.cn:10086&#x27;</span>],<br>        <span class="hljs-string">&#x27;username&#x27;</span>: <span class="hljs-string">&#x27;nmrtc&#x27;</span>,<br>        <span class="hljs-string">&#x27;credential&#x27;</span>: <span class="hljs-string">&#x27;Fengcheng_1992&#x27;</span><br>    &#125;<br>]<br></code></pre></td></tr></table></figure>
+<ol start="4">
+<li>修改电脑hosts文件，将客户端源代码中的appr.tc域名重定向到本地127.0.0.1。在本地hosts文件内新增下面一行。hosts文件在：<code>/etc/hosts</code></li>
+</ol>
+<figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs accesslog"># webrtc 源码使用的域名,全部转为本地的nmrtc_docker服务<br><span class="hljs-number">127.0.0.1</span>       appr.tc<br></code></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>每次脚本运行完成，都得需要双击证书，在钥匙串里设置信任。</li>
+</ol>
+<h3 id="保存镜像"><a href="#保存镜像" class="headerlink" title="保存镜像"></a>保存镜像</h3><h3 id="如何打包并分享您的-nmrtc-docker-镜像"><a href="#如何打包并分享您的-nmrtc-docker-镜像" class="headerlink" title="如何打包并分享您的 nmrtc_docker 镜像"></a>如何打包并分享您的 nmrtc_docker 镜像</h3><p>这个过程分为两步：在您当前的电脑上 保存 镜像，以及在您的另一台电脑上 加载并运行</p>
+<ol>
+<li>保存镜像 ：执行以下命令，将我们已经构建好的 nmrtc_docker 镜像，保存成一个名为 nmrtc_docker.tar 的文件。<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs fortran">docker <span class="hljs-keyword">save</span> -o nmrtc_docker.tar nmrtc_docker:latest<br></code></pre></td></tr></table></figure>
+<ul>
+<li>-o 参数代表“输出 (output)”。</li>
+<li>执行完毕后，您会在 &#x2F;Users&#x2F;bytedance&#x2F;Documents&#x2F;Gitee&#x2F;apprtc 目录下，看到一个几百兆大小的 nmrtc_docker.tar 文件。<br>现在，这个 nmrtc_docker.tar 文件，就是您那个 包含了所有修复、可随处运行的 AppRTC 服务器 。您可以通过 U 盘、移动硬盘、或者网络，将它拷贝到您的任何一台其他电脑上。</li>
+</ul>
+</li>
+<li>第二步：在您的另一台电脑上，加载并运行镜像<br>在您的另一台电脑上，您 不需要 再下载我们的 Gitee 仓库，也 不需要 再运行 build.sh 脚本。您只需要：<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">docker load -<span class="hljs-selector-tag">i</span> nmrtc_docker<span class="hljs-selector-class">.tar</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>-i 参数代表“输入 (input)”。</li>
+</ul>
+</li>
+<li>运行容器 ：执行以下命令，用这个刚刚加载的镜像，来启动一个和您当前电脑上 一模一样 的 AppRTC 服务器容器。<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">docker</span> run -d -p <span class="hljs-number">443</span>:<span class="hljs-number">443</span> -p <span class="hljs-number">8089</span>:<span class="hljs-number">8089</span> --name apprtc-server nmrtc_docker:latest<br></code></pre></td></tr></table></figure>
+<ul>
+<li>-d 代表在后台运行。</li>
+<li>-p 代表端口映射。</li>
+<li>–name 给容器命名，方便管理。</li>
+</ul>
+</li>
+<li>拷贝并信任证书 ：为了让新电脑上的客户端能够连接，我们还需要从刚刚启动的容器中，把证书拷贝出来。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">docker <span class="hljs-built_in">cp</span> apprtc-server:/cert/cert.crt .<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这个命令执行后，您会在当前目录下，看到一个 cert.crt 文件。</li>
+<li>请您像之前一样，在您的新电脑上，将这个证书添加到“钥匙串访问”中，并设置为“始终信任”。</li>
+</ul>
+</li>
+</ol>
+<p>至此，所有步骤都已完成！</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/webrtc/" class="print-no-link">#webrtc</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>webrtc 源码获取&amp;编译&amp;运行</div>
+      <div>http://example.com/2026/04/22/webrtc-源码获取-编译-运行/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月22日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/21/hello-world/" title="Hello World">
+                        <span class="hidden-mobile">Hello World</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
