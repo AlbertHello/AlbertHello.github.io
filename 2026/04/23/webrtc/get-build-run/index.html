@@ -19,43 +19,45 @@
   <meta name="author" content="fengcheng">
   <meta name="keywords" content="博客，技术，生活，分享">
   
-    <meta name="description" content="webrtc下载+编译+运行本机环境本机为Mac M2 os14.4版本，iphone12mini-iOS16.4，vpn 下载首先python2 和 python3 都得安装。去官网下载安装包。  macos 自带Python3，默认安装在 &#x2F;usr&#x2F;bin&#x2F;pyhon3，手动下载的Python2安装包，最终会把Python2安装在 &#x2F;usr&#x2F;local&#x2F;bin&#x2F;python  下载depot_">
+    <meta name="description" content="webrtc下载+编译+运行本机环境本机为Mac M2 os14.4版本，iphone12mini-iOS16.4，vpn 下载首先python2 和 python3 都得安装。去官网下载安装包。  macos 自带Python3，默认安装在 &#x2F;usr&#x2F;bin&#x2F;pyhon3，手动下载的Python2安装包，最终会把Python2安装在 &#x2F;usr&#x2F;local&#x2F;bin&#x2F;python     下载dep">
 <meta property="og:type" content="article">
-<meta property="og:title" content="webrtc 源码获取&amp;编译&amp;运行">
-<meta property="og:url" content="http://example.com/2026/04/22/webrtc-%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96-%E7%BC%96%E8%AF%91-%E8%BF%90%E8%A1%8C/index.html">
+<meta property="og:title" content="webrtc最佳实践">
+<meta property="og:url" content="http://example.com/2026/04/23/webrtc/get-build-run/index.html">
 <meta property="og:site_name" content="我的博客">
-<meta property="og:description" content="webrtc下载+编译+运行本机环境本机为Mac M2 os14.4版本，iphone12mini-iOS16.4，vpn 下载首先python2 和 python3 都得安装。去官网下载安装包。  macos 自带Python3，默认安装在 &#x2F;usr&#x2F;bin&#x2F;pyhon3，手动下载的Python2安装包，最终会把Python2安装在 &#x2F;usr&#x2F;local&#x2F;bin&#x2F;python  下载depot_">
+<meta property="og:description" content="webrtc下载+编译+运行本机环境本机为Mac M2 os14.4版本，iphone12mini-iOS16.4，vpn 下载首先python2 和 python3 都得安装。去官网下载安装包。  macos 自带Python3，默认安装在 &#x2F;usr&#x2F;bin&#x2F;pyhon3，手动下载的Python2安装包，最终会把Python2安装在 &#x2F;usr&#x2F;local&#x2F;bin&#x2F;python     下载dep">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/webrtc-%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96-%E7%BC%96%E8%AF%91-%E8%BF%90%E8%A1%8C/python.jpg">
-<meta property="og:image" content="http://example.com/media/17322828630572.jpg">
-<meta property="og:image" content="http://example.com/media/16851723261025.jpg">
-<meta property="og:image" content="http://example.com/media/16851725466270.jpg">
-<meta property="og:image" content="http://example.com/media/Snipaste_2023-05-06_19-22-12.png">
-<meta property="og:image" content="http://example.com/media/16835493353458.jpg">
-<meta property="og:image" content="http://example.com/media/16835497385042.jpg">
-<meta property="og:image" content="http://example.com/media/Snipaste_2023-05-08_20-39-41.png">
-<meta property="og:image" content="http://example.com/media/16835498819109.jpg">
-<meta property="og:image" content="http://example.com/media/16835501057880.jpg">
-<meta property="og:image" content="http://example.com/media/16835504281158.jpg">
-<meta property="og:image" content="http://example.com/media/16835504017117.jpg">
-<meta property="og:image" content="http://example.com/media/16835518922019.jpg">
-<meta property="og:image" content="http://example.com/media/16835525892884.jpg">
-<meta property="og:image" content="http://example.com/media/16835527741147.jpg">
-<meta property="og:image" content="http://example.com/media/17100816604221.jpg">
-<meta property="og:image" content="http://example.com/media/16835546228125.jpg">
-<meta property="og:image" content="http://example.com/media/16835548315996.jpg">
-<meta property="og:image" content="http://example.com/media/16836211770351.jpg">
-<meta property="og:image" content="http://example.com/media/17554320141661.jpg">
-<meta property="article:published_time" content="2026-04-22T06:42:23.000Z">
-<meta property="article:modified_time" content="2026-04-22T06:48:57.190Z">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/17322799424016.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/17322828630572.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16851723261025.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16851725466270.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/Snipaste_2023-05-06_19-22-12.png">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835493353458.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835497385042.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/Snipaste_2023-05-08_20-39-41.png">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835498819109.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835501057880.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835504281158.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835504017117.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835518922019.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835525892884.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835527741147.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/17100816604221.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835546228125.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16835548315996.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/16836211770351.jpg">
+<meta property="og:image" content="http://example.com/2026/04/23/webrtc/get-build-run/17554320141661.jpg">
+<meta property="article:published_time" content="2026-04-23T09:30:14.000Z">
+<meta property="article:modified_time" content="2026-04-23T09:56:32.343Z">
 <meta property="article:author" content="fengcheng">
-<meta property="article:tag" content="webrtc">
+<meta property="article:tag" content="博客，技术，生活，分享">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://example.com/webrtc-%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96-%E7%BC%96%E8%AF%91-%E8%BF%90%E8%A1%8C/python.jpg">
+<meta name="twitter:image" content="http://example.com/2026/04/23/webrtc/get-build-run/17322799424016.jpg">
   
   
+    <meta name="referrer" content="no-referrer-when-downgrade">
   
-  <title>webrtc 源码获取&amp;编译&amp;运行 - 我的博客</title>
+  
+  <title>webrtc最佳实践 - 我的博客</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -272,7 +274,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="webrtc 源码获取&amp;编译&amp;运行"></span>
+            <span id="subtitle" data-typed-text="webrtc最佳实践"></span>
           
         </div>
 
@@ -283,8 +285,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2026-04-22 14:42" pubdate>
-          2026年4月22日 下午
+        <time datetime="2026-04-23 17:30" pubdate>
+          2026年4月23日 下午
         </time>
       </span>
     
@@ -301,17 +303,17 @@
     
 
     
-      <span class="post-meta mr-2">
-        <i class="iconfont icon-clock-fill"></i>
-        
-        
-        
-          119 分钟
-        
-      </span>
-    
 
     
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
     
   </div>
 
@@ -345,7 +347,17 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">webrtc 源码获取&amp;编译&amp;运行</h1>
+            <h1 id="seo-header">webrtc最佳实践</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-04-23T17:56:32+08:00
+                  
+                  
+
+                
+              </p>
             
             
               <div class="markdown-body">
@@ -353,8 +365,11 @@
                 <h2 id="webrtc下载-编译-运行"><a href="#webrtc下载-编译-运行" class="headerlink" title="webrtc下载+编译+运行"></a>webrtc下载+编译+运行</h2><p>本机环境<br>本机为Mac M2 os14.4版本，iphone12mini-iOS16.4，vpn</p>
 <h3 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h3><p>首先python2 和 python3 都得安装。去<a target="_blank" rel="noopener" href="https://www.python.org/downloads/macos/">官网下载</a>安装包。</p>
 <ul>
-<li><p>macos 自带Python3，默认安装在 <code>/usr/bin/pyhon3</code>，手动下载的Python2安装包，最终会把Python2安装在 <code>/usr/local/bin/python</code><br><img src="/./webrtc-%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96-%E7%BC%96%E8%AF%91-%E8%BF%90%E8%A1%8C/python.jpg" srcset="/img/loading.gif" lazyload alt="Python2 和 Python3 安装目录"></p>
-</li>
+<li>macos 自带Python3，默认安装在 <code>/usr/bin/pyhon3</code>，手动下载的Python2安装包，最终会把Python2安装在 <code>/usr/local/bin/python</code></li>
+</ul>
+<img src="/2026/04/23/webrtc/get-build-run/17322799424016.jpg" srcset="/img/loading.gif" lazyload class="" title="Python2 和 Python3 安装目录">
+
+<ul>
 <li><p>下载depot_tools</p>
 <ul>
 <li><code>git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git</code></li>
@@ -379,24 +394,29 @@
 </li>
 <li><p>碰到编译失败的情况可现在官网搜一下<a target="_blank" rel="noopener" href="https://issues.chromium.org/issues?q=">官网搜issue</a></p>
 </li>
-<li><p>webrtc 从 m79 版本之后不再以此种形式命名，m79 最后一笔提交已经是五年前了：2019 年 11 月。<a target="_blank" rel="noopener" href="https://webrtc.googlesource.com/src.git/+log/refs/branch-heads/m79">M79</a>。我用的是[6261]即 M122 版本：2024 年 2 月<br> <img src="/media/17322828630572.jpg" srcset="/img/loading.gif" lazyload alt="webrtc 版本"></p>
+<li><p>webrtc 从 m79 版本之后不再以此种形式命名，m79 最后一笔提交已经是五年前了：2019 年 11 月。<a target="_blank" rel="noopener" href="https://webrtc.googlesource.com/src.git/+log/refs/branch-heads/m79">M79</a>。我用的是[6261]即 M122 版本：2024 年 2 月</p>
 </li>
-<li><p>查看可用版本分支 <code>git branch -r</code></p>
-</li>
-<li><p>切换到某个分支，比如m79分支 <code>git checkout branch-heads/m79</code> 再 <code>gclient sync -D</code></p>
-</li>
-<li><p>或者强制切换到指定commit（b484ec0082948ae086c2ba4142b4d2bf8bc4dd4b是m79最后一次提交的commit id）<br><code>gclient sync -r b484ec0082948ae086c2ba4142b4d2bf8bc4dd4b --force</code></p>
-</li>
+</ul>
+<img src="/2026/04/23/webrtc/get-build-run/17322828630572.jpg" srcset="/img/loading.gif" lazyload class="" title="webrtc版本">
+
+<ul>
+<li>查看可用版本分支 <code>git branch -r</code></li>
+<li>切换到某个分支，比如m79分支 <code>git checkout branch-heads/m79</code> 再 <code>gclient sync -D</code></li>
+<li>或者强制切换到指定commit（b484ec0082948ae086c2ba4142b4d2bf8bc4dd4b是m79最后一次提交的commit id）<br><code>gclient sync -r b484ec0082948ae086c2ba4142b4d2bf8bc4dd4b --force</code></li>
 </ul>
 <hr>
 <h4 id="执行-fetch-–nohooks-webrtc-ios可能出现的错误"><a href="#执行-fetch-–nohooks-webrtc-ios可能出现的错误" class="headerlink" title="执行 fetch –nohooks webrtc_ios可能出现的错误"></a>执行 fetch –nohooks webrtc_ios可能出现的错误</h4><ul>
-<li>.cipd_bin&#x2F;vpython3: No such file or directory<br><img src="/media/16851723261025.jpg" srcset="/img/loading.gif" lazyload alt=".cipd_bin&#x2F;vpython3: No such file or directory"><br>是代理的原因，终端执行如下命令：</li>
+<li>.cipd_bin&#x2F;vpython3: No such file or directory</li>
+</ul>
+<img src="/2026/04/23/webrtc/get-build-run/16851723261025.jpg" srcset="/img/loading.gif" lazyload class="" title=".cipd_bin&#x2F;vpython3: No such file or directory">
+<p>是代理的原因，终端执行如下命令：</p>
+<ul>
 <li>export http_proxy&#x3D;”<a target="_blank" rel="noopener" href="http://127.0.0.1:7890/">http://127.0.0.1:7890</a>“</li>
 <li>export https_proxy&#x3D;”<a target="_blank" rel="noopener" href="http://127.0.0.1:7890/">http://127.0.0.1:7890</a>“<ul>
 <li>其中端口就是你vpn的端口，打开你vpn的设置去找端口</li>
-<li>比如这样<br>  <img src="/media/16851725466270.jpg" srcset="/img/loading.gif" lazyload alt="vpn 设置"></li>
+<li>比如这样</li>
 </ul>
-</li>
+  <img src="/2026/04/23/webrtc/get-build-run/16851725466270.jpg" srcset="/img/loading.gif" lazyload class="" title="vpn 设置"></li>
 <li>查看设置的代理<ul>
 <li>echo $http_proxy</li>
 </ul>
@@ -408,19 +428,34 @@
 </li>
 </ul>
 <hr>
-<h4 id="执行gclient-sync时可能出现的错误："><a href="#执行gclient-sync时可能出现的错误：" class="headerlink" title="执行gclient sync时可能出现的错误："></a>执行gclient sync时可能出现的错误：</h4><p><img src="/media/Snipaste_2023-05-06_19-22-12.png" srcset="/img/loading.gif" lazyload alt="update.py脚本更新clang失败"></p>
-<p>把update.py脚本用PyCharm IDE打开跑一下，发现报错如下：<br><img src="/media/16835493353458.jpg" srcset="/img/loading.gif" lazyload alt="python请求https地址失败"></p>
+<h4 id="执行gclient-sync时可能出现的错误："><a href="#执行gclient-sync时可能出现的错误：" class="headerlink" title="执行gclient sync时可能出现的错误："></a>执行gclient sync时可能出现的错误：</h4><img src="/2026/04/23/webrtc/get-build-run/Snipaste_2023-05-06_19-22-12.png" srcset="/img/loading.gif" lazyload class="" title="update.py脚本更新clang失败">
+
+<p>把update.py脚本用PyCharm IDE打开跑一下，发现报错如下：</p>
+<img src="/2026/04/23/webrtc/get-build-run/16835493353458.jpg" srcset="/img/loading.gif" lazyload class="" title="python请求https地址失败">
+
+
 <hr>
 <p>使用如下命令可以解决</p>
 <ul>
 <li>python3 -m pip install certifi</li>
 <li>再打开spot light输入Install Certificates.command然后启动</li>
-<li><img src="/media/16835497385042.jpg" srcset="/img/loading.gif" lazyload alt="Install Certificates.command"><br>启动的是一个进程，加载完后是这样：<br><img src="/media/Snipaste_2023-05-08_20-39-41.png" srcset="/img/loading.gif" lazyload alt="Install Certificates.command加载完成"></li>
+<li><img src="/2026/04/23/webrtc/get-build-run/16835497385042.jpg" srcset="/img/loading.gif" lazyload class="" title="Install Certificates.command">
+启动的是一个进程，加载完后是这样：</li>
 </ul>
-<p>这个命令就会更新ssl 的证书到一个目录下：<br><img src="/media/16835498819109.jpg" srcset="/img/loading.gif" lazyload></p>
+<img src="/2026/04/23/webrtc/get-build-run/Snipaste_2023-05-08_20-39-41.png" srcset="/img/loading.gif" lazyload class="" title="Install Certificates.command加载完成">
+
+
+<p>这个命令就会更新ssl 的证书到一个目录下：</p>
+<img src="/2026/04/23/webrtc/get-build-run/16835498819109.jpg" srcset="/img/loading.gif" lazyload class="">
+
 <p>&#x2F;Library&#x2F;Frameworks&#x2F;Python.framework&#x2F;Versions&#x2F;3.11&#x2F;etc&#x2F;openssl 在执行Install Certificates.command命令前，该目录下是空的。执行命令后就会看到一个cert.pem</p>
-<p>解决后再继续gclient sync就可以跑完了，跑完后的样子是这样：<br><img src="/media/16835501057880.jpg" srcset="/img/loading.gif" lazyload alt="gclient sync完成"></p>
-<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><h4 id="mac平台的支持h264的debug版本"><a href="#mac平台的支持h264的debug版本" class="headerlink" title="mac平台的支持h264的debug版本"></a>mac平台的支持h264的debug版本</h4><p>下载完后的目录结构是这样：<br><img src="/media/16835504281158.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>解决后再继续gclient sync就可以跑完了，跑完后的样子是这样：</p>
+<img src="/2026/04/23/webrtc/get-build-run/16835501057880.jpg" srcset="/img/loading.gif" lazyload class="" title="gclient sync完成">
+
+
+<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><h4 id="mac平台的支持h264的debug版本"><a href="#mac平台的支持h264的debug版本" class="headerlink" title="mac平台的支持h264的debug版本"></a>mac平台的支持h264的debug版本</h4><p>下载完后的目录结构是这样：</p>
+<img src="/2026/04/23/webrtc/get-build-run/16835504281158.jpg" srcset="/img/loading.gif" lazyload class="">
+
 <p>开始执行编译命令：</p>
 <ul>
 <li><p>cd src</p>
@@ -429,23 +464,30 @@
 <ul>
 <li>gn gen out&#x2F;mac-debug –args&#x3D;’target_os&#x3D;”mac” target_cpu&#x3D;”x64” is_debug&#x3D;true use_rtti&#x3D;true is_component_build&#x3D;false rtc_use_h264&#x3D;true rtc_include_tests&#x3D;false’ –ide&#x3D;xcode</li>
 <li>其中out&#x2F;mac-debug表示会在src&#x2F;out目录下创建一个mac-debug目录</li>
-<li>执行完成后的样子：<br>  <img src="/media/16835504017117.jpg" srcset="/img/loading.gif" lazyload></li>
+<li>执行完成后的样子：</li>
 </ul>
+  <img src="/2026/04/23/webrtc/get-build-run/16835504017117.jpg" srcset="/img/loading.gif" lazyload class="">
 </li>
 <li><p>生成一个可以运行调试的工程</p>
 <ul>
 <li>ninja -C out&#x2F;mac-debug</li>
-<li>该命令执行如下所示<br>  <img src="/media/16835518922019.jpg" srcset="/img/loading.gif" lazyload alt="ninja -C out&#x2F;mac-debug"></li>
-<li>执行完成如下所示：<br>  <img src="/media/16835525892884.jpg" srcset="/img/loading.gif" lazyload alt="ninja -C out&#x2F;mac-debug执行完成"><br>  目录如下<br>  <img src="/media/16835527741147.jpg" srcset="/img/loading.gif" lazyload><br>其中AppRTCMobile.app可以直接打开，也可以打开all工程调试代码了。</li>
+<li>该命令执行如下所示</li>
 </ul>
+  <img src="/2026/04/23/webrtc/get-build-run/16835518922019.jpg" srcset="/img/loading.gif" lazyload class="" title="ninja -C out&#x2F;mac-debug">
+<ul>
+<li>执行完成如下所示：</li>
+</ul>
+  <img src="/2026/04/23/webrtc/get-build-run/16835525892884.jpg" srcset="/img/loading.gif" lazyload class="" title="ninja -C out&#x2F;mac-debug执行完成">
+<p>  目录如下<br>  <img src="/2026/04/23/webrtc/get-build-run/16835527741147.jpg" srcset="/img/loading.gif" lazyload class=""><br>其中AppRTCMobile.app可以直接打开，也可以打开all工程调试代码了。</p>
 </li>
 </ul>
 <h5 id="运行-Mac-的-AppRTCMobile-工程"><a href="#运行-Mac-的-AppRTCMobile-工程" class="headerlink" title="运行 Mac 的 AppRTCMobile 工程"></a>运行 Mac 的 AppRTCMobile 工程</h5><ul>
 <li><p>首先需要给该demo添加plist文件:</p>
 <ul>
 <li>plist文件目录在webrtc&#x2F;src&#x2F;examples&#x2F;objc&#x2F;AppRTCMobile&#x2F;mac&#x2F;Info.plist</li>
-<li>在build settings中搜索info.plist，默认显示info.plist目录时空的，把上面的目录填上，如下图<br>   <img src="/media/17100816604221.jpg" srcset="/img/loading.gif" lazyload></li>
+<li>在build settings中搜索info.plist，默认显示info.plist目录时空的，把上面的目录填上，如下图</li>
 </ul>
+   <img src="/2026/04/23/webrtc/get-build-run/17100816604221.jpg" srcset="/img/loading.gif" lazyload class="">
 </li>
 <li><p>修改info.plist的bundle ID</p>
 <ul>
@@ -458,17 +500,19 @@
 <blockquote>
 <p>gn gen out&#x2F;ios-release –args&#x3D;’target_os&#x3D;”ios” target_cpu&#x3D;”arm64” is_debug&#x3D;false use_rtti&#x3D;true is_component_build&#x3D;false ios_enable_code_signing&#x3D;false proprietary_codecs&#x3D;false rtc_use_h264&#x3D;false rtc_include_tests&#x3D;false’ –ide&#x3D;xcode</p>
 </blockquote>
-<p><img src="/media/16835546228125.jpg" srcset="/img/loading.gif" lazyload></p>
+<img src="/2026/04/23/webrtc/get-build-run/16835546228125.jpg" srcset="/img/loading.gif" lazyload class="">
+
 <blockquote>
 <p>ninja -C out&#x2F;ios-release</p>
 </blockquote>
-<p><img src="/media/16835548315996.jpg" srcset="/img/loading.gif" lazyload></p>
+<img src="/2026/04/23/webrtc/get-build-run/16835548315996.jpg" srcset="/img/loading.gif" lazyload class="">
+
 <hr>
 <h4 id="ios平台的支持h264的release-code-signing版本"><a href="#ios平台的支持h264的release-code-signing版本" class="headerlink" title="ios平台的支持h264的release code signing版本"></a>ios平台的支持h264的release code signing版本</h4><ul>
 <li>获取本机Xcode带有的所有可用的开发者账号<ul>
-<li>security find-identity -v -p codesigning 打印如下：<br>  <img src="/media/16836211770351.jpg" srcset="/img/loading.gif" lazyload></li>
+<li>security find-identity -v -p codesigning 打印如下：</li>
 </ul>
-</li>
+  <img src="/2026/04/23/webrtc/get-build-run/16836211770351.jpg" srcset="/img/loading.gif" lazyload class=""></li>
 <li><code>gn gen out/ios-release-sign --args=&#39;target_os=&quot;ios&quot; target_cpu=&quot;arm64&quot; is_debug=false use_rtti=true is_component_build=false ios_code_signing_identity_description=&quot;2417xxxx&quot; proprietary_codecs=false rtc_use_h264=true rtc_include_tests=false&#39; --ide=xcode</code></li>
 <li>ios_code_signing_identity_description 用来指定用哪个开发者账号。只能是开发者账号全称字符串的子串。</li>
 </ul>
@@ -530,7 +574,9 @@
 </ul>
 </li>
 </ul>
-<h2 id="部署AppRTC-Server"><a href="#部署AppRTC-Server" class="headerlink" title="部署AppRTC Server"></a>部署AppRTC Server</h2><p>下载的源码里面可以看到有很多appr.tc的域名<br><img src="/media/17554320141661.jpg" srcset="/img/loading.gif" lazyload></p>
+<h2 id="部署AppRTC-Server"><a href="#部署AppRTC-Server" class="headerlink" title="部署AppRTC Server"></a>部署AppRTC Server</h2><p>下载的源码里面可以看到有很多appr.tc的域名</p>
+<img src="/2026/04/23/webrtc/get-build-run/17554320141661.jpg" srcset="/img/loading.gif" lazyload class="">
+
 <p>这是demo与appr.tc的后端进行交互，请求stun&#x2F;turn服务地址，还有加入房间和离开房间等一些房间逻辑。由于官方不再维护appr.tc官网，推荐使用docker本地部署，就可以进行本地调试了。</p>
 <h3 id="构建-apprtc-server-的-docker-镜像"><a href="#构建-apprtc-server-的-docker-镜像" class="headerlink" title="构建 apprtc server 的 docker 镜像"></a>构建 apprtc server 的 docker 镜像</h3><ol>
 <li>仓库地址：<code>https://gitee.com/damn_code/apprtc-server.git</code> 这是 fork 的谷歌apprtc server仓库。我的仓库已经对仓库中的部分源代码文件进行了修改简化。</li>
@@ -589,13 +635,27 @@
             <div>
               <div class="post-metas my-3">
   
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
   
-    <div class="post-meta">
-      <i class="iconfont icon-tags"></i>
-      
-        <a href="/tags/webrtc/" class="print-no-link">#webrtc</a>
-      
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
     </div>
+  
   
 </div>
 
@@ -605,8 +665,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>webrtc 源码获取&amp;编译&amp;运行</div>
-      <div>http://example.com/2026/04/22/webrtc-源码获取-编译-运行/</div>
+      <div>webrtc最佳实践</div>
+      <div>http://example.com/2026/04/23/webrtc/get-build-run/</div>
     </div>
     <div class="license-meta">
       
@@ -618,9 +678,14 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2026年4月22日</div>
+          <div>2026年4月23日</div>
         </div>
       
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年4月23日</div>
+        </div>
       
       
         <div class="license-meta-item">
@@ -653,12 +718,6 @@
                   </article>
                   <article class="post-next col-6">
                     
-                    
-                      <a href="/2026/04/21/hello-world/" title="Hello World">
-                        <span class="hidden-mobile">Hello World</span>
-                        <span class="visible-mobile">下一篇</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
                     
                   </article>
                 </div>
@@ -712,6 +771,12 @@
 
 
   
+
+
+  
+  
+
+
 
 
 
@@ -810,6 +875,33 @@
   
 
 
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
 
 
   
@@ -969,7 +1061,52 @@
 
   <script>Fluid.plugins.imageCaption();</script>
 
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
   <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
 
 
 
