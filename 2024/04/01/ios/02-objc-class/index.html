@@ -1,0 +1,933 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="instance对象、class对象、meta-class元类对象1、 instance 实例对象 instance对象也就是实例对象，通过alloc创建。 instance对象在内存中存储着信息包括： isa指针 成员变量    2、class 类对象123456789101112131415161718192021&#x2F;&#x2F;实例对象NSObject *object1 &#x3D; [[NSObject all">
+<meta property="og:type" content="article">
+<meta property="og:title" content="instance、class 与 meta-class">
+<meta property="og:url" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="instance对象、class对象、meta-class元类对象1、 instance 实例对象 instance对象也就是实例对象，通过alloc创建。 instance对象在内存中存储着信息包括： isa指针 成员变量    2、class 类对象123456789101112131415161718192021&#x2F;&#x2F;实例对象NSObject *object1 &#x3D; [[NSObject all">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/01.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/02.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/03.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/07.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/08.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/04.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/09.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/05.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/10.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/06.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/12.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/11.png">
+<meta property="article:published_time" content="2024-04-01T14:53:05.000Z">
+<meta property="article:modified_time" content="2026-05-20T13:10:39.238Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="Objective-C">
+<meta property="article:tag" content="Runtime">
+<meta property="article:tag" content="iOS">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://alberthello.github.io/2024/04/01/ios/02-objc-class/01.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>instance、class 与 meta-class - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="instance、class 与 meta-class"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-04-01 22:53" pubdate>
+          2024年4月1日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.1k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">instance、class 与 meta-class</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-05-20T21:10:39+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="instance对象、class对象、meta-class元类对象"><a href="#instance对象、class对象、meta-class元类对象" class="headerlink" title="instance对象、class对象、meta-class元类对象"></a>instance对象、class对象、meta-class元类对象</h2><h3 id="1、-instance-实例对象"><a href="#1、-instance-实例对象" class="headerlink" title="1、 instance 实例对象"></a>1、 instance 实例对象</h3><ul>
+<li>instance对象也就是实例对象，通过alloc创建。</li>
+<li>instance对象在内存中存储着信息包括：<ul>
+<li>isa指针</li>
+<li>成员变量</li>
+</ul>
+</li>
+</ul>
+<h3 id="2、class-类对象"><a href="#2、class-类对象" class="headerlink" title="2、class 类对象"></a>2、class 类对象</h3><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs perl">//实例对象<br>NSObject *object1 = [[NSObject alloc] init]; <br>NSObject *object2 = [[NSObject alloc] init];<br><span class="hljs-regexp">//</span>类对象<br>Class objectClass1 = [object1 <span class="hljs-class"><span class="hljs-keyword">class</span>]</span>;<br>Class objectClass2 = [object2 <span class="hljs-class"><span class="hljs-keyword">class</span>]</span>;<br>Class objectClass3 = object_getClass(object1);<br>Class objectClass4 = object_getClass(object2);<br>Class objectClass5 = [NSObject <span class="hljs-class"><span class="hljs-keyword">class</span>]</span>;<br><br>//打印实例对象地址<br>NSLog(@<span class="hljs-string">&quot;<span class="hljs-variable">%p</span> <span class="hljs-variable">%p</span>&quot;</span>,object1,object2);<span class="hljs-regexp">//</span> <span class="hljs-number">0x10044a440</span> <span class="hljs-number">0x10044a250</span><br>//打印类对象地址<br>NSLog(@<span class="hljs-string">&quot;\n<span class="hljs-variable">%p</span>\n <span class="hljs-variable">%p</span>\n <span class="hljs-variable">%p</span>\n <span class="hljs-variable">%p</span>\n <span class="hljs-variable">%p</span>&quot;</span>,objectClass1,objectClass2,objectClass3,objectClass4,<br>              objectClass5);<br><span class="hljs-regexp">//</span><span class="hljs-number">0x7fff92c75118</span><br>//<span class="hljs-number">0x7fff92c75118</span><br>//<span class="hljs-number">0x7fff92c75118</span><br>//<span class="hljs-number">0x7fff92c75118</span><br>//<span class="hljs-number">0x7fff92c75118</span><br><br></code></pre></td></tr></table></figure>
+<ul>
+<li>objectClass1 ~ objectClass5都是NSObject的class对象（类对象）</li>
+<li>它们是同一个对象。<strong>每个类在内存中有且只有一个class对象</strong></li>
+<li>class对象在内存中存储的信息主要包括:<ul>
+<li>isa指针</li>
+<li>superclass指针</li>
+<li>类的属性信息（@property）、类的对象方法信息（instance method）</li>
+<li>类的协议信息（protocol）、类的成员变量信息（ivar)等</li>
+</ul>
+</li>
+</ul>
+<img src="/2024/04/01/ios/02-objc-class/01.png" srcset="/img/loading.gif" lazyload class="" width="01">
+<h3 id="3、meta-class-元类对象"><a href="#3、meta-class-元类对象" class="headerlink" title="3、meta-class 元类对象"></a>3、meta-class 元类对象</h3><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl">// meta-<span class="hljs-class"><span class="hljs-keyword">class</span>对象，元类对象</span><br><span class="hljs-class">// 将类对象当做参数传入，获得元类对象</span><br><span class="hljs-class"><span class="hljs-title">Class</span> <span class="hljs-title">objectMetaClass</span> = <span class="hljs-title">object_getClass</span>(<span class="hljs-title">objectClass5</span>)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>objectMetaClass是NSObject的meta-class对象（元类对象）</li>
+<li><strong>每个类在内存中有且只有一个meta-class对象</strong></li>
+<li>meta-class对象和class对象的内存结构是一样的，但是用途不一样，在内存中存储的信息主要包括：<ul>
+<li>isa指针</li>
+<li>superclass指针</li>
+<li>类的类方法信息（class method）</li>
+</ul>
+</li>
+</ul>
+<img src="/2024/04/01/ios/02-objc-class/02.png" srcset="/img/loading.gif" lazyload class="" width="02">
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-comment">//这个方法可以判断某个对象是不是元类对象</span><br><span class="hljs-function"><span class="hljs-title">class_isMetaClass</span><span class="hljs-params">()</span></span> <br></code></pre></td></tr></table></figure>
+<h3 id="4、isa-指针"><a href="#4、isa-指针" class="headerlink" title="4、isa 指针"></a>4、isa 指针</h3><img src="/2024/04/01/ios/02-objc-class/03.png" srcset="/img/loading.gif" lazyload class="" width="03">
+<ul>
+<li>instance的isa指向class<ul>
+<li>当调用对象方法时，通过instance的isa找到class，最后找到对象方法的实现进行调用</li>
+</ul>
+</li>
+<li>class的isa指向meta-class<ul>
+<li>当调用类方法时，通过class的isa找到meta-class，最后找到类方法的实现进行调用</li>
+</ul>
+</li>
+</ul>
+<h4 id="4-1、isa知识补充"><a href="#4-1、isa知识补充" class="headerlink" title="4.1、isa知识补充"></a>4.1、isa知识补充</h4><img src="/2024/04/01/ios/02-objc-class/07.png" srcset="/img/loading.gif" lazyload class="" width="07">
+<p>前面讲过了实例对象的isa指向其类对象，在arm64之后实例对象的isa并不是直接指向类对象了，查询源码得知需要进行一次位运算才能得到：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta"># <span class="hljs-keyword">if</span> __arm64__</span><br><span class="hljs-meta">#   <span class="hljs-keyword">define</span> ISA_MASK        0x0000000ffffffff8ULL</span><br><span class="hljs-meta"># <span class="hljs-keyword">elif</span> __x86_64__</span><br><span class="hljs-meta">#   <span class="hljs-keyword">define</span> ISA_MASK        0x00007ffffffffff8ULL</span><br><span class="hljs-meta"># <span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<p>如图所示:</p>
+<img src="/2024/04/01/ios/02-objc-class/08.png" srcset="/img/loading.gif" lazyload class="" width="08">
+<h3 id="5、class的superclass指针"><a href="#5、class的superclass指针" class="headerlink" title="5、class的superclass指针"></a>5、class的superclass指针</h3><img src="/2024/04/01/ios/02-objc-class/04.png" srcset="/img/loading.gif" lazyload class="" width="04">
+<ul>
+<li>当Student的instance对象要调用Person的对象方法时，会先通过isa找到Student的class，然后通过superclass找到Person的class，最后找到对象方法的实现进行调用</li>
+</ul>
+<h4 id="5-1、类对象的superclass知识补充"><a href="#5-1、类对象的superclass知识补充" class="headerlink" title="5.1、类对象的superclass知识补充"></a>5.1、类对象的superclass知识补充</h4><ul>
+<li>isa指针需要进行一次位运算才能获取到其真正指向的地址，但类对象的superclass指针不需要进行位运算，是直接指向其父类的类对象的。</li>
+<li>下面验证：</li>
+</ul>
+<img src="/2024/04/01/ios/02-objc-class/09.png" srcset="/img/loading.gif" lazyload class="" width="09">
+<h3 id="6、-meta-class对象的superclass指针"><a href="#6、-meta-class对象的superclass指针" class="headerlink" title="6、 meta-class对象的superclass指针"></a>6、 meta-class对象的superclass指针</h3><img src="/2024/04/01/ios/02-objc-class/05.png" srcset="/img/loading.gif" lazyload class="" width="05">
+<ul>
+<li>当Student的class要调用Person的类方法时，会先通过isa找到Student的meta-class，然后通过superclass找到Person的meta-class，最后找到类方法的实现进行调用</li>
+</ul>
+<h4 id="6-1、元类对象的superclass知识补充"><a href="#6-1、元类对象的superclass知识补充" class="headerlink" title="6.1、元类对象的superclass知识补充"></a>6.1、元类对象的superclass知识补充</h4><ul>
+<li>isa指针需要进行一次位运算才能获取到其真正指向的地址，但元类对象的superclass指针不需要进行位运算，是直接指向其父类的元类对象的。<br>如下：</li>
+</ul>
+<img src="/2024/04/01/ios/02-objc-class/10.png" srcset="/img/loading.gif" lazyload class="" width="10">
+<h3 id="7、isa-和-superclass的总结"><a href="#7、isa-和-superclass的总结" class="headerlink" title="7、isa 和 superclass的总结"></a>7、isa 和 superclass的总结</h3><img src="/2024/04/01/ios/02-objc-class/06.png" srcset="/img/loading.gif" lazyload class="" width="06">
+<ul>
+<li>instance的isa指向class</li>
+<li>class的isa指向meta-class</li>
+<li>meta-class的isa指向基类的meta-class</li>
+<li>class的superclass指向父类的class<ul>
+<li>如果没有父类，superclass指针为nil</li>
+</ul>
+</li>
+<li>meta-class的superclass指向父类的meta-class<ul>
+<li>基类的meta-class的superclass指向基类的class</li>
+</ul>
+</li>
+<li>instance调用对象方法的轨迹<ul>
+<li>isa找到class，方法不存在，就通过superclass找父类</li>
+</ul>
+</li>
+<li>class调用类方法的轨迹<ul>
+<li>isa找meta-class，方法不存在，就通过superclass找父类</li>
+</ul>
+</li>
+</ul>
+<h3 id="8、窥探-struct-objc-class-结构"><a href="#8、窥探-struct-objc-class-结构" class="headerlink" title="8、窥探 struct objc_class 结构"></a>8、窥探 struct objc_class 结构</h3><ul>
+<li><a target="_blank" rel="noopener" href="https://opensource.apple.com/tarballs/objc4/">跳转下载objc源码</a></li>
+<li>class、meta-class对象的本质结构都是struct objc_class</li>
+<li>在源码中查到以下源码，但这个已经被弃用了，目前OC语法已经是第四个版本了，下面的是objc2的版本</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">objc_class</span> &#123;<br>    Class _Nonnull isa  OBJC_ISA_AVAILABILITY;<br><br><span class="hljs-meta">#<span class="hljs-keyword">if</span> !__OBJC2__</span><br>    Class _Nullable super_class                              OBJC2_UNAVAILABLE;<br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> * _Nonnull name                               OBJC2_UNAVAILABLE;<br>    <span class="hljs-type">long</span> version                                             OBJC2_UNAVAILABLE;<br>    <span class="hljs-type">long</span> info                                                OBJC2_UNAVAILABLE;<br>    <span class="hljs-type">long</span> instance_size                                       OBJC2_UNAVAILABLE;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">objc_ivar_list</span> * _Nullable ivars                  OBJC2_UNAVAILABLE;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">objc_method_list</span> * _Nullable * _Nullable methodLists                    OBJC2_UNAVAILABLE;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">objc_cache</span> * _Nonnull cache                       OBJC2_UNAVAILABLE;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">objc_protocol_list</span> * _Nullable protocols          OBJC2_UNAVAILABLE;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><br>&#125; OBJC2_UNAVAILABLE;<br><span class="hljs-comment">/* Use `Class` instead of `struct objc_class *` */</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>所以objc4-723版本的struct objc_class如下所示：</li>
+</ul>
+<img src="/2024/04/01/ios/02-objc-class/12.png" srcset="/img/loading.gif" lazyload class="" width="12">
+<ul>
+<li>objc4的objc_class和objc2的已经大不一样了，方法缓存列表、方法列表、成员变量信息等数据已经分散在不同的结构体中，MJ老师已经将其抽离出来了。如下结构所示</li>
+</ul>
+<img src="/2024/04/01/ios/02-objc-class/11.png" srcset="/img/loading.gif" lazyload class="" width="11">
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/iOS/" class="category-chain-item">iOS</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/iOS/" class="print-no-link">#iOS</a>
+      
+        <a href="/tags/Objective-C/" class="print-no-link">#Objective-C</a>
+      
+        <a href="/tags/Runtime/" class="print-no-link">#Runtime</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>instance、class 与 meta-class</div>
+      <div>https://alberthello.github.io/2024/04/01/ios/02-objc-class/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年4月1日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/04/05/cmake/cmake-add-subdirectory/" title="CMake add_subdirectory 使用笔记">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">CMake add_subdirectory 使用笔记</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/04/01/ios/03-kvo/" title="KVO 原理">
+                        <span class="hidden-mobile">KVO 原理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

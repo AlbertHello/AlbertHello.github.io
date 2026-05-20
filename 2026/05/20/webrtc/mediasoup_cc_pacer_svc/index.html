@@ -1,0 +1,1222 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="深入 mediasoup 服务端下行拥塞控制：TWCC、GoogCC、Pacer 与 SVC 分层 在 WebRTC SFU 场景里，服务端既不是简单的 RTP 转发器，也不是完整的端到端编码发送端。它需要在不转码的前提下，根据每个下行接收端的网络状态，动态决定应该发送哪些 RTP 包、保留哪些 SVC&#x2F;Simulcast 层、何时降码率、何时恢复高层。 mediasoup 的设计很适合">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入 mediasoup 服务端下行拥塞控制">
+<meta property="og:url" content="https://alberthello.github.io/2026/05/20/webrtc/mediasoup_cc_pacer_svc/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="深入 mediasoup 服务端下行拥塞控制：TWCC、GoogCC、Pacer 与 SVC 分层 在 WebRTC SFU 场景里，服务端既不是简单的 RTP 转发器，也不是完整的端到端编码发送端。它需要在不转码的前提下，根据每个下行接收端的网络状态，动态决定应该发送哪些 RTP 包、保留哪些 SVC&#x2F;Simulcast 层、何时降码率、何时恢复高层。 mediasoup 的设计很适合">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-20T13:22:36.000Z">
+<meta property="article:modified_time" content="2026-05-20T13:37:56.133Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="博客，技术，生活，分享">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>深入 mediasoup 服务端下行拥塞控制 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="深入 mediasoup 服务端下行拥塞控制"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-05-20 21:22" pubdate>
+          2026年5月20日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          19k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">深入 mediasoup 服务端下行拥塞控制</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-05-20T21:37:56+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <p>深入 mediasoup 服务端下行拥塞控制：TWCC、GoogCC、Pacer 与 SVC 分层</p>
+<p>在 WebRTC SFU 场景里，服务端既不是简单的 RTP 转发器，也不是完整的端到端编码发送端。它需要在不转码的前提下，根据每个下行接收端的网络状态，动态决定应该发送哪些 RTP 包、保留哪些 SVC&#x2F;Simulcast 层、何时降码率、何时恢复高层。</p>
+<p>mediasoup 的设计很适合作为理解 SFU 下行抗弱网的参考样本：它把下行链路的拥塞估计交给 libwebrtc 的 GoogCC 子集处理，再把估计出来的 <code>availableBitrate</code> 转化为 Consumer 级别的 SVC&#x2F;Simulcast 分层选择。这个闭环的核心不是“看到丢包就降层”，而是 <strong>每个 WebRtcTransport 独立做 sender-side BWE，并用带宽预算驱动分层转发</strong>。</p>
+<p>本文从服务端下行角度拆解 mediasoup 的 CC、Pacer、BWE、SVC 分层链路。</p>
+<h2 id="1-总体结论"><a href="#1-总体结论" class="headerlink" title="1. 总体结论"></a>1. 总体结论</h2><p>mediasoup 的下行抗弱网可以概括为四层：</p>
+<ol>
+<li><strong>反馈输入层</strong>：客户端通过 RTCP Transport-CC、REMB、RR 等反馈下行接收状态。</li>
+<li><strong>BWE &#x2F; CC 计算层</strong>：mediasoup 内置改造过的 libwebrtc 子集，主要通过 <code>RtpTransportControllerSend</code> 与 <code>GoogCcNetworkController</code> 计算目标码率。</li>
+<li><strong>带宽分配层</strong>：mediasoup 将 libwebrtc 输出的 target rate 保存为 Transport 级别的 <code>availableBitrate</code>。</li>
+<li><strong>分层执行层</strong>：<code>Transport::DistributeAvailableOutgoingBitrate()</code> 将带宽预算分配给 Consumers，再由 SVC&#x2F;Simulcast Consumer 决定目标层并执行丢层。</li>
+</ol>
+<p>整体链路如下：</p>
+<pre><code class=" mermaid">flowchart TD
+    A[&quot;客户端接收 RTP&quot;] --&gt; B[&quot;RTCP Transport-CC / REMB / RR&quot;]
+    B --&gt; C[&quot;mediasoup WebRtcTransport&quot;]
+    C --&gt; D[&quot;TransportCongestionControlClient&quot;]
+    D --&gt; E[&quot;libwebrtc RtpTransportControllerSend&quot;]
+    E --&gt; F[&quot;GoogCcNetworkController&quot;]
+    F --&gt; G[&quot;TargetTransferRate&quot;]
+    G --&gt; H[&quot;availableBitrate&quot;]
+    H --&gt; I[&quot;DistributeAvailableOutgoingBitrate&quot;]
+    I --&gt; J[&quot;Consumer layer allocation&quot;]
+    J --&gt; K[&quot;SVC / Simulcast 目标层&quot;]
+    K --&gt; L[&quot;转发基础层或增强层 RTP&quot;]
+    L --&gt; A
+</code></pre>
+
+<p>这里最重要的设计是 <strong>per-Transport 隔离</strong>。每个下行 WebRtcTransport 都有自己的 TWCC sequence、sent history、feedback adapter、GoogCC controller 和 available bitrate。某个接收端弱网时，它的反馈只会影响自己的 Transport，不会直接污染其他 Transport 的估计结果。</p>
+<h2 id="2-mediasoup-的-BWE-核心来自哪里"><a href="#2-mediasoup-的-BWE-核心来自哪里" class="headerlink" title="2. mediasoup 的 BWE 核心来自哪里"></a>2. mediasoup 的 BWE 核心来自哪里</h2><p>mediasoup worker 自己负责 SFU 逻辑，例如 ICE、DTLS、SRTP、RTP&#x2F;RTCP、Producer、Consumer、Simulcast&#x2F;SVC 层级选择、NACK、RTX 等。但下行 transport congestion control &#x2F; bandwidth estimation 的核心计算借用了 libwebrtc 的一部分源码。</p>
+<p>mediasoup v3 仓库中有一个改造过的 libwebrtc 子集：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">worker/deps/libwebrtc/<br></code></pre></td></tr></table></figure>
+
+<p>这个子集不是运行时链接系统上的完整 libwebrtc，也不是不可见黑盒。它会在 worker 构建时一起编译并链接到 mediasoup worker 内部。可以把它理解为 mediasoup worker 内置的一组 libwebrtc 拥塞控制源码模块。</p>
+<p>常见的核心路径包括：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs text">worker/deps/libwebrtc/libwebrtc/call/rtp_transport_controller_send.cc<br>worker/deps/libwebrtc/libwebrtc/api/transport/goog_cc_factory.cc<br>worker/deps/libwebrtc/libwebrtc/modules/congestion_controller/goog_cc/goog_cc_network_control.cc<br>worker/deps/libwebrtc/libwebrtc/modules/congestion_controller/goog_cc/delay_based_bwe.cc<br>worker/deps/libwebrtc/libwebrtc/modules/congestion_controller/goog_cc/trendline_estimator.cc<br>worker/deps/libwebrtc/libwebrtc/modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator.cc<br>worker/deps/libwebrtc/libwebrtc/modules/congestion_controller/goog_cc/probe_bitrate_estimator.cc<br>worker/deps/libwebrtc/libwebrtc/modules/congestion_controller/goog_cc/probe_controller.cc<br>worker/deps/libwebrtc/libwebrtc/modules/bitrate_controller/send_side_bandwidth_estimation.cc<br>worker/deps/libwebrtc/libwebrtc/modules/bitrate_controller/loss_based_bandwidth_estimation.cc<br>worker/deps/libwebrtc/libwebrtc/modules/pacing/paced_sender.cc<br>worker/deps/libwebrtc/libwebrtc/modules/congestion_controller/rtp/transport_feedback_adapter.cc<br>worker/deps/libwebrtc/libwebrtc/modules/congestion_controller/rtp/send_time_history.cc<br></code></pre></td></tr></table></figure>
+
+<p>现代 upstream libwebrtc 的目录结构和算法细节已有变化，例如 <code>LossBasedBweV2</code> 等逻辑在新版本中更加复杂，但核心思想仍然一致：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">TWCC feedback<br>    -&gt; TransportFeedbackAdapter<br>    -&gt; GoogCcNetworkController<br>    -&gt; delay-based / loss-based / acked bitrate / probe<br>    -&gt; target transfer rate<br>    -&gt; SFU layer allocation<br></code></pre></td></tr></table></figure>
+
+<h2 id="3-下行方向：Client-与-Server-的命名容易误解"><a href="#3-下行方向：Client-与-Server-的命名容易误解" class="headerlink" title="3. 下行方向：Client 与 Server 的命名容易误解"></a>3. 下行方向：Client 与 Server 的命名容易误解</h2><p>mediasoup 内部有两个容易混淆的类：</p>
+<table>
+<thead>
+<tr>
+<th>类</th>
+<th>mediasoup 所处角色</th>
+<th>方向</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>TransportCongestionControlClient</code></td>
+<td>mediasoup 作为 RTP sender</td>
+<td>服务端到客户端下行</td>
+<td>接收客户端拥塞反馈，计算下行可用码率</td>
+</tr>
+<tr>
+<td><code>TransportCongestionControlServer</code></td>
+<td>mediasoup 作为 RTP receiver</td>
+<td>客户端到服务端上行</td>
+<td>接收上行 RTP，生成 TCC feedback 给发送端</td>
+</tr>
+</tbody></table>
+<p>如果分析“服务端如何根据某个拉流客户端的弱网情况降低下行码率”，重点应该看 <code>TransportCongestionControlClient</code>。这里的 “Client” 不是浏览器客户端，而是 libwebrtc congestion controller 的使用方。</p>
+<h2 id="4-下行-CC-主链路"><a href="#4-下行-CC-主链路" class="headerlink" title="4. 下行 CC 主链路"></a>4. 下行 CC 主链路</h2><p>当 WebRtcTransport 连通后，mediasoup 会初始化下行拥塞控制：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs text">Transport::Connected()<br>    -&gt; tccClient-&gt;TransportConnected()<br>        -&gt; InitializeController()<br>            -&gt; GoogCcNetworkControllerFactory<br>            -&gt; RtpTransportControllerSend<br>            -&gt; RegisterTargetTransferRateObserver(this)<br>            -&gt; ProbationGenerator<br>            -&gt; EnablePeriodicAlrProbing(true)<br>            -&gt; processTimer.Start(...)<br>        -&gt; rtpTransportControllerSend-&gt;OnNetworkAvailability(true)<br></code></pre></td></tr></table></figure>
+
+<p>关键点：</p>
+<ul>
+<li><code>GoogCcNetworkControllerFactory</code> 创建 GoogCC 控制器。</li>
+<li><code>RtpTransportControllerSend</code> 是发送侧拥塞控制入口。</li>
+<li><code>RegisterTargetTransferRateObserver()</code> 让 mediasoup 能接收 libwebrtc 输出的 target rate。</li>
+<li><code>EnablePeriodicAlrProbing(true)</code> 让低发送量场景仍然可以周期性探测容量。</li>
+<li><code>processTimer</code> 驱动 controller 和 pacer&#x2F;prober 的周期性处理。</li>
+</ul>
+<h2 id="5-RTP-发送路径：InsertPacket-与-PacketSent"><a href="#5-RTP-发送路径：InsertPacket-与-PacketSent" class="headerlink" title="5. RTP 发送路径：InsertPacket 与 PacketSent"></a>5. RTP 发送路径：InsertPacket 与 PacketSent</h2><p>当某个 Consumer 要向客户端发送 RTP 包时，mediasoup 会为这个包写入 transport-wide sequence number，并将发送信息记录给 libwebrtc：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// 伪代码，用于说明数据流，不是 mediasoup 原始源码。</span><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">Transport::OnConsumerSendRtpPacket</span><span class="hljs-params">(Consumer* consumer, RtpPacket* packet)</span></span><br><span class="hljs-function"></span>&#123;<br>    packet-&gt;<span class="hljs-built_in">UpdateAbsSendTime</span>(nowMs);<br><br>    <span class="hljs-keyword">if</span> (tccClient &amp;&amp; bweType == TRANSPORT_CC)<br>    &#123;<br>        transportWideCcSeq++;<br>        packet-&gt;<span class="hljs-built_in">UpdateTransportWideCc01</span>(transportWideCcSeq);<br><br>        webrtc::RtpPacketSendInfo packetInfo;<br>        packetInfo.ssrc = packet-&gt;<span class="hljs-built_in">GetSsrc</span>();<br>        packetInfo.transport_sequence_number = transportWideCcSeq;<br>        packetInfo.has_rtp_sequence_number = <span class="hljs-literal">true</span>;<br>        packetInfo.rtp_sequence_number = packet-&gt;<span class="hljs-built_in">GetSequenceNumber</span>();<br>        packetInfo.length = packet-&gt;<span class="hljs-built_in">GetLength</span>();<br>        packetInfo.pacing_info = tccClient-&gt;<span class="hljs-built_in">GetPacingInfo</span>();<br><br>        tccClient-&gt;<span class="hljs-built_in">InsertPacket</span>(packetInfo);<br><br>        <span class="hljs-built_in">SendRtpPacket</span>(consumer, packet, [packetInfo] &#123;<br>            tccClient-&gt;<span class="hljs-built_in">PacketSent</span>(packetInfo, nowMs);<br>        &#125;);<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        <span class="hljs-built_in">SendRtpPacket</span>(consumer, packet);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里有两个非常关键的动作：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">InsertPacket() = 发送意图，进入 send history / pacer accounting<br>PacketSent()   = socket 实际发送成功后的发送时间<br></code></pre></td></tr></table></figure>
+
+<p>BWE 计算依赖真实 <code>send_time</code>。如果只记录 enqueue 时间，而不是实际出 socket 的时间，TWCC feedback 还原出来的 delay trend 会被污染。</p>
+<h2 id="6-RTCP-Transport-Feedback-如何进入-GoogCC"><a href="#6-RTCP-Transport-Feedback-如何进入-GoogCC" class="headerlink" title="6. RTCP Transport Feedback 如何进入 GoogCC"></a>6. RTCP Transport Feedback 如何进入 GoogCC</h2><p>客户端收到 RTP 后，会根据 RTP header extension 中的 transport-wide sequence number 周期性生成 RTCP Transport Feedback。该反馈包含：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">base sequence number<br>packet status count<br>reference time<br>每个包的 received / lost 状态<br>每个已接收包的 receive delta<br></code></pre></td></tr></table></figure>
+
+<p>mediasoup 收到 RTCP 后：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">Transport::HandleRtcpPacket(packet)<br>    -&gt; RTPFB / TCC<br>        -&gt; tccClient-&gt;ReceiveRtcpTransportFeedback(feedback)<br>            -&gt; UpdatePacketLoss()<br>            -&gt; rtpTransportControllerSend-&gt;OnTransportFeedback(feedback)<br></code></pre></td></tr></table></figure>
+
+<p>libwebrtc 会通过 <code>TransportFeedbackAdapter</code> 把 RTCP feedback 转成 <code>TransportPacketsFeedback</code>：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp">TransportPacketsFeedback &#123;<br>    Timestamp feedback_time;<br>    DataSize data_in_flight;<br>    std::vector&lt;PacketResult&gt; packet_feedbacks;<br>&#125;<br><br>PacketResult &#123;<br>    SentPacket sent_packet;  <span class="hljs-comment">// send_time, size, packet_id, pacing_info</span><br>    Timestamp receive_time;  <span class="hljs-comment">// 丢包时为 infinite</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这样，GoogCC 同时拿到了：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">服务端真实发送时间 send_time<br>客户端接收时间 receive_time<br>包大小 size<br>丢包状态 lost<br>probe cluster 信息<br>当前 data_in_flight<br></code></pre></td></tr></table></figure>
+
+<h2 id="7-GoogCC-内部主流程"><a href="#7-GoogCC-内部主流程" class="headerlink" title="7. GoogCC 内部主流程"></a>7. GoogCC 内部主流程</h2><p>GoogCC 的核心入口是：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp">GoogCcNetworkController::<span class="hljs-built_in">OnTransportPacketsFeedback</span>(TransportPacketsFeedback report)<br></code></pre></td></tr></table></figure>
+
+<p>这个流程可以拆成以下步骤：</p>
+<pre><code class=" mermaid">flowchart TD
+    A[&quot;TransportPacketsFeedback&quot;] --&gt; B[&quot;计算 feedback RTT / propagation RTT&quot;]
+    B --&gt; C[&quot;更新 ALR 状态&quot;]
+    C --&gt; D[&quot;AcknowledgedBitrateEstimator&quot;]
+    D --&gt; E[&quot;ProbeBitrateEstimator&quot;]
+    E --&gt; F[&quot;DelayBasedBwe&quot;]
+    F --&gt; G[&quot;TrendlineEstimator&quot;]
+    G --&gt; H[&quot;AimdRateControl&quot;]
+    H --&gt; I[&quot;SendSideBandwidthEstimation&quot;]
+    I --&gt; J[&quot;LossBasedBandwidthEstimation&quot;]
+    J --&gt; K[&quot;NetworkControlUpdate&quot;]
+    K --&gt; L[&quot;target_rate / pacer_config / probe_cluster / cwnd&quot;]
+</code></pre>
+
+<h3 id="7-1-RTT-估计"><a href="#7-1-RTT-估计" class="headerlink" title="7.1 RTT 估计"></a>7.1 RTT 估计</h3><p>对每个已收到反馈的包，GoogCC 会估算：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">feedback_rtt = feedback_time - packet_send_time<br>min_pending_time = max_recv_time_in_feedback - packet_receive_time<br>propagation_rtt = feedback_rtt - min_pending_time<br></code></pre></td></tr></table></figure>
+
+<p><code>feedback_rtt</code> 是从服务端发包到服务端收到反馈的总时延。<code>min_pending_time</code> 用来尽量剔除 feedback 聚合等待时间，得到更接近链路传播时间的估计。RTT 会影响 AIMD 降速频率、congestion window、loss-based backoff 等策略。</p>
+<h3 id="7-2-ALR-状态"><a href="#7-2-ALR-状态" class="headerlink" title="7.2 ALR 状态"></a>7.2 ALR 状态</h3><p>ALR 是 Application Limited Region，表示应用层没有足够数据可发，例如静态画面、静音、视频层级已经很低等。</p>
+<p>在 ALR 中，“没有 delay 增长”并不等于“链路容量足够”，因为发送端可能根本没有把链路打满。GoogCC 会在 ALR 中更谨慎地升码率，并通过 periodic probing 探测真实容量。</p>
+<h3 id="7-3-acknowledged-bitrate"><a href="#7-3-acknowledged-bitrate" class="headerlink" title="7.3 acknowledged bitrate"></a>7.3 acknowledged bitrate</h3><p><code>AcknowledgedBitrateEstimator</code> 根据 feedback 中实际被接收端确认收到的包计算吞吐：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">acked_bitrate = feedback_window_received_bytes * 8 / feedback_window_duration<br></code></pre></td></tr></table></figure>
+
+<p>弱网时，acked bitrate 往往会低于当前发送码率。相比单纯看发送端排队或编码码率，acked bitrate 更接近接收端真实拿到的数据量。</p>
+<h3 id="7-4-probe-bitrate"><a href="#7-4-probe-bitrate" class="headerlink" title="7.4 probe bitrate"></a>7.4 probe bitrate</h3><p>如果包属于某个 probe cluster：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">packet.sent_packet.pacing_info.probe_cluster_id != kNotAProbe<br></code></pre></td></tr></table></figure>
+
+<p><code>ProbeBitrateEstimator</code> 会根据这些 probe 包的发送和接收时间估算探测码率。probe 成功时，GoogCC 可以比普通慢增更快地提升 target；probe 失败时则不会盲目上调。</p>
+<h3 id="7-5-delay-based-BWE"><a href="#7-5-delay-based-BWE" class="headerlink" title="7.5 delay-based BWE"></a>7.5 delay-based BWE</h3><p>Delay-based BWE 主要根据包间延迟趋势判断网络是否出现排队。</p>
+<p>它不会直接对每个包做一次 <code>receive_time - send_time</code>，因为单包 jitter 噪声太大。WebRTC 会按发送时间分组，对相邻 group 计算：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">send_delta = send_time_group_i - send_time_group_&#123;i-1&#125;<br>recv_delta = recv_time_group_i - recv_time_group_&#123;i-1&#125;<br>size_delta = size_group_i - size_group_&#123;i-1&#125;<br></code></pre></td></tr></table></figure>
+
+<p>核心信号是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">delay_delta = recv_delta - send_delta<br></code></pre></td></tr></table></figure>
+
+<p>含义：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">recv_delta &gt; send_delta  -&gt; 接收端看到的包间隔变大，队列可能增长<br>recv_delta ≈ send_delta  -&gt; 链路大体稳定<br>recv_delta &lt; send_delta  -&gt; 队列在排空，或链路未被打满<br></code></pre></td></tr></table></figure>
+
+<h3 id="7-6-trendline-estimator"><a href="#7-6-trendline-estimator" class="headerlink" title="7.6 trendline estimator"></a>7.6 trendline estimator</h3><p>TrendlineEstimator 会累积 delay 并做平滑：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">delta_ms = recv_delta_ms - send_delta_ms<br>accumulated_delay += delta_ms<br>smoothed_delay = 0.9 * smoothed_delay + 0.1 * accumulated_delay<br></code></pre></td></tr></table></figure>
+
+<p>随后在一个时间窗口内对：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">arrival_time_ms<br>smoothed_delay_ms<br></code></pre></td></tr></table></figure>
+
+<p>做线性回归，得到 trend：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">trend &gt; 0  -&gt; delay 增长，队列堆积<br>trend = 0  -&gt; delay 稳定<br>trend &lt; 0  -&gt; delay 下降，队列排空<br></code></pre></td></tr></table></figure>
+
+<p>WebRTC 不直接使用 raw slope，而是计算 modified trend：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">modified_trend = min(num_of_deltas, 60) * trend * threshold_gain<br></code></pre></td></tr></table></figure>
+
+<p>典型判断：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">modified_trend &gt; threshold   -&gt; overusing<br>modified_trend &lt; -threshold  -&gt; underusing<br>otherwise                    -&gt; normal<br></code></pre></td></tr></table></figure>
+
+<p>这个动态阈值机制让算法既不会因为单个包 jitter 立刻降速，又能在连续 delay trend 上升时较快进入 overusing。</p>
+<h3 id="7-7-AIMD-rate-control"><a href="#7-7-AIMD-rate-control" class="headerlink" title="7.7 AIMD rate control"></a>7.7 AIMD rate control</h3><p>DelayBasedBwe 得到状态后，会把状态和 acked bitrate 交给 <code>AimdRateControl</code>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">kBwNormal     -&gt; kRcIncrease<br>kBwOverusing  -&gt; kRcDecrease<br>kBwUnderusing -&gt; kRcHold<br></code></pre></td></tr></table></figure>
+
+<p>overusing 时，典型降速逻辑是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">new_target ≈ acked_bitrate * beta<br>beta ≈ 0.85<br></code></pre></td></tr></table></figure>
+
+<p>例如当前发送目标是 2 Mbps，但接收端 acked bitrate 只有 900 kbps，新的 delay-based target 可能接近：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">900 kbps * 0.85 = 765 kbps<br></code></pre></td></tr></table></figure>
+
+<p>这也是 TWCC + delay trend 比“等到大量 NACK 或明显卡顿再降码率”更及时的原因。</p>
+<p>normal 时，AIMD 会逐步增大码率。如果已经有链路容量估计，通常采用加性增长；如果还不知道容量，则会采用更快的乘性增长，并受 throughput-based limit 约束：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">throughput_based_limit = 1.5 * estimated_throughput + 10 kbps<br></code></pre></td></tr></table></figure>
+
+<p>underusing 时不会立刻升码率，而是 hold，让队列先排空并恢复稳定。</p>
+<h3 id="7-8-loss-based-部分"><a href="#7-8-loss-based-部分" class="headerlink" title="7.8 loss-based 部分"></a>7.8 loss-based 部分</h3><p>GoogCC 不只看 delay。Transport-CC feedback 也能统计丢包：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">expected_packets<br>lost_packets<br>loss_ratio = lost / expected<br></code></pre></td></tr></table></figure>
+
+<p>经典 loss-based 策略可以概括为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">loss &lt; 2%         -&gt; 低丢包，可适当增加码率<br>2% &lt;= loss &lt;= 10% -&gt; hold<br>loss &gt; 10%        -&gt; 降码率<br></code></pre></td></tr></table></figure>
+
+<p>经典降速公式：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">new_rate = current_rate * (1 - 0.5 * loss_rate)<br></code></pre></td></tr></table></figure>
+
+<p>不过在 transport-cc 模式下，delay trend 和 acked bitrate 通常比丢包更早反映拥塞。等到大量丢包时，接收端往往已经开始卡顿。</p>
+<h2 id="8-TargetTransferRate-如何回到-mediasoup"><a href="#8-TargetTransferRate-如何回到-mediasoup" class="headerlink" title="8. TargetTransferRate 如何回到 mediasoup"></a>8. TargetTransferRate 如何回到 mediasoup</h2><p>GoogCC 最终不会简单输出 delay-based target，而是综合：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs text">delay_based_target<br>loss_based_target<br>receiver_limit / REMB<br>min_bitrate<br>max_bitrate<br>acked_bitrate<br>probe_bitrate<br>RTT backoff<br>congestion window pushback<br>ALR 状态<br></code></pre></td></tr></table></figure>
+
+<p>生成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cpp">NetworkControlUpdate &#123;<br>    target_rate,<br>    pacer_config,<br>    probe_cluster_configs,<br>    congestion_window<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>RtpTransportControllerSend::PostUpdates()</code> 会应用这些更新：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">更新 congestion window<br>更新 pacer_config<br>创建 probe cluster<br>通知 TargetTransferRateObserver<br></code></pre></td></tr></table></figure>
+
+<p>mediasoup 的 <code>TransportCongestionControlClient::OnTargetTransferRate()</code> 接收到结果后：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">bitrates.availableBitrate = targetTransferRate.target_rate.bps()<br></code></pre></td></tr></table></figure>
+
+<p>然后通知 Transport 重新分配下行带宽。</p>
+<p>可用码率通知有一定节流策略：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">第一次有效结果：立即通知<br>普通变化：约 1000ms 通知一次<br>大幅下降：available &lt; previous * 0.75 时快速通知<br>大幅上升：available &gt; previous * 1.50 时快速通知<br></code></pre></td></tr></table></figure>
+
+<p>这个策略避免过于频繁地触发分层重算，同时保证大幅弱网和明显恢复能快速响应。</p>
+<h2 id="9-availableBitrate-如何驱动-SVC-Simulcast"><a href="#9-availableBitrate-如何驱动-SVC-Simulcast" class="headerlink" title="9. availableBitrate 如何驱动 SVC &#x2F; Simulcast"></a>9. availableBitrate 如何驱动 SVC &#x2F; Simulcast</h2><p>mediasoup 真正执行下行抗弱网的地方不是 BWE 本身，而是 Consumer 分层分配。</p>
+<p>核心函数是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">Transport::DistributeAvailableOutgoingBitrate()<br></code></pre></td></tr></table></figure>
+
+<p>简化流程：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs cpp">availableBitrate = tccClient-&gt;<span class="hljs-built_in">GetAvailableBitrate</span>();<br><br><span class="hljs-comment">// 按 priority 收集需要分配码率的 Consumers。</span><br><span class="hljs-keyword">for</span> each consumer:<br>    <span class="hljs-keyword">if</span> consumer-&gt;<span class="hljs-built_in">GetBitratePriority</span>() &gt; <span class="hljs-number">0</span>:<br>        <span class="hljs-built_in">insert</span>(priority, consumer)<br><br><span class="hljs-comment">// 第一轮尽量保证基础层，后续按 priority 逐层升级。</span><br><span class="hljs-keyword">while</span> availableBitrate &gt; <span class="hljs-number">0</span>:<br>    <span class="hljs-keyword">for</span> consumer from high priority to low priority:<br>        used = consumer-&gt;<span class="hljs-built_in">IncreaseLayer</span>(availableBitrate, considerLoss)<br>        availableBitrate -= used<br><br><span class="hljs-comment">// 应用最终目标层。</span><br><span class="hljs-keyword">for</span> consumer:<br>    consumer-&gt;<span class="hljs-built_in">ApplyLayers</span>()<br></code></pre></td></tr></table></figure>
+
+<p>流程图如下：</p>
+<pre><code class=" mermaid">flowchart TD
+    A[&quot;availableBitrate&quot;] --&gt; B[&quot;按 bitratePriority 收集 Consumers&quot;]
+    B --&gt; C[&quot;基础层优先分配&quot;]
+    C --&gt; D&#123;&quot;仍有剩余带宽?&quot;&#125;
+    D -- &quot;是&quot; --&gt; E[&quot;按优先级尝试提升 temporal/spatial layer&quot;]
+    E --&gt; D
+    D -- &quot;否&quot; --&gt; F[&quot;ApplyLayers&quot;]
+    F --&gt; G[&quot;RTP 转发时过滤非目标层&quot;]
+</code></pre>
+
+<p>这条链路的结果是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">BWE 降低 availableBitrate<br>    -&gt; Transport 重新分配码率<br>    -&gt; Consumer::IncreaseLayer() 无法维持高层<br>    -&gt; Consumer::ApplyLayers() 降低 spatial/temporal layer<br>    -&gt; 服务端停止转发部分增强层<br></code></pre></td></tr></table></figure>
+
+<p>对 SVC 来说，基础层优先，低 temporal layer 优先，增强 temporal&#x2F;spatial layer 在预算不足时被丢弃。</p>
+<p>对 Simulcast 来说，低分辨率 encoding 优先，预算足够时再切到更高 encoding。</p>
+<h2 id="10-SVC-Consumer-的关键策略"><a href="#10-SVC-Consumer-的关键策略" class="headerlink" title="10. SVC Consumer 的关键策略"></a>10. SVC Consumer 的关键策略</h2><p>SVC Consumer 内部维护几个层级状态：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">preferredLayers           应用期望的最高层<br>provisionalTargetLayers   Transport 分配阶段的临时目标层<br>targetLayers              当前正式目标层<br>currentLayers             当前实际转发/解码上下文识别到的层<br></code></pre></td></tr></table></figure>
+
+<p><code>SvcConsumer::IncreaseLayer()</code> 大致逻辑：</p>
+<ol>
+<li>如果上游流不可用，返回 0。</li>
+<li>如果已经到达 preferred layers，返回 0。</li>
+<li>根据当前可用预算计算 virtual bitrate。</li>
+<li>从当前 provisional layer 开始，逐个测试更高 spatial&#x2F;temporal layer。</li>
+<li>查询对应 layer bitrate。</li>
+<li>如果预算足够，升级 provisional target layer。</li>
+<li>返回本次升级消耗的码率。</li>
+</ol>
+<p>transport-cc 模式下，mediasoup 不会在 Consumer 层再按单个 Consumer loss 做一套硬阈值降层。原因是 loss、delay、acked bitrate 已经由 GoogCC 综合处理。如果分层选择器再额外叠加独立 loss 规则，容易与 GoogCC 的判断互相打架，造成误降或震荡。</p>
+<h3 id="BWE-downgrade-后的保守升级"><a href="#BWE-downgrade-后的保守升级" class="headerlink" title="BWE downgrade 后的保守升级"></a>BWE downgrade 后的保守升级</h3><p><code>SvcConsumer</code> 有一个重要抗抖动机制：当检测到疑似 BWE 导致的 spatial downgrade 后，会在一段时间内限制重新升 spatial layer。</p>
+<p>典型常量：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">BweDowngradeConservativeMs = 10000<br>BweDowngradeMinActiveMs    = 8000<br></code></pre></td></tr></table></figure>
+
+<p>含义：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">如果流已经活跃超过 8 秒，并且目标 spatial layer 从当前 spatial layer 往下掉，<br>mediasoup 认为这可能是一次 BWE downgrade。<br><br>降级后的 10 秒内，避免立即升回更高 spatial layer。<br></code></pre></td></tr></table></figure>
+
+<p>这能减少弱网恢复边缘的反复横跳：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">弱网出现：允许较快降层。<br>刚恢复：不要立刻升 spatial layer。<br>稳定一段时间：再逐步升层。<br></code></pre></td></tr></table></figure>
+
+<h3 id="RTP-转发时的实际丢层"><a href="#RTP-转发时的实际丢层" class="headerlink" title="RTP 转发时的实际丢层"></a>RTP 转发时的实际丢层</h3><p><code>SvcConsumer::SendRtpPacket()</code> 是真正执行丢层的地方。它不只是简单看 RTP header，而是依赖 codec-specific 的 encoding context：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs text">1. Consumer 不活跃：丢弃。<br>2. target spatial/temporal 无效：丢弃。<br>3. 需要同步但不是 keyframe：丢弃，并等待目标层关键帧。<br>4. payload type 不支持：丢弃。<br>5. 空 payload：丢弃。<br>6. 调用 packet-&gt;ProcessPayload(encodingContext, marker) 判断是否属于目标层。<br>7. 重写 SSRC / RTP sequence number / marker。<br>8. 进入 RtpStreamSend。<br>9. 通知 Transport 发送 RTP。<br>10. 恢复原始包字段。<br></code></pre></td></tr></table></figure>
+
+<h2 id="11-Pacer-Prober-在-mediasoup-中的真实角色"><a href="#11-Pacer-Prober-在-mediasoup-中的真实角色" class="headerlink" title="11. Pacer &#x2F; Prober 在 mediasoup 中的真实角色"></a>11. Pacer &#x2F; Prober 在 mediasoup 中的真实角色</h2><p>这是 mediasoup 下行架构里最容易被误读的部分。</p>
+<p>在完整 libwebrtc 端到端发送栈中，媒体 RTP 通常进入 pacer 队列，由 pacer 按 pacing rate 平滑发送：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">encoder packetize<br>    -&gt; RTPSender<br>    -&gt; pacer enqueue<br>    -&gt; pacer dequeue by pacing rate<br>    -&gt; PacketRouter<br>    -&gt; Transport send<br></code></pre></td></tr></table></figure>
+
+<p>pacer 的标准职责包括：</p>
+<ul>
+<li>避免大帧瞬间突发。</li>
+<li>控制 pacing rate。</li>
+<li>创建 probe cluster。</li>
+<li>管理 padding&#x2F;probe。</li>
+<li>配合 congestion window 控制 outstanding data。</li>
+</ul>
+<p>但 mediasoup 是 SFU worker，不是完整复用 libwebrtc 的 VideoSendStream。普通 Consumer RTP 包路径更接近：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">InsertPacket() 记录给 libwebrtc<br>SendRtpPacket() 由 mediasoup 直接发送<br>PacketSent() 在发送回调中通知真实发送时间<br></code></pre></td></tr></table></figure>
+
+<p>也就是说，普通媒体包并不等同于浏览器发送端那样全部进入 libwebrtc pacer 队列后再按 pacing rate 出队。</p>
+<p>mediasoup 中 libwebrtc pacer&#x2F;prober 主要用于：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">1. 给 BWE 控制器提供 pacing/probing 机制<br>2. 生成 probation / padding 包<br>3. 支持 ALR probing<br>4. 驱动 controller 与 pacer 的 process interval<br>5. 给发送包附带 PacedPacketInfo<br>6. 接收 GoogCC 输出的 pacer_config / probe_cluster<br></code></pre></td></tr></table></figure>
+
+<p><code>TransportCongestionControlClient::SendPacket()</code> 主要是给 <code>PacedSender</code> 发送 probation packets 使用的路径。</p>
+<p>因此，mediasoup 下行抗弱网的核心不能简单理解成“所有 RTP 都被后端 pacer 平滑发送”。更准确的理解是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">普通 RTP 发送路径：mediasoup direct send + libwebrtc BWE accounting<br>probe / padding 路径：libwebrtc pacer/prober 驱动<br>分层控制路径：availableBitrate -&gt; Consumer layer allocation<br></code></pre></td></tr></table></figure>
+
+<h2 id="12-为什么一个接收端弱网不会直接影响另一个接收端"><a href="#12-为什么一个接收端弱网不会直接影响另一个接收端" class="headerlink" title="12. 为什么一个接收端弱网不会直接影响另一个接收端"></a>12. 为什么一个接收端弱网不会直接影响另一个接收端</h2><p>mediasoup 的隔离边界是 WebRtcTransport。不同客户端通常对应不同的 WebRtcTransport，也就有独立的拥塞控制状态：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">transportWideCcSeq<br>TransportCongestionControlClient<br>RtpTransportControllerSend<br>GoogCcNetworkController<br>sent packet history<br>RTCP Transport Feedback<br>availableBitrate<br>Consumer layer allocation<br></code></pre></td></tr></table></figure>
+
+<p>多下行场景可以表示为：</p>
+<pre><code class=" mermaid">flowchart LR
+    P[&quot;Producer RTP&quot;] --&gt; SFU[&quot;mediasoup SFU&quot;]
+    SFU --&gt; A[&quot;WebRtcTransport A&quot;]
+    SFU --&gt; B[&quot;WebRtcTransport B&quot;]
+
+    A --&gt; A1[&quot;TWCC feedback A&quot;]
+    A1 --&gt; A2[&quot;GoogCC A&quot;]
+    A2 --&gt; A3[&quot;availableBitrate A&quot;]
+    A3 --&gt; A4[&quot;Consumer layers A&quot;]
+
+    B --&gt; B1[&quot;TWCC feedback B&quot;]
+    B1 --&gt; B2[&quot;GoogCC B&quot;]
+    B2 --&gt; B3[&quot;availableBitrate B&quot;]
+    B3 --&gt; B4[&quot;Consumer layers B&quot;]
+</code></pre>
+
+<p>当 A 弱网时：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">A delay trend 上升<br>A acked bitrate 下降<br>A loss 可能上升<br>A availableBitrate 下降<br>A Consumer 降层<br></code></pre></td></tr></table></figure>
+
+<p>B 网络正常时：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">B delay trend 正常<br>B acked bitrate 正常<br>B availableBitrate 不下降<br>B Consumer 保持原有层级<br></code></pre></td></tr></table></figure>
+
+<p>需要注意的是，per-Transport BWE 解决的是下行接收端网络差异问题。如果瓶颈发生在服务端公共出口，例如公网带宽上限、系统 UDP send buffer 堆积、事件循环阻塞、进程级队列堆积，那么多个 Transport 仍可能同时受到影响。此时需要额外关注全局出口限速、进程调度、socket buffer、队列长度和系统网络栈指标。</p>
+<h2 id="13-transport-cc-与-REMB"><a href="#13-transport-cc-与-REMB" class="headerlink" title="13. transport-cc 与 REMB"></a>13. transport-cc 与 REMB</h2><p>mediasoup 下行 BWE 优先使用 transport-cc。transport-cc 能提供 transport-wide packet arrival feedback，更适合 sender-side BWE。</p>
+<p>当不满足 transport-cc 条件，但存在 <code>abs-send-time</code> 和 <code>goog-remb</code> RTCP feedback 时，mediasoup 可以启用 REMB 作为 fallback。</p>
+<p>两者可以粗略比较：</p>
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>估计位置</th>
+<th>输入信号</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Transport-CC &#x2F; TWCC</td>
+<td>发送端根据接收端反馈计算</td>
+<td>transport-wide sequence、send time、receive delta、loss</td>
+<td>更适合 sender-side BWE，可做 delay trend、acked bitrate、probe 分析</td>
+</tr>
+<tr>
+<td>REMB</td>
+<td>接收端估算后告诉发送端</td>
+<td>receiver estimated max bitrate</td>
+<td>较老，粒度和可控性弱于 TWCC</td>
+</tr>
+</tbody></table>
+<p>在现代 SFU 下行抗弱网中，应优先理解和使用 transport-cc。</p>
+<h2 id="14-关键工程观测指标"><a href="#14-关键工程观测指标" class="headerlink" title="14. 关键工程观测指标"></a>14. 关键工程观测指标</h2><p>分析 mediasoup 或类似 SFU 的下行弱网问题时，建议把指标拆开看，而不是只看“当前分辨率”或“是否丢包”。</p>
+<p>Transport 级别：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">availableBitrate<br>desiredBitrate<br>minBitrate / maxBitrate / startBitrate<br>targetRate update interval<br>transport-wide sequence gap<br>feedback RTT<br>propagation RTT<br>data_in_flight<br></code></pre></td></tr></table></figure>
+
+<p>TWCC &#x2F; GoogCC 级别：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">acked bitrate<br>delay detector state: normal / overusing / underusing<br>trendline slope / modified trend<br>loss ratio<br>probe cluster id<br>probe bitrate<br>ALR state<br>congestion window pushback<br></code></pre></td></tr></table></figure>
+
+<p>Consumer &#x2F; Layer 级别：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">preferredLayers<br>provisionalTargetLayers<br>targetLayers<br>currentLayers<br>layer bitrate<br>bitratePriority<br>last BWE downgrade timestamp<br>keyframe request / layer sync state<br></code></pre></td></tr></table></figure>
+
+<p>系统级别：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">UDP send buffer<br>socket send return time<br>process event loop latency<br>egress bandwidth<br>CPU load<br>packet pacing / burst size<br></code></pre></td></tr></table></figure>
+
+<p>只有把这些指标拆开，才能判断问题到底出在链路估计、带宽分配、分层策略、发送突发，还是系统出口瓶颈。</p>
+<h2 id="15-参数和策略速查"><a href="#15-参数和策略速查" class="headerlink" title="15. 参数和策略速查"></a>15. 参数和策略速查</h2><p>以下参数有助于理解 mediasoup 的行为，但不应脱离业务场景机械照搬：</p>
+<table>
+<thead>
+<tr>
+<th>参数 &#x2F; 策略</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AvailableBitrateEventInterval ≈ 1000ms</code></td>
+<td>普通 available bitrate 变化通知节流</td>
+</tr>
+<tr>
+<td><code>available &lt; previous * 0.75</code></td>
+<td>大幅下降时快速通知</td>
+</tr>
+<tr>
+<td><code>available &gt; previous * 1.50</code></td>
+<td>大幅上升时快速通知</td>
+</tr>
+<tr>
+<td><code>BweDowngradeConservativeMs = 10000</code></td>
+<td>BWE 降级后保守升 spatial layer 的时间窗口</td>
+</tr>
+<tr>
+<td><code>BweDowngradeMinActiveMs = 8000</code></td>
+<td>流至少活跃一段时间后才记录 BWE downgrade</td>
+</tr>
+<tr>
+<td><code>GoogCC process interval ≈ 25ms</code></td>
+<td>controller &#x2F; pacer 周期处理粒度</td>
+</tr>
+<tr>
+<td><code>MaxBitrateIncrementFactor ≈ 1.35</code></td>
+<td>desired bitrate 反向约束 GoogCC max bitrate 的 margin</td>
+</tr>
+<tr>
+<td><code>MaxPaddingBitrateFactor ≈ 0.85</code></td>
+<td>padding &#x2F; probing 预算 margin</td>
+</tr>
+</tbody></table>
+<h2 id="16-小结"><a href="#16-小结" class="headerlink" title="16. 小结"></a>16. 小结</h2><p>mediasoup 下行拥塞控制的核心不是某个单独算法，而是一条完整闭环：</p>
+<pre><code class=" mermaid">flowchart TD
+    A[&quot;RTP 下行发送&quot;] --&gt; B[&quot;记录 TWCC seq / sent history&quot;]
+    B --&gt; C[&quot;客户端 RTCP Transport Feedback&quot;]
+    C --&gt; D[&quot;TransportFeedbackAdapter&quot;]
+    D --&gt; E[&quot;GoogCC: delay / loss / acked / probe&quot;]
+    E --&gt; F[&quot;TargetTransferRate&quot;]
+    F --&gt; G[&quot;Transport availableBitrate&quot;]
+    G --&gt; H[&quot;Consumer layer allocation&quot;]
+    H --&gt; I[&quot;SVC / Simulcast 丢层或升层&quot;]
+    I --&gt; A
+</code></pre>
+
+<p>几个关键点值得反复强调：</p>
+<ol>
+<li>mediasoup 的 BWE 核心来自内置的 libwebrtc GoogCC 子集，源码可见并随 worker 一起构建。</li>
+<li>下行抗弱网以 WebRtcTransport 为隔离边界，每个接收端独立维护 BWE 状态。</li>
+<li>TWCC 提供发送时间、接收时间、丢包和 acked bitrate，是 sender-side BWE 的核心输入。</li>
+<li>GoogCC 不只看丢包，而是综合 delay trend、acked bitrate、probe、loss、RTT、ALR 等信号。</li>
+<li>BWE 输出的是 transport-level available bitrate，不是直接的 SVC 层级。</li>
+<li>SVC&#x2F;Simulcast 层级由 Consumer layer allocation 执行，基础层优先，增强层按预算逐步恢复。</li>
+<li>mediasoup 的 libwebrtc pacer&#x2F;prober 主要用于 probing、padding 和控制器机制；普通媒体 RTP 并不等价于完整浏览器发送端的 pacer 队列模型。</li>
+</ol>
+<p>理解这条链路后，再看 SFU 下行弱网问题时，就不应只问“什么时候丢包降层”，而应拆成更清晰的问题：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">TWCC feedback 是否准确？<br>send_time 是否是真实发送时间？<br>GoogCC 的 delay / acked / loss 判断是否合理？<br>availableBitrate 是否正确回调到 Transport？<br>Consumer layer allocation 是否按预算执行？<br>SVC/Simulcast 丢层是否等待了正确的同步点？<br>公共出口或系统队列是否成为新的瓶颈？<br></code></pre></td></tr></table></figure>
+
+<p>这也是 mediasoup 这套架构最值得学习的地方：它把网络估计、码率预算和分层执行解耦，让每一层都能被独立观测、独立调试，并最终形成稳定的下行抗弱网闭环。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>mediasoup v3 Design: <code>https://mediasoup.org/documentation/v3/mediasoup/design/</code></li>
+<li>mediasoup Scalability: <code>https://mediasoup.org/documentation/v3/scalability/</code></li>
+<li>mediasoup API: <code>https://mediasoup.org/documentation/v3/mediasoup/api/</code></li>
+<li><code>TransportCongestionControlClient.cpp</code>: <code>https://github.com/versatica/mediasoup/blob/v3/worker/src/RTC/TransportCongestionControlClient.cpp</code></li>
+<li><code>TransportCongestionControlClient.hpp</code>: <code>https://github.com/versatica/mediasoup/blob/v3/worker/include/RTC/TransportCongestionControlClient.hpp</code></li>
+<li><code>TransportCongestionControlServer.cpp</code>: <code>https://github.com/versatica/mediasoup/blob/v3/worker/src/RTC/TransportCongestionControlServer.cpp</code></li>
+<li><code>Transport.cpp</code>: <code>https://github.com/versatica/mediasoup/blob/v3/worker/src/RTC/Transport.cpp</code></li>
+<li><code>SvcConsumer.cpp</code>: <code>https://github.com/versatica/mediasoup/blob/v3/worker/src/RTC/SvcConsumer.cpp</code></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>深入 mediasoup 服务端下行拥塞控制</div>
+      <div>https://alberthello.github.io/2026/05/20/webrtc/mediasoup_cc_pacer_svc/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/05/11/AI/rag_system/" title="生产环境的大型 RAG 知识库系统怎么工作的">
+                        <span class="hidden-mobile">生产环境的大型 RAG 知识库系统怎么工作的</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

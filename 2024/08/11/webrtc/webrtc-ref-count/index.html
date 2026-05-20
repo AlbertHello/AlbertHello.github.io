@@ -1,0 +1,851 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="webrtc 中的引用计数系统转载自 https:&#x2F;&#x2F;blog.csdn.net&#x2F;ice_ly000&#x2F;article&#x2F;details&#x2F;105629297 WebRTC中的引用计数主要由四个类RefCountInterface、RefCounter、RefCountedObject、scoped_refptr一起构建起WebRTC中的引用计数系统。 RefCountInterface —— 引用计数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="webrtc引用计数系统">
+<meta property="og:url" content="https://alberthello.github.io/2024/08/11/webrtc/webrtc-ref-count/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="webrtc 中的引用计数系统转载自 https:&#x2F;&#x2F;blog.csdn.net&#x2F;ice_ly000&#x2F;article&#x2F;details&#x2F;105629297 WebRTC中的引用计数主要由四个类RefCountInterface、RefCounter、RefCountedObject、scoped_refptr一起构建起WebRTC中的引用计数系统。 RefCountInterface —— 引用计数">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://alberthello.github.io/2024/08/11/webrtc/webrtc-ref-count/16871557737263.jpg">
+<meta property="og:image" content="https://alberthello.github.io/2024/08/11/webrtc/webrtc-ref-count/16871559141378.jpg">
+<meta property="article:published_time" content="2024-08-11T03:39:52.000Z">
+<meta property="article:modified_time" content="2026-05-20T13:10:39.936Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="WebRTC">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://alberthello.github.io/2024/08/11/webrtc/webrtc-ref-count/16871557737263.jpg">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>webrtc引用计数系统 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="webrtc引用计数系统"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-08-11 11:39" pubdate>
+          2024年8月11日 中午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          8.8k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">webrtc引用计数系统</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-05-20T21:10:39+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="webrtc-中的引用计数系统"><a href="#webrtc-中的引用计数系统" class="headerlink" title="webrtc 中的引用计数系统"></a>webrtc 中的引用计数系统</h2><p>转载自 <a target="_blank" rel="noopener" href="https://blog.csdn.net/ice_ly000/article/details/105629297">https://blog.csdn.net/ice_ly000/article/details/105629297</a></p>
+<p>WebRTC中的引用计数主要由四个类RefCountInterface、RefCounter、RefCountedObject、scoped_refptr一起构建起WebRTC中的引用计数系统。</p>
+<h3 id="RefCountInterface-——-引用计数抽象接口"><a href="#RefCountInterface-——-引用计数抽象接口" class="headerlink" title="RefCountInterface —— 引用计数抽象接口"></a>RefCountInterface —— 引用计数抽象接口</h3><p>RefCountInterface是一个抽象接口类，位于rtc_base&#x2F;ref_count.h目录下。源码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">enum class</span> <span class="hljs-title class_">RefCountReleaseStatus</span> &#123; kDroppedLastRef, kOtherRefsRemained &#125;;<br><br><span class="hljs-comment">// Interfaces where refcounting is part of the public api should</span><br><span class="hljs-comment">// inherit this abstract interface. The implementation of these</span><br><span class="hljs-comment">// methods is usually provided by the RefCountedObject template class,</span><br><span class="hljs-comment">// applied as a leaf in the inheritance tree.</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">RefCountInterface</span> &#123;<br> <span class="hljs-keyword">public</span>:<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> <span class="hljs-title">AddRef</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>= <span class="hljs-number">0</span>;<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> RefCountReleaseStatus <span class="hljs-title">Release</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>= <span class="hljs-number">0</span>;<br><br>  <span class="hljs-comment">// Non-public destructor, because Release() has exclusive responsibility for</span><br>  <span class="hljs-comment">// destroying the object.</span><br> <span class="hljs-keyword">protected</span>:<br>  <span class="hljs-keyword">virtual</span> ~<span class="hljs-built_in">RefCountInterface</span>() &#123;&#125;<br>&#125;;<br></code></pre></td></tr></table></figure>
+<p>正如该类的英文注释所说那样：需要使用引用计数的公共接口类需要继承RefCountInterface这个抽象接口。但公共接口类并不直接实现RefCountInterface的纯虚方法AddRef() &amp;&amp; Release()。这两个方法由后文的模板对象RefCountedObject对象来提供具体的实现。</p>
+<p>比如WebRTC中的类RTCStatsReport，它继承了RefCountInterface，但是RTCStatsReport类并没有实现AddRef()和Release()这两个纯虚方法，也即RTCStatsReport仍然是个抽象类。而使用该类时，不能直接new RTCStatsReport（因为它是抽象类）。 一般会如此使用：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp">rtc::scoped_refptr&lt;RTCStatsReport&gt; statsReport = <span class="hljs-keyword">new</span> <span class="hljs-built_in">RefCountedObject</span>&lt;RTCStatsReport&gt;(...);<br></code></pre></td></tr></table></figure>
+<p>RefCountedObject<RTCStatsReport>这个类继承了RTCStatsReport，并为AddRef()和Release()两个纯虚方法提供了实现。</p>
+<p>如此设计后，这三个类的继承关系就变为：（RefCountInterface就是继承链上的叶子节点）</p>
+<img src="/2024/08/11/webrtc/webrtc-ref-count/16871557737263.jpg" srcset="/img/loading.gif" lazyload class="">
+
+<p>AddRef()：将对象的引用计数线+1<br>Release()：将对象的引用计数-1，若引用计数为0，即kDroppedLastRef。那么对象将在Release()中被delete。</p>
+<hr>
+<h3 id="RefCounter-——-引用计数"><a href="#RefCounter-——-引用计数" class="headerlink" title="RefCounter —— 引用计数"></a>RefCounter —— 引用计数</h3><p>RefCounter是实现引用计数的核心类，代码位于rtc_base&#x2F;ref_counter.h文件中。该类的对象用来保存被引用对象的计数值</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">RefCounter</span> &#123;<br> <span class="hljs-keyword">public</span>:<br>  <span class="hljs-function"><span class="hljs-keyword">explicit</span> <span class="hljs-title">RefCounter</span><span class="hljs-params">(<span class="hljs-type">int</span> ref_count)</span> : ref_count_(ref_count) &#123;</span>&#125;<br>  <span class="hljs-built_in">RefCounter</span>() = <span class="hljs-keyword">delete</span>;<br><br>  <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">IncRef</span><span class="hljs-params">()</span> </span>&#123;<br>    ref_count_.<span class="hljs-built_in">fetch_add</span>(<span class="hljs-number">1</span>, std::memory_order_relaxed);<br>  &#125;<br>  <br>  <span class="hljs-function">rtc::RefCountReleaseStatus <span class="hljs-title">DecRef</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-type">int</span> ref_count_after_subtract =<br>        ref_count_.<span class="hljs-built_in">fetch_sub</span>(<span class="hljs-number">1</span>, std::memory_order_acq_rel) - <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">return</span> ref_count_after_subtract == <span class="hljs-number">0</span><br>               ? rtc::RefCountReleaseStatus::kDroppedLastRef<br>               : rtc::RefCountReleaseStatus::kOtherRefsRemained;<br>  &#125;<br><br>  <span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">HasOneRef</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> ref_count_.<span class="hljs-built_in">load</span>(std::memory_order_acquire) == <span class="hljs-number">1</span>;<br>  &#125;<br><br> <span class="hljs-keyword">private</span>:<br>  std::atomic&lt;<span class="hljs-type">int</span>&gt; ref_count_;<br>&#125;;<br><br></code></pre></td></tr></table></figure>
+<p>正如上述源码可知，实际上该类使用了c++标准库的原子操作类std::atomic<int>来保存引用计数：</p>
+<p>利用std::atomic<int>a类的 fetch_add() 方法来实现+1的操作函数IncRef()；<br>利用std::atomic<int>类的 fetch_sub() 方法来实现-1的操作函数DecRef()；<br>利用std::atomic<int>类的 load() 方法来实现是否刚好引用计数为1的操作函数HasOneRef()；<br>fetch_add()、fetch_sub() 、load() 方法都传入了指示CPU指令中插入内存屏障，防止某种指令重排序的参数，详细解释请查看 <a target="_blank" rel="noopener" href="https://zh.cppreference.com/w/cpp/atomic/memory_order">https://zh.cppreference.com/w/cpp/atomic/memory_order</a></p>
+<hr>
+<h3 id="RefCountedObject-——-引用计数对象"><a href="#RefCountedObject-——-引用计数对象" class="headerlink" title="RefCountedObject —— 引用计数对象"></a>RefCountedObject —— 引用计数对象</h3><p>RefCountedObject<T>模板类是正真实现应用计数增减方法 AddRef 和 Release的地方，实质上是通过持有成员RefCounter来实现的。那么RefCountedObject<T>——&gt;利用RefCounter——&gt;利用std::atomic<int> ref_count_来进行计数的。该类的UML类图如下所示</p>
+<img src="/2024/08/11/webrtc/webrtc-ref-count/16871559141378.jpg" srcset="/img/loading.gif" lazyload class="">
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">class</span> <span class="hljs-title class_">T</span>&gt;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">RefCountedObject</span> : <span class="hljs-keyword">public</span> T &#123;<br> <span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">RefCountedObject</span>() &#123;&#125;<br><br>  <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">class</span> <span class="hljs-title class_">P0</span>&gt;<br>  <span class="hljs-function"><span class="hljs-keyword">explicit</span> <span class="hljs-title">RefCountedObject</span><span class="hljs-params">(P0&amp;&amp; p0)</span> : T(std::forward&lt;P0&gt;(p0)) &#123;</span>&#125;<br><br>  <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">class</span> <span class="hljs-title class_">P0</span>, <span class="hljs-keyword">class</span> <span class="hljs-title class_">P1</span>, <span class="hljs-keyword">class</span>... Args&gt;<br>  <span class="hljs-built_in">RefCountedObject</span>(P0&amp;&amp; p0, P1&amp;&amp; p1, Args&amp;&amp;... args)<br>      : <span class="hljs-built_in">T</span>(std::forward&lt;P0&gt;(p0),<br>          std::forward&lt;P1&gt;(p1),<br>          std::forward&lt;Args&gt;(args)...) &#123;&#125;<br><br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> <span class="hljs-title">AddRef</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123; ref_count_.<span class="hljs-built_in">IncRef</span>(); &#125;<br><br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> RefCountReleaseStatus <span class="hljs-title">Release</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123;<br>    <span class="hljs-type">const</span> <span class="hljs-keyword">auto</span> status = ref_count_.<span class="hljs-built_in">DecRef</span>();<br>    <span class="hljs-keyword">if</span> (status == RefCountReleaseStatus::kDroppedLastRef) &#123;<br>      <span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>;<br>    &#125;<br>    <span class="hljs-keyword">return</span> status;<br>  &#125;<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-type">bool</span> <span class="hljs-title">HasOneRef</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123; <span class="hljs-keyword">return</span> ref_count_.<span class="hljs-built_in">HasOneRef</span>(); &#125;<br><br> <span class="hljs-keyword">protected</span>:<br>  <span class="hljs-keyword">virtual</span> ~<span class="hljs-built_in">RefCountedObject</span>() &#123;&#125;<br><br>  <span class="hljs-keyword">mutable</span> webrtc::webrtc_impl::RefCounter ref_count_&#123;<span class="hljs-number">0</span>&#125;;<br><br>  <span class="hljs-built_in">RTC_DISALLOW_COPY_AND_ASSIGN</span>(RefCountedObject);<br>&#125;;<br><br></code></pre></td></tr></table></figure>
+<p>代码实现简单，也容易理解，有这么几点需要重点强调下：</p>
+<p>RefCountedObject<T>是继承T的，是T的子类；<br>RefCountedObject的构造函数使用了c++11中的右值引用&amp;&amp; 以及完美转发std::forward来提高效率；<br>Release()函数的实现，当引用计数为0时，将delete掉自己！！！<br>ref_count_成员被初始化为0，并且声明为mutable，表示该成员是可变的，将不受子类可能出现的const修饰符的影响；<br>最后，RTC_DISALLOW_COPY_AND_ASSIGN(RefCountedObject) 对 RefCountedObject进行了修饰，表示RefCountedObject<T>不允许赋值和拷贝。注意RTC_DISALLOW_COPY_AND_ASSIGN所放位置是RefCountedObject<T>声明的内部<br>PS1: 完美转发std:forward作用：在模板内，如果我们需要将一组参数原封不动的传递给另外一个参数，在没有完美转发的情况下，考虑参数会有多种类型的重载，因此在没有完美转发的情况下，重载函数个数将会达到2^n个，多么庞大的人工量。当使用std::forward辅以模板参数推导规则以保持参数属性不变，实现完美转发节省了大量的工作。std::forward分析可见：详解C++11中移动语义(std::move)和完美转发(std::forward)</p>
+<p>PS2: RTC_DISALLOW_COPY_AND_ASSIGN(RefCountedObject) 宏展开后相当于两个语句：即移除了默认的拷贝构造和赋值运算符。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-built_in">RefCountedObject</span>(<span class="hljs-type">const</span> RefCountedObject&amp;) = <span class="hljs-keyword">delete</span>;<br>RefCountedObject&amp; <span class="hljs-keyword">operator</span>=(<span class="hljs-type">const</span> RefCountedObject&amp;) = <span class="hljs-keyword">delete</span><br><br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="rtc-scoped-refptr-——-智能指针"><a href="#rtc-scoped-refptr-——-智能指针" class="headerlink" title="rtc::scoped_refptr —— 智能指针"></a>rtc::scoped_refptr —— 智能指针</h3><p>rtc::scoped_refptr<T>是RTC中为了使用引用计数对象的智能指针，实现位于api层的api&#x2F;scoped_refptr.h中。</p>
+<p>使用智能指针，避免直接使用引用计数对象、手动调用引用计数对象的AddRef()、Release()。可以有效防止忘记Release一个对象所引发的内存泄漏。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">class</span> <span class="hljs-title class_">T</span>&gt;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">scoped_refptr</span> &#123;<br> <span class="hljs-keyword">public</span>:<br>  <span class="hljs-keyword">typedef</span> T element_type;<br><br>  <span class="hljs-comment">// 1. 6个构造函数</span><br>  <span class="hljs-comment">// 1.1 默认构造，传入空的引用计数对象</span><br>  <span class="hljs-built_in">scoped_refptr</span>() : <span class="hljs-built_in">ptr_</span>(<span class="hljs-literal">nullptr</span>) &#123;&#125;<br>  <span class="hljs-comment">// 1.2 构造，传入引用计数对象p的指针，调用其AddRef()方法，引用计数+1。</span><br>  <span class="hljs-built_in">scoped_refptr</span>(T* p) : <span class="hljs-built_in">ptr_</span>(p) &#123;  <span class="hljs-comment">// NOLINT(runtime/explicit)</span><br>    <span class="hljs-keyword">if</span> (ptr_)<br>      ptr_-&gt;<span class="hljs-built_in">AddRef</span>();<br>  &#125;<br>  <span class="hljs-comment">// 1.3 拷贝构造，对应的引用计数+1，调用引用计数对象的AddRef()方法。</span><br>  <span class="hljs-built_in">scoped_refptr</span>(<span class="hljs-type">const</span> scoped_refptr&lt;T&gt;&amp; r) : <span class="hljs-built_in">ptr_</span>(r.ptr_) &#123;<br>    <span class="hljs-keyword">if</span> (ptr_)<br>      ptr_-&gt;<span class="hljs-built_in">AddRef</span>();<br>  &#125;<br>  <span class="hljs-comment">// 1.4 拷贝构造，U必须是T的子类，同1.3</span><br>  <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> U&gt;<br>  <span class="hljs-built_in">scoped_refptr</span>(<span class="hljs-type">const</span> scoped_refptr&lt;U&gt;&amp; r) : <span class="hljs-built_in">ptr_</span>(r.<span class="hljs-built_in">get</span>()) &#123;<br>    <span class="hljs-keyword">if</span> (ptr_)<br>      ptr_-&gt;<span class="hljs-built_in">AddRef</span>();<br>  &#125;<br>  <span class="hljs-comment">// 1.5 移动构造(右值引用)，表示对象的转移，亦即使用同一个对象，因此，需要保持</span><br>  <span class="hljs-comment">//     对引用计数对象的引用次数不变。所以，此处调用scoped_refptr&lt;T&gt;的release()</span><br>  <span class="hljs-comment">//     方法，将原来的scoped_refptr&lt;T&gt;对象内部引用计数指针置空，新的scoped_refptr&lt;T&gt;</span><br>  <span class="hljs-comment">//     对象来保存引用计数对象，以达到转移的目的。   </span><br>  <span class="hljs-built_in">scoped_refptr</span>(scoped_refptr&lt;T&gt;&amp;&amp; r) <span class="hljs-keyword">noexcept</span> : <span class="hljs-built_in">ptr_</span>(r.<span class="hljs-built_in">release</span>()) &#123;&#125;<br>  <span class="hljs-comment">// 1.6 移动构造，U必须是T的子类，同1.5</span><br>  <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> U&gt;<br>  <span class="hljs-built_in">scoped_refptr</span>(scoped_refptr&lt;U&gt;&amp;&amp; r) <span class="hljs-keyword">noexcept</span> : <span class="hljs-built_in">ptr_</span>(r.<span class="hljs-built_in">release</span>()) &#123;&#125;<br><br>  <span class="hljs-comment">// 2 析构函数，调用引用计数对象Release()，引用计数-1</span><br>  ~<span class="hljs-built_in">scoped_refptr</span>() &#123;<br>    <span class="hljs-keyword">if</span> (ptr_)<br>      ptr_-&gt;<span class="hljs-built_in">Release</span>();<br>  &#125;<br><br>  <span class="hljs-comment">// 3. get、release、()、-&gt;()方法</span><br>  <span class="hljs-function">T* <span class="hljs-title">get</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123; <span class="hljs-keyword">return</span> ptr_; &#125;<br>  <span class="hljs-keyword">operator</span> T*() <span class="hljs-type">const</span> &#123; <span class="hljs-keyword">return</span> ptr_; &#125;<br>  T* <span class="hljs-keyword">operator</span>-&gt;() <span class="hljs-type">const</span> &#123; <span class="hljs-keyword">return</span> ptr_; &#125;<br>  <span class="hljs-function">T* <span class="hljs-title">release</span><span class="hljs-params">()</span> </span>&#123;<br>    T* retVal = ptr_;<br>    ptr_ = <span class="hljs-literal">nullptr</span>;<br>    <span class="hljs-keyword">return</span> retVal;<br>  &#125;<br><br>  <span class="hljs-comment">// 4. 重载赋值运算符</span><br>  <span class="hljs-comment">// 4.1 赋值新的引用计数对象的指针，新引用计数对象的引用计数+1，原来的-1</span><br>  scoped_refptr&lt;T&gt;&amp; <span class="hljs-keyword">operator</span>=(T* p) &#123;<br>    <span class="hljs-comment">// AddRef first so that self assignment should work</span><br>    <span class="hljs-comment">// 先增加引用，再减小原来的引用，这样可以使得自赋值能正常工作</span><br>    <span class="hljs-keyword">if</span> (p)<br>      p-&gt;<span class="hljs-built_in">AddRef</span>();<br>    <span class="hljs-keyword">if</span> (ptr_)<br>      ptr_-&gt;<span class="hljs-built_in">Release</span>();<br>    ptr_ = p;<br>    <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span>;<br>  &#125;<br>  <span class="hljs-comment">// 4.2 赋值智能指针，新引用计数对象的引用计数+1，原来的-1</span><br>  scoped_refptr&lt;T&gt;&amp; <span class="hljs-keyword">operator</span>=(<span class="hljs-type">const</span> scoped_refptr&lt;T&gt;&amp; r) &#123;<br>  	<span class="hljs-comment">// 取出智能指针的内部引用计数的指针，利用4.1的功能实现赋值</span><br>    <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span> = r.ptr_;<br>  &#125;<br>  <span class="hljs-comment">// 4.3 赋值T的子类U的智能指针，新引用计数对象的引用计数+1，原来的-1</span><br>  <span class="hljs-comment">//     具体使用过程中，这个赋值方法用得最多。</span><br>  <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> U&gt;<br>  scoped_refptr&lt;T&gt;&amp; <span class="hljs-keyword">operator</span>=(<span class="hljs-type">const</span> scoped_refptr&lt;U&gt;&amp; r) &#123;<br>    <span class="hljs-comment">// 使用get()方法取出智能指针的内部引用计数的指针，利用4.1的功能实现赋值</span><br>    <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span> = r.<span class="hljs-built_in">get</span>();<br>  &#125;<br>  <span class="hljs-comment">// 4.4 移动赋值右值智能指针，新引用计数对象的引用计数不变，原来引用计数对象的引用计数不变</span><br>  scoped_refptr&lt;T&gt;&amp; <span class="hljs-keyword">operator</span>=(scoped_refptr&lt;T&gt;&amp;&amp; r) <span class="hljs-keyword">noexcept</span> &#123;<br>    <span class="hljs-comment">// 使用移动语义std::move + 移动构造 + swap进行引用计数对象的地址交换</span><br>    <span class="hljs-built_in">scoped_refptr</span>&lt;T&gt;(std::<span class="hljs-built_in">move</span>(r)).<span class="hljs-built_in">swap</span>(*<span class="hljs-keyword">this</span>);<br>    <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span>;<br>  &#125;<br>  <span class="hljs-comment">// 4.5 移动赋值T的子类U的右值智能指针，新引用计数对象的引用计数不变，原来引用计数对象的引用计数不变</span><br>  <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> U&gt;<br>  scoped_refptr&lt;T&gt;&amp; <span class="hljs-keyword">operator</span>=(scoped_refptr&lt;U&gt;&amp;&amp; r) <span class="hljs-keyword">noexcept</span> &#123;<br>    <span class="hljs-comment">// 使用移动语义std::move + 移动构造 + swap进行引用计数对象的地址交换</span><br>    <span class="hljs-built_in">scoped_refptr</span>&lt;T&gt;(std::<span class="hljs-built_in">move</span>(r)).<span class="hljs-built_in">swap</span>(*<span class="hljs-keyword">this</span>);<br>    <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span>;<br>  &#125;<br><br>  <span class="hljs-comment">// 5 地址交换函数</span><br>  <span class="hljs-comment">// 5.1 引用计数对象的地址交换</span><br>  <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">swap</span><span class="hljs-params">(T** pp)</span> <span class="hljs-keyword">noexcept</span> </span>&#123;<br>    T* p = ptr_;<br>    ptr_ = *pp;<br>    *pp = p;<br>  &#125;<br>  <span class="hljs-comment">// 5.2 智能智能内部的引用计数对象的地址交换，利用5.1</span><br>  <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">swap</span><span class="hljs-params">(scoped_refptr&lt;T&gt;&amp; r)</span> <span class="hljs-keyword">noexcept</span> </span>&#123; <span class="hljs-built_in">swap</span>(&amp;r.ptr_); &#125;<br><br> <span class="hljs-keyword">protected</span>:<br>  T* ptr_;<br>&#125;;<br><br></code></pre></td></tr></table></figure>
+<p>rtc::scoped_refptr<T>的成员方法大致按照源码的注释所述，分为5类。具体就不再详述，见注释即可。需要引起重视的有如下几个观点：</p>
+<p>rtc::scoped_refptr<T>的构造 和 赋值 将调用引用计数对象的AddRef()方法，使得引用计数+1；<br>rtc::scoped_refptr<T>的析构 将调用引用计数对象的Release()方法，使得引用计数-1，引用计数减少为0，则引用计数对象将再Release()方法中被delete。<br>rtc::scoped_refptr<T>移动构造 和 移动赋值 将不会增加引用计数对象的计数，只会交换智能指针内部保存的引用计数对象的地址，右值引用的内部引用计数对象指针将被赋值为nullptr。<br>小写的release()方法不可轻易调用，需要在理解其作用的条件下谨慎使用。因为，release()方法会使智能指针内部存储的ptr_为空，失去对引用计数对象的引用，而引用计数没有-1。</p>
+<hr>
+<h3 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h3><h4 id="demo1"><a href="#demo1" class="headerlink" title="demo1"></a>demo1</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyFoo</span> : <span class="hljs-keyword">public</span> RefCountInterface &#123;<br>...<br>&#125;;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">some_function</span><span class="hljs-params">()</span> </span>&#123;<br>	scoped_refptr&lt;MyFoo&gt; foo = <span class="hljs-keyword">new</span> <span class="hljs-built_in">RefCountedObject</span>&lt;MyFoo&gt;();<br>	foo-&gt;<span class="hljs-built_in">Method</span>(param);<br>	<span class="hljs-comment">//|foo| is released when this function returns</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">some_other_function</span><span class="hljs-params">()</span> </span>&#123;<br>	scoped_refptr&lt;MyFoo&gt; foo = <span class="hljs-keyword">new</span> <span class="hljs-built_in">RefCountedObject</span>&lt;MyFoo&gt;();<br>	...<br>	foo = <span class="hljs-literal">nullptr</span>;  <span class="hljs-comment">// explicitly releases |foo|</span><br>	...<br>	<span class="hljs-keyword">if</span> (foo)<br>		foo-&gt;<span class="hljs-built_in">Method</span>(param);<br>&#125;<br><br></code></pre></td></tr></table></figure>
+<p>上面的示例演示了scoped_refptr<T>如何表现得像T*<br>演示了两个智能指针对象之间如何交换底层保存的引用计数对象。通过swap()，最终b引用了a之间保存的引用计数对象，而a则引用nullptr，因为b之前就是引用nullptr。</p>
+<h4 id="demo2"><a href="#demo2" class="headerlink" title="demo2"></a>demo2</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs cpp">&#123;<br>	scoped_refptr&lt;MyFoo&gt; a = <span class="hljs-keyword">new</span> <span class="hljs-built_in">RefCountedObject</span>&lt;MyFoo&gt;();<br>	scoped_refptr&lt;MyFoo&gt; b;<br>	b.<span class="hljs-built_in">swap</span>(a);<br>	<span class="hljs-comment">// now, |b| references the MyFoo object, and |a| references null.</span><br>&#125;<br><br>&#123;<br>	scoped_refptr&lt;MyFoo&gt; a = <span class="hljs-keyword">new</span> <span class="hljs-built_in">RefCountedObject</span>&lt;MyFoo&gt;();<br>	scoped_refptr&lt;MyFoo&gt; b;<br>	b = a;<br>	<span class="hljs-comment">// now, |a| and |b| each own a reference to the same MyFoo object.</span><br>&#125;<br><br></code></pre></td></tr></table></figure>
+<p>演示了如何让智能指针b和a引用同一个引用计数对象，简单的赋值即可。上述示例将使得b也引用了之前a保存的引用计数对象，引用计数为2。若是语句b &#x3D; a 改为 a &#x3D; b，那么a和b都将引用空对象nullptr，之前a保存的引用计数对象RefCountedObject<MyFoo>的引用计数将被减为0，从而被delete掉。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/WebRTC/" class="print-no-link">#WebRTC</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>webrtc引用计数系统</div>
+      <div>https://alberthello.github.io/2024/08/11/webrtc/webrtc-ref-count/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年8月11日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/08/11/webrtc/course-11-2/" title="11.2 网卡">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">11.2 网卡</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/04/19/webrtc/course-6-2-sdp/" title="6.2 生成SDP">
+                        <span class="hidden-mobile">6.2 生成SDP</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

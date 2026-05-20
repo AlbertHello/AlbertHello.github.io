@@ -1,0 +1,1186 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="2020年10月5日  书店 天气不错，晴冷 runtime首先介绍下C语言的有关位运算的知识 按位与 按位或 在arm64架构之前，isa就是一个普通的指针，存储着Class、Meta-Class对象的内存地址 从arm64架构开始，对isa进行了优化，变成了一个共用体（union）结构，还使用位域来存储更多的信息   C语言位运算  与运算&amp;   两个同时为1，结果为1，否则为0 比如">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Runtime 原理">
+<meta property="og:url" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="2020年10月5日  书店 天气不错，晴冷 runtime首先介绍下C语言的有关位运算的知识 按位与 按位或 在arm64架构之前，isa就是一个普通的指针，存储着Class、Meta-Class对象的内存地址 从arm64架构开始，对isa进行了优化，变成了一个共用体（union）结构，还使用位域来存储更多的信息   C语言位运算  与运算&amp;   两个同时为1，结果为1，否则为0 比如">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/01.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/02.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/03.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/04.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/05.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/06.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/07.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/08.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/09.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/10.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/11.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/12.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/13.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/14.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/01.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/15.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/16.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/06.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/29.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/24.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/23.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/18.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/01.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/19.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/20.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/21.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/22.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/27.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/26.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/28.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/37.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/38.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/39.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/30.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/42.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/43.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/44.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/31.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/45.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/46.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/52.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/33.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/35.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/36.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/32.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/47.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/48.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/49.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/50.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/51.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/53.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/54.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/55.png">
+<meta property="article:published_time" content="2024-04-01T14:53:05.000Z">
+<meta property="article:modified_time" content="2026-05-20T13:10:39.307Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="Objective-C">
+<meta property="article:tag" content="Runtime">
+<meta property="article:tag" content="iOS">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://alberthello.github.io/2024/04/01/ios/08-runtime/01.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Runtime 原理 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Runtime 原理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-04-01 22:53" pubdate>
+          2024年4月1日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.7k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Runtime 原理</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-05-20T21:10:39+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <p>2020年10月5日  书店 天气不错，晴冷</p>
+<h2 id="runtime"><a href="#runtime" class="headerlink" title="runtime"></a>runtime</h2><p>首先介绍下C语言的有关位运算的知识</p>
+<h3 id="按位与-按位或"><a href="#按位与-按位或" class="headerlink" title="按位与 按位或"></a>按位与 按位或</h3><ul>
+<li>在arm64架构之前，isa就是一个普通的指针，存储着Class、Meta-Class对象的内存地址</li>
+<li>从arm64架构开始，对isa进行了优化，变成了一个共用体（union）结构，还使用<strong>位域</strong>来存储更多的信息</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/01.png" srcset="/img/loading.gif" lazyload class="" width="01">
+<p>C语言位运算</p>
+<ul>
+<li><p>与运算&amp; </p>
+<ul>
+<li>两个同时为1，结果为1，否则为0</li>
+<li>比如 0000 1000 &amp; 0000 1001 &#x3D; 0000 1000</li>
+</ul>
+</li>
+<li><p>或运算|</p>
+<ul>
+<li>只要一个为1，其值为1。</li>
+<li>比如 0000 1000 | 0000 1001 &#x3D; 0000 1001</li>
+</ul>
+</li>
+<li><p>取反运算~</p>
+<ul>
+<li>按位取反，0-&gt;1,1-&gt;0</li>
+<li>~0000 1000 &#x3D; 1111 0111</li>
+</ul>
+</li>
+<li><p>&amp; 常用来取值</p>
+<ul>
+<li>比如有二进制0001 1010，我想知道第四个二进制位是0还是1，那么我可以让这个数&amp;上一个掩码0000 1000</li>
+<li>那么0001 1010 &amp; 0000 1000 &#x3D; 0000 1000，如果得到的数第四位为1那么远来得那个数第四位也一定为1，如果为0那么原来的那个数的第四位也是0。</li>
+</ul>
+</li>
+<li><p>| 常用来赋值</p>
+<ul>
+<li>比如有二进制数0001 1010，我想让他第一位变为1，那么可以让它|上一个掩码0000 0001</li>
+<li>那么0001 1010 | 0000 0001 &#x3D; 0001 1011 </li>
+<li>这样既能保证不改变其他位的值，也能把第一位置位1.</li>
+<li>如果把第二位置0怎么办呢？先对掩码取反，再&amp;</li>
+<li>也就是先取反 ~0000 0010 &#x3D; 1111 1101</li>
+<li>然后再与 0001 1010 &amp; 1111 1101 &#x3D; 0001 1000</li>
+</ul>
+</li>
+</ul>
+<h4 id="对象的属性用-来赋值取值"><a href="#对象的属性用-来赋值取值" class="headerlink" title="对象的属性用&amp; | 来赋值取值"></a>对象的属性用&amp; | 来赋值取值</h4><p>加入此时我创建一个对象，这个对象有三个布尔类型的属性。正常情况下我们应该是这么创建的：</p>
+<img src="/2024/04/01/ios/08-runtime/02.png" srcset="/img/loading.gif" lazyload class="" width="02">
+<p>这样最终会占用三个字节，其实我们可以用一个字节就可以完成。</p>
+<p>我们这样做：</p>
+<img src="/2024/04/01/ios/08-runtime/03.png" srcset="/img/loading.gif" lazyload class="" width="03">
+<p>我们只定义一个char类型的成员变量，它只占用一个字节，但我们怎么把三个属性用它表示呢？</p>
+<p>这样做：</p>
+<img src="/2024/04/01/ios/08-runtime/04.png" srcset="/img/loading.gif" lazyload class="" width="04">
+<p>我们给成员变量用二进制赋值。三个属性的值分别用最低位的三个二进制位表示</p>
+<p>那么我们就不需要属性了，我们改为如下的接口：</p>
+<img src="/2024/04/01/ios/08-runtime/05.png" srcset="/img/loading.gif" lazyload class="" width="05">
+<p>前面已经温习了C语言的知识，那下面就是取值和赋值的实现：</p>
+<ul>
+<li>tall 属性</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/06.png" srcset="/img/loading.gif" lazyload class="" width="06">
+<ul>
+<li>rich 属性</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/07.png" srcset="/img/loading.gif" lazyload class="" width="07">
+<ul>
+<li>handsome属性</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/08.png" srcset="/img/loading.gif" lazyload class="" width="08">
+<ul>
+<li>其中的宏是：</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/09.png" srcset="/img/loading.gif" lazyload class="" width="09">
+<ul>
+<li>左移几位就是乘上2的几次方</li>
+<li>右移几位就是除上2的几次方</li>
+<li>前面讲取第一位就与上0000 0001 这就是 1&lt;&lt;0</li>
+<li>前面讲取第二位就与上0000 0010 这就是 1&lt;&lt;1</li>
+<li>前面讲取第三位就与上0000 0100 这就是 1&lt;&lt;2</li>
+</ul>
+<p>至此三个属性只占用一个字节的demo就完成了：</p>
+<img src="/2024/04/01/ios/08-runtime/10.png" srcset="/img/loading.gif" lazyload class="" width="10">
+<h4 id="对象的属性用-来赋值取值优化"><a href="#对象的属性用-来赋值取值优化" class="headerlink" title="对象的属性用 &amp; | 来赋值取值优化"></a>对象的属性用 &amp; | 来赋值取值优化</h4><p>我们对成员变量进行优化如下：</p>
+<img src="/2024/04/01/ios/08-runtime/11.png" srcset="/img/loading.gif" lazyload class="" width="11">
+<p>成员变量改为一个结构体变量_tallRichHandsome，结构体有三个成员，但每个成员规定了只占一位，且由上而下占用由低到高的二进制位，也就是说tall 占用第一个二进制位，rich占用第二个二进制位，handsome占用第三个二进制位。由于结构体的内存对齐原则，最终_tallRichHandsome还是只占用一个字节。</p>
+<p>随之取值赋值改变如下：</p>
+<img src="/2024/04/01/ios/08-runtime/12.png" srcset="/img/loading.gif" lazyload class="" width="12">
+<p>赋值操作就按照常规操作正常赋值就能完事儿:</p>
+<img src="/2024/04/01/ios/08-runtime/13.png" srcset="/img/loading.gif" lazyload class="" width="13">
+<h4 id="对象的属性用-来赋值取值再优化-共用体"><a href="#对象的属性用-来赋值取值再优化-共用体" class="headerlink" title="对象的属性用 &amp; | 来赋值取值再优化-共用体"></a>对象的属性用 &amp; | 来赋值取值再优化-共用体</h4><p>来看下面：</p>
+<img src="/2024/04/01/ios/08-runtime/14.png" srcset="/img/loading.gif" lazyload class="" width="14">
+<p>这个是共用体结构，来存储我们的四个属性的值。最终也只需要1个字节，起作用的其实就只有bits成员。这个结构已经和isa_t共用体非常相似了：</p>
+<img src="/2024/04/01/ios/08-runtime/01.png" srcset="/img/loading.gif" lazyload class="" width="01">
+<p>demo中的共用体也等价于下面的：</p>
+<img src="/2024/04/01/ios/08-runtime/15.png" srcset="/img/loading.gif" lazyload class="" width="15">
+<p>也进一步等价于下面的：</p>
+<img src="/2024/04/01/ios/08-runtime/16.png" srcset="/img/loading.gif" lazyload class="" width="16">
+<p>而且当使用共用体存储属性值时，其setter和getter方法的实现和只用一个char类型成员时的实现一模一样：</p>
+<img src="/2024/04/01/ios/08-runtime/06.png" srcset="/img/loading.gif" lazyload class="" width="06">
+<p>至此位域大概就是这样了，下面仔细看下isa_t共用体</p>
+<h4 id="位运算补充"><a href="#位运算补充" class="headerlink" title="位运算补充"></a>位运算补充</h4><p>开发中我们经常看到有如下用法:</p>
+<img src="/2024/04/01/ios/08-runtime/29.png" srcset="/img/loading.gif" lazyload class="" width="29">
+<p>设置多个或运算后，内部怎么取值的？<br>我们也自己定义：</p>
+<img src="/2024/04/01/ios/08-runtime/24.png" srcset="/img/loading.gif" lazyload class="" width="24">
+<p>传入值之后再&amp;就能能得到它的值了。</p>
+<img src="/2024/04/01/ios/08-runtime/23.png" srcset="/img/loading.gif" lazyload class="" width="23">
+<h3 id="isa-t共用体详解"><a href="#isa-t共用体详解" class="headerlink" title="isa_t共用体详解"></a>isa_t共用体详解</h3><img src="/2024/04/01/ios/08-runtime/18.png" srcset="/img/loading.gif" lazyload class="" width="18">
+<ul>
+<li>前面说过了在64位之后，isa指针指向的类对象或元类对象的地址需要做一次位运算才能拿到相应的地址<ul>
+<li>64位之前isa指针指向的就直接是类对象地址或元类对象地址。</li>
+</ul>
+</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/01.png" srcset="/img/loading.gif" lazyload class="" width="01">
+<p>从上图可以里看到占用33位的那个就是指向的类对象或元类对象地址，参与运算的掩码是：0xFFFFFFFF8：</p>
+<img src="/2024/04/01/ios/08-runtime/19.png" srcset="/img/loading.gif" lazyload class="" width="19">
+<p>用计算器显示下二进制如下：</p>
+<img src="/2024/04/01/ios/08-runtime/20.png" srcset="/img/loading.gif" lazyload class="" width="20">
+<p>中间的33位都是1，最低位的三位都是0，那么通过 &amp; 运算得到的地址最后三位一定都是0，也就是我们得到以下结论：</p>
+<img src="/2024/04/01/ios/08-runtime/21.png" srcset="/img/loading.gif" lazyload class="" width="21">
+<p>类对象或元类对象的地址最后三位永远都是0：</p>
+<img src="/2024/04/01/ios/08-runtime/22.png" srcset="/img/loading.gif" lazyload class="" width="22">
+<h4 id="isa-t成员变量详解"><a href="#isa-t成员变量详解" class="headerlink" title="isa_t成员变量详解"></a>isa_t成员变量详解</h4><p>下面挨个来看看isa_t每个成员的含义:</p>
+<ul>
+<li>nonpointer<ul>
+<li>0，代表普通的指针，存储着Class、Meta-Class对象的内存地址</li>
+<li>1，代表优化过，使用位域存储更多的信息</li>
+</ul>
+</li>
+<li>has_assoc<ul>
+<li>是否有设置过关联对象，如果没有，释放时会更快</li>
+</ul>
+</li>
+<li>has_cxx_dtor<ul>
+<li>是否有C++的析构函数（.cxx_destruct），如果没有，释放时会更快，看如下源码：</li>
+</ul>
+</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/27.png" srcset="/img/loading.gif" lazyload class="" width="27">
+<ul>
+<li>shiftcls<ul>
+<li>存储着Class、Meta-Class对象的内存地址信息</li>
+</ul>
+</li>
+<li>magic<ul>
+<li>用于在调试时分辨对象是否未完成初始化</li>
+</ul>
+</li>
+<li>weakly_referenced<ul>
+<li>是否有被弱引用指向过，如果没有，释放时会更快</li>
+</ul>
+</li>
+<li>deallocating<ul>
+<li>对象是否正在释放</li>
+</ul>
+</li>
+<li>extra_rc<ul>
+<li>里面存储的值是引用计数器减1</li>
+</ul>
+</li>
+<li>has_sidetable_rc<ul>
+<li>引用计数器是否过大无法存储在isa中。</li>
+<li>如果为1，那么引用计数会存储在一个叫SideTable的类的属性中</li>
+</ul>
+</li>
+</ul>
+<h4 id="Class的结构"><a href="#Class的结构" class="headerlink" title="Class的结构"></a>Class的结构</h4><img src="/2024/04/01/ios/08-runtime/26.png" srcset="/img/loading.gif" lazyload class="" width="26">
+<img src="/2024/04/01/ios/08-runtime/28.png" srcset="/img/loading.gif" lazyload class="" width="28">
+<img src="/2024/04/01/ios/08-runtime/37.png" srcset="/img/loading.gif" lazyload class="" width="37">
+<h5 id="class-rw-t"><a href="#class-rw-t" class="headerlink" title="class_rw_t"></a>class_rw_t</h5><ul>
+<li>class_rw_t里面的methods、properties、protocols是二维数组，是可读可写的，包含了类的初始内容、分类的内容</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/38.png" srcset="/img/loading.gif" lazyload class="" width="38">
+<ul>
+<li>method_t是对方法\函数的封装</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/39.png" srcset="/img/loading.gif" lazyload class="" width="39">
+<ul>
+<li>IMP代表函数的具体实现</li>
+<li>SEL代表方法\函数名，一般叫做选择器，底层结构跟char *类似<ul>
+<li>可以通过@selector()和sel_registerName()获得</li>
+<li>可以通过sel_getName()和NSStringFromSelector()转成字符串</li>
+<li>不同类中相同名字的方法，所对应的方法选择器是相同的</li>
+</ul>
+</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/30.png" srcset="/img/loading.gif" lazyload class="" width="30">
+<ul>
+<li>types包含了函数返回值、参数编码的字符串</li>
+<li>iOS中提供了一个叫做@encode的指令，可以将具体的类型表示成字符串编码</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/42.png" srcset="/img/loading.gif" lazyload class="" width="42">
+<img src="/2024/04/01/ios/08-runtime/43.png" srcset="/img/loading.gif" lazyload class="" width="43">
+<img src="/2024/04/01/ios/08-runtime/44.png" srcset="/img/loading.gif" lazyload class="" width="44">
+<img src="/2024/04/01/ios/08-runtime/31.png" srcset="/img/loading.gif" lazyload class="" width="31">
+
+<p>其中i代表返回值是int类型，@代表第一个参数是id类型，:代表第二个参数是sel类型，i代表第三个参数是int类型，f代表第四个参数是float类型。</p>
+<p>24代表参数总共占用24个字节，0代表从第0个字节开始是id类型的参数，8代表从第八个字节开始是sel类型的参数，16代表从第16个字节开始是int类型的参数，20代表从第20个字节开始是float类型的参数。</p>
+<h5 id="class-ro-t"><a href="#class-ro-t" class="headerlink" title="class_ro_t"></a>class_ro_t</h5><ul>
+<li>class_ro_t里面的baseMethodList、baseProtocols、ivars、baseProperties是一维数组，是只读的，包含了类的初始内容</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/45.png" srcset="/img/loading.gif" lazyload class="" width="45">
+<h5 id="cache-t-方法缓存"><a href="#cache-t-方法缓存" class="headerlink" title="cache_t 方法缓存"></a>cache_t 方法缓存</h5><ul>
+<li>Class内部结构中有个方法缓存（cache_t），用**散列表（哈希表）**来缓存曾经调用过的方法，可以提高方法的查找速度</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/46.png" srcset="/img/loading.gif" lazyload class="" width="46">
+<p>散列表原理：</p>
+<ul>
+<li>散列表也是哈希表，查找效率比数组高，是因为用空间换取了时间</li>
+<li>通过传入的一个key，经过某种算法得到一个索引index，该key对应的值组成结构体bucket_t就存在获取到的索引index下。</li>
+<li>当在某个index下存储时，可能其他的index并没有值，所以有部分空间是浪费的。</li>
+<li>当通过key查找时，也是通过key利用某个算法再次获取到index，然后根据index直接取值，速度自然比数组快。</li>
+<li>当两个或多个key通过某该算法得到了同一个index时，也就是产生了哈希碰撞，再会根据某个算法比如让得出的index-1或index+1或者其他什么算法，让index一个key一一对应就行。</li>
+</ul>
+<p><strong>注意：</strong></p>
+<ul>
+<li>实际上哈希冲突的解决办法一般有开放定址、再哈希、链地址等</li>
+<li>开放定址：<ul>
+<li>按照一定规则向其他地址探测，直到遇到空桶</li>
+</ul>
+</li>
+<li>再哈希：<ul>
+<li>设计多个哈希函数</li>
+</ul>
+</li>
+<li>链地址：<ul>
+<li>比如通过链表把同一index下的元素串起来。比如Java JDK1.8中就使用单链表和红黑树解决哈希冲突</li>
+</ul>
+</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/52.png" srcset="/img/loading.gif" lazyload class="" width="52">
+<hr>
+<p>iOS 这里 bucket_t 的原理：</p>
+<ul>
+<li>当拿传入key时，会通过&amp;上mask，得到index索引</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/33.png" srcset="/img/loading.gif" lazyload class="" width="33">
+<ul>
+<li>当多个key通过&amp;是哪个mask得到了同一个index时，iOS这里的处理方法是让index-1。</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/35.png" srcset="/img/loading.gif" lazyload class="" width="35">
+<ul>
+<li>当散列表容量满了，会清空之前存储的，再扩容，因为mask变了，所以有必要清空之前的。</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/36.png" srcset="/img/loading.gif" lazyload class="" width="36">
+<ul>
+<li>&amp;上mask得到的值最大也不会超过mask</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/32.png" srcset="/img/loading.gif" lazyload class="" width="32">
+<p>下面看下实际的都没：</p>
+<ul>
+<li>只调用了init方法之后：</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/47.png" srcset="/img/loading.gif" lazyload class="" width="47">
+<p>容量是mask+1&#x3D;4，occupied&#x3D;1，表明只缓存了一个。</p>
+<ul>
+<li>调用personTest 之后</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/48.png" srcset="/img/loading.gif" lazyload class="" width="48">
+<p>我们恰巧能看到bucket数组的第一个元素是就是刚才调用过的，如果这为null，也是正常的，因为可能缓存的index位置可能不是0而已。</p>
+<ul>
+<li>当调用多个方法之后，打散列表：</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/49.png" srcset="/img/loading.gif" lazyload class="" width="49">
+<p>可以看到有的为null有的是空，所以印证了上面所说的散列表的某些位置是空的。</p>
+<p>可以看下具体的通过key获取imp指针的实现:</p>
+<img src="/2024/04/01/ios/08-runtime/50.png" srcset="/img/loading.gif" lazyload class="" width="50">
+<img src="/2024/04/01/ios/08-runtime/51.png" srcset="/img/loading.gif" lazyload class="" width="51">
+
+<p>可以看到传入的sel会通过&amp;上mask得到index，再通过判断根据index取出来的selector是否等于传入的selector,只有相等的时候才会返回对应的imp。 如果不满足则下一个循环，index-1了。</p>
+<h3 id="消息发送"><a href="#消息发送" class="headerlink" title="消息发送"></a>消息发送</h3><p>详细看下消息发送的执行流程：[obj instanceMethod] 大概转化成了如下形式：<br> objc_msgSend(obj,instanceMethod)，其中obj称为消息接收者，instanceMethod是函数地址IMP。</p>
+<ul>
+<li>1 首先如果接收者obj如果是nil，则消息发送就会停止，没有任何反应</li>
+<li>2 obj不为nil，则就会根据obj的isa找到obj的类对象，然后在cache中国查找方法</li>
+<li>3 cache找到了即调用，结束查找。</li>
+<li>4 cache找不到则会在class_rw_t中查找方法，找到了即调用，并将方法缓存到类对象的cache中</li>
+<li>5 class_rw_t中没有找到，则会在类对象中利用superClass指针找到父类</li>
+<li>6 然后在父类的cache中查找，找到了即调用，结束查找。</li>
+<li>7 否则在父类的class_rw_t中查找，找到了即调用，并将方法缓存到类对象的cache中。</li>
+<li>8 如果父类的class_rw_t中还还查找不到，那就重复第5步。</li>
+<li>9 如果父类到头儿了还没找到方法就回进入动态解析阶段</li>
+</ul>
+<p>如下图示：</p>
+<img src="/2024/04/01/ios/08-runtime/53.png" srcset="/img/loading.gif" lazyload class="" width="53">
+<h3 id="动态解析"><a href="#动态解析" class="headerlink" title="动态解析"></a>动态解析</h3><p>消息发送阶段如果找不到方法，就回进入到动态解析阶段，看下源码先：</p>
+<img src="/2024/04/01/ios/08-runtime/54.png" srcset="/img/loading.gif" lazyload class="" width="54">
+<ul>
+<li>动态解析阶段有个if判断，第一个参数是应该系统传入的resolver，这个是YES。重点是第二个参数triedResolver，这个参数在本函数开头，定义为：<code>bool triedResolver = NO;</code></li>
+<li>所以当第一次进入动态解析时，能进入到 if 执行代码。</li>
+<li>动态解析完后，triedResolver被设置为YES，所以对该方法的动态解析就执行一次。</li>
+<li>解析完后就回到函数开头处重新走消息发送的流程，查chche、class_rw_t等，找到就调用。找不到就进入下一阶段消息转发。</li>
+</ul>
+<p>那么动态解析上层应该这么做呢？</p>
+<ul>
+<li>首先，实现两个方法</li>
+</ul>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs perl">// 处理类方法找不到<br>+ (BOOL)resolveClassMethod:(SEL)sel&#123;<br>    <span class="hljs-keyword">if</span> (sel == <span class="hljs-variable">@selector</span>(testClassMethord)) &#123;<br>        <br>        <span class="hljs-regexp">//</span> 方案<span class="hljs-number">1</span> 添加 C 函数<br>        // 第一个参数是object_getClass(self)<br>        // 第二个参数是就是传入的sel<br>        // 第三个参数是将要动态添加的方法的IMP指针<br>        // 第四个是将要动态添加的方法的参数类型、返回值类型等描述<br>//        class_addMethod(object_getClass(self),<br><span class="hljs-regexp">//</span>                        sel,<br><span class="hljs-regexp">//</span>                        (IMP)c_other, <span class="hljs-regexp">//</span> 如果是C函数，那么函数名就是函数地址了。<br>//                        <span class="hljs-string">&quot;v16<span class="hljs-variable">@0</span>:8&quot;</span>);<br>        <br>        <span class="hljs-regexp">//</span> 方案<span class="hljs-number">2</span> 添加 OC 函数<br>        // 第一个参数是object_getClass(self)<br>        // 第二个参数是就是传入的sel<br>        // 第三个参数是将要动态添加的方法的IMP指针<br>        // 第四个是将要动态添加的方法的参数类型、返回值类型等描述<br>        <br>        Method <span class="hljs-function"><span class="hljs-keyword">method</span> = <span class="hljs-title">class_getInstanceMethod</span></span>(self, @selector(other));<br>        IMP imp = method_getImplementation(<span class="hljs-function"><span class="hljs-keyword">method</span>)</span>; // 获取到OC函数的函数地址<br><br>        class_addMethod(object_getClass(self),<br>                        sel,<br>                        imp,<br>                        method_getTypeEncoding(<span class="hljs-function"><span class="hljs-keyword">method</span>))</span>;<br>        <span class="hljs-keyword">return</span> YES; <span class="hljs-regexp">//</span> 返回YES代表有动态添加方法<br>    &#125;<br>    <span class="hljs-keyword">return</span> [super resolveClassMethod:sel];<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs perl">// 处理实例方法找不到<br>+ (BOOL)resolveInstanceMethod:(SEL)sel&#123;<br>    <span class="hljs-keyword">if</span> (sel == <span class="hljs-variable">@selector</span>(testInstanceMethord)) &#123;<br>        <br>        <span class="hljs-regexp">//</span> 方案<span class="hljs-number">1</span> 添加 C 函数<br>        // 第一个参数是 self 代表实例对象<br>        // 第二个参数是就是传入的sel<br>        // 第三个参数是将要动态添加的方法的IMP指针<br>        // 第四个是将要动态添加的方法的参数类型、返回值类型等描述<br>//        class_addMethod(self,<br><span class="hljs-regexp">//</span>                        sel,<br><span class="hljs-regexp">//</span>                        (IMP)c_other,<br><span class="hljs-regexp">//</span>                        <span class="hljs-string">&quot;v16<span class="hljs-variable">@0</span>:8&quot;</span>);<br>        <br>        <span class="hljs-regexp">//</span> 方案<span class="hljs-number">2</span> 添加 OC 函数<br>        // 第一个参数是 self 代表实例对象<br>        // 第二个参数是就是传入的sel<br>        // 第三个参数是将要动态添加的方法的IMP指针<br>        // 第四个是将要动态添加的方法的参数类型、返回值类型等描述<br>        <br>        Method <span class="hljs-function"><span class="hljs-keyword">method</span> = <span class="hljs-title">class_getInstanceMethod</span></span>(self, @selector(other));<br>        IMP imp = method_getImplementation(<span class="hljs-function"><span class="hljs-keyword">method</span>)</span>; // 获取到OC函数的函数地址<br><br>        class_addMethod(self,<br>                        sel,<br>                        imp,<br>                        method_getTypeEncoding(<span class="hljs-function"><span class="hljs-keyword">method</span>))</span>;<br>        <br>        <span class="hljs-keyword">return</span> YES; <span class="hljs-regexp">//</span> 返回YES代表有动态添加方法<br>    &#125;<br>    <span class="hljs-keyword">return</span> [super resolveInstanceMethod:sel];<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>还有要动态添加的方法，也就是找不到某个方法时，临时让一个方法顶替的意思</li>
+</ul>
+<figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs objectivec"><span class="hljs-comment">// C 函数</span><br><span class="hljs-type">void</span> c_other(<span class="hljs-type">id</span> <span class="hljs-keyword">self</span>, SEL _cmd)&#123;<br>    <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@&quot;c_other - %@ - %@&quot;</span>, <span class="hljs-keyword">self</span>, <span class="hljs-built_in">NSStringFromSelector</span>(_cmd));<br>&#125;<br><span class="hljs-comment">// OC 函数</span><br>- (<span class="hljs-type">void</span>)other&#123;<br>    <span class="hljs-built_in">NSLog</span>(<span class="hljs-string">@&quot;%s&quot;</span>, __func__);<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>+resolveClassMethod</code> 和 <code>+resolveInstanceMethod</code> 分别是类方法找不到和实例方法找不到时被系统自动调用的方法</li>
+<li>通过method_getImplementation函数动态添加一个方法实现。</li>
+<li>动态添加的这个方法可以是C函数也可以是OC的方法。</li>
+<li>如此，便解决了方法找不到的问题。<br>图示：</li>
+</ul>
+<img src="/2024/04/01/ios/08-runtime/55.png" srcset="/img/loading.gif" lazyload class="" width="55">
+<p><strong>另外：</strong></p>
+<ul>
+<li>上面代码中的<code>Method</code>其实在底层就是<code>struct method_t</code></li>
+<li><code>Method</code>的定义是<code>typedef struct objc_method *Method;</code></li>
+<li>而 <code>struct objc_method == struct method_t</code></li>
+</ul>
+<figure class="highlight oxygene"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs oxygene">struct method_t <span class="hljs-comment">&#123;</span><br><span class="hljs-comment">    SEL sel;</span><br><span class="hljs-comment">    char *types;</span><br><span class="hljs-comment">    IMP imp;</span><br><span class="hljs-comment">&#125;</span><span class="hljs-punctuation">;</span><br><br><span class="hljs-comment">// 获取其他方法</span><br>struct method_t *<span class="hljs-keyword">method</span> = <span class="hljs-params">(struct method_t *)</span><span class="hljs-title function_">class_getInstanceMethod</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, @<span class="hljs-keyword">selector</span>(other)</span>);<br><span class="hljs-comment">// 动态添加test方法的实现</span><br>class_addMethod(<span class="hljs-keyword">self</span>, sel, <span class="hljs-keyword">method</span>-&gt;<span class="hljs-title function_">imp</span>, <span class="hljs-title function_">method</span>-&gt;<span class="hljs-title function_">types</span>);<br></code></pre></td></tr></table></figure>
+<h3 id="消息转发"><a href="#消息转发" class="headerlink" title="消息转发"></a>消息转发</h3><p>通过上面的源码可以看到如果动态解析阶段还没解决，那么就进入到消息转发阶段了。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/iOS/" class="category-chain-item">iOS</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/iOS/" class="print-no-link">#iOS</a>
+      
+        <a href="/tags/Objective-C/" class="print-no-link">#Objective-C</a>
+      
+        <a href="/tags/Runtime/" class="print-no-link">#Runtime</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Runtime 原理</div>
+      <div>https://alberthello.github.io/2024/04/01/ios/08-runtime/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年4月1日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/04/01/ios/06-block/" title="Block 底层原理">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Block 底层原理</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/04/01/nodejs/blog-environment/" title="Node.js 博客环境搭建">
+                        <span class="hidden-mobile">Node.js 博客环境搭建</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

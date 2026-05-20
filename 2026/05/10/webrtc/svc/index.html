@@ -1,0 +1,927 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="在 SFU 服务端做 H.264 SVC 丢层适配：从“能转发”到“能抗弱网”在实时音视频系统里，SFU 的优势很明确: 服务端不解码、不合流、不重新编码，只负责把上行 RTP 流选择性转发给不同的下行用户。这种架构延迟低、成本可控，也更适合直播和互动场景。 但它也带来一个典型问题: 当某一个拉流端网络变差时，服务端不能简单地把上游编码器码率调低。因为同一条上行流通常会被多个拉流端共享，如果为了一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SFU 服务端做 SVC 丢层适配：从“能转发”到“能抗弱网”">
+<meta property="og:url" content="https://alberthello.github.io/2026/05/10/webrtc/svc/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="在 SFU 服务端做 H.264 SVC 丢层适配：从“能转发”到“能抗弱网”在实时音视频系统里，SFU 的优势很明确: 服务端不解码、不合流、不重新编码，只负责把上行 RTP 流选择性转发给不同的下行用户。这种架构延迟低、成本可控，也更适合直播和互动场景。 但它也带来一个典型问题: 当某一个拉流端网络变差时，服务端不能简单地把上游编码器码率调低。因为同一条上行流通常会被多个拉流端共享，如果为了一">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-10T13:06:24.000Z">
+<meta property="article:modified_time" content="2026-05-20T13:10:39.932Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="博客，技术，生活，分享">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>SFU 服务端做 SVC 丢层适配：从“能转发”到“能抗弱网” - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="SFU 服务端做 SVC 丢层适配：从“能转发”到“能抗弱网”"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-05-10 21:06" pubdate>
+          2026年5月10日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.2k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">SFU 服务端做 SVC 丢层适配：从“能转发”到“能抗弱网”</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-05-20T21:10:39+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="在-SFU-服务端做-H-264-SVC-丢层适配：从“能转发”到“能抗弱网”"><a href="#在-SFU-服务端做-H-264-SVC-丢层适配：从“能转发”到“能抗弱网”" class="headerlink" title="在 SFU 服务端做 H.264 SVC 丢层适配：从“能转发”到“能抗弱网”"></a>在 SFU 服务端做 H.264 SVC 丢层适配：从“能转发”到“能抗弱网”</h2><p>在实时音视频系统里，SFU 的优势很明确: 服务端不解码、不合流、不重新编码，只负责把上行 RTP 流选择性转发给不同的下行用户。这种架构延迟低、成本可控，也更适合直播和互动场景。</p>
+<p>但它也带来一个典型问题: 当某一个拉流端网络变差时，服务端不能简单地把上游编码器码率调低。因为同一条上行流通常会被多个拉流端共享，如果为了一个弱网用户降低上游编码质量，其他网络正常的用户也会被一起降级。</p>
+<p>NMRTC 在这类场景里采用的思路是: 让推流端输出 H.264 SVC 分层码流，服务端在 RTP 层识别基础层和增强层。网络正常时转发完整码流；某一路下行变差时，只对这一条下行链路丢弃部分增强层，从而降低带宽压力，同时不影响其他拉流端。</p>
+<p>这篇文章不展开所有实现细节，只讨论服务端做 SVC 丢层适配时最关键的几个工程问题。</p>
+<h2 id="为什么-SFU-需要-SVC"><a href="#为什么-SFU-需要-SVC" class="headerlink" title="为什么 SFU 需要 SVC"></a>为什么 SFU 需要 SVC</h2><p>SVC 是 Scalable Video Coding，可伸缩视频编码。它把一条视频码流拆成多层:</p>
+<ul>
+<li>基础层: 保证最低可解码的视频内容。</li>
+<li>增强层: 在基础层之上提升清晰度、帧率或质量。</li>
+</ul>
+<p>对 SFU 来说，SVC 的价值不只是“编码更高级”，而是让同一条上行码流可以适配不同下行网络:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">同一路上行 SVC 码流<br>        |<br>        +-&gt; 用户 A 网络好: 转发完整码流<br>        |<br>        +-&gt; 用户 B 网络一般: 丢弃部分时间增强层<br>        |<br>        +-&gt; 用户 C 网络较差: 只保留基础层<br></code></pre></td></tr></table></figure>
+
+<p>服务端仍然不需要解码，也不需要为每个用户重新编码，只是在 RTP 转发阶段做分层选择。这样既保留了 SFU 的低延迟和低成本，也给弱网适配留下了空间。</p>
+<h2 id="服务端能识别什么"><a href="#服务端能识别什么" class="headerlink" title="服务端能识别什么"></a>服务端能识别什么</h2><p>H.264 SVC 的 RTP 包里会携带层级信息。NMRTC 服务端主要关注两个字段:</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>适配价值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>DID</code></td>
+<td>空域依赖层</td>
+<td>用来区分基础空间层和空间增强层</td>
+</tr>
+<tr>
+<td><code>TID</code></td>
+<td>时域层</td>
+<td>用来区分基础帧率层和时间增强层</td>
+</tr>
+</tbody></table>
+<p>可以粗略理解为:</p>
+<ul>
+<li><code>DID=0, TID=0</code>: 最基础的视频层，弱网下也尽量保留。</li>
+<li><code>TID&gt;0</code>: 提升帧率的时间增强层，弱网时可以优先丢。</li>
+<li><code>DID&gt;0</code>: 提升清晰度或码率的空间增强层，带宽紧张时可以丢。</li>
+</ul>
+<p>在实际 RTP 封包里，服务端会遇到 Single NAL、STAP-A、FU-A 等不同形态。难点不在于读出几个字段，而在于不同封包方式下层级信息的位置并不总是一样。例如 Prefix NAL 可能单独携带层级信息，而真正的视频 slice 需要继承同一帧里的 Prefix 信息；FU-A 分片则必须保证一个 NAL 的所有分片要么都保留，要么都丢弃。</p>
+<p>因此，服务端不能只按单个 RTP 包即时决策，而需要按 frame 做一次相对完整的判断。</p>
+<h2 id="丢层不是简单丢包"><a href="#丢层不是简单丢包" class="headerlink" title="丢层不是简单丢包"></a>丢层不是简单丢包</h2><p>很多人第一次做 SVC 适配时，容易把问题理解成“识别增强层，然后丢掉它”。这只完成了一半。</p>
+<p>RTP 接收端依赖 sequence number 判断丢包、乱序和重传。如果服务端直接丢掉增强层包，下行接收端看到的就是 seq 空洞:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">上游 seq:  1000 1001 1002 1003 1004<br>服务端:    保留 丢弃 保留 丢弃 保留<br>下行看到: 1000      1002      1004<br></code></pre></td></tr></table></figure>
+
+<p>拉流端无法知道这是服务端主动做的策略丢层，只会认为网络丢包了。结果通常是 jitter buffer 等待缺失包，NACK 模块持续请求重传，甚至把弱网链路进一步打满。</p>
+<p>所以，真正可用的服务端 SVC 丢层至少要同时处理三件事:</p>
+<ol>
+<li>只丢弃可被丢弃的增强层，不破坏基础层和 NAL 分片完整性。</li>
+<li>对保留下来的 RTP 包重写连续的下行 seq，避免接收端误判丢包。</li>
+<li>当真实网络丢包发生时，能把下行 NACK 翻译回上游原始 seq，并正确恢复 RTX。</li>
+</ol>
+<p>这也是 SVC 适配从“理论可行”走向“线上可用”的关键分界线。</p>
+<h2 id="NMRTC-的服务端处理链路"><a href="#NMRTC-的服务端处理链路" class="headerlink" title="NMRTC 的服务端处理链路"></a>NMRTC 的服务端处理链路</h2><p>NMRTC 的直播链路可以简化为:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">推流端 -&gt; UplinkStream -&gt; NmrtcStreamManager -&gt; DownlinkStream -&gt; 拉流端<br></code></pre></td></tr></table></figure>
+
+<p>其中 UplinkStream 负责接收和缓存上行 RTP，NmrtcStreamManager 负责把同一路流分发给多个 DownlinkStream。每个 DownlinkStream 代表一路下行连接，也就是一个具体的拉流端。</p>
+<p>SVC 丢层策略放在 DownlinkStream 侧，而不是 UplinkStream 侧。原因很直接: 弱网状态是下行链路独有的。用户 A 网络正常时可以看完整码流，用户 B 网络较差时可以只看基础层，两者不能互相影响。</p>
+<p>因此，每个 DownlinkStream 都维护自己的 SVC 状态:</p>
+<ul>
+<li>当前丢层策略。</li>
+<li>本路下行的 seq 重写映射。</li>
+<li>已经被策略丢弃的上游 seq 集合。</li>
+<li>NACK 翻译和 RTX 恢复所需的上下文。</li>
+</ul>
+<p>这让 SVC 策略天然具备 per-user 粒度。后续如果把下行拥塞控制、pacer 或 BWE 结果接入进来，就可以由每一路 DownlinkStream 根据自己的网络状态选择不同的层级。</p>
+<h2 id="几种实用的降级策略"><a href="#几种实用的降级策略" class="headerlink" title="几种实用的降级策略"></a>几种实用的降级策略</h2><p>在工程实现上，没必要一开始就追求复杂的自适应算法。更可靠的做法是先把几个稳定的策略跑通:</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>保留内容</th>
+<th>适合场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>keep_all</code></td>
+<td>所有层</td>
+<td>网络正常</td>
+</tr>
+<tr>
+<td><code>drop_temporal</code></td>
+<td>保留基础时间层</td>
+<td>带宽轻微紧张，希望先降帧率</td>
+</tr>
+<tr>
+<td><code>drop_spatial</code></td>
+<td>保留基础空间层</td>
+<td>带宽明显紧张，希望降低码率</td>
+</tr>
+<tr>
+<td><code>keep_base_only</code></td>
+<td>只保留基础层</td>
+<td>严重弱网，需要优先保证可播放</td>
+</tr>
+</tbody></table>
+<p>这里的取舍不是绝对的。丢时间层通常会牺牲流畅度，但画面清晰度变化相对小；丢空间层通常能更明显降低码率，但可能影响清晰度。实际系统里应该结合编码器输出结构、业务场景和接收端表现来调策略。</p>
+<p>对于 NMRTC 当前的直播场景，比较合理的演进路线是:</p>
+<ol>
+<li>正常网络下保持完整码流。</li>
+<li>轻微拥塞时优先丢时间增强层，降低帧率压力。</li>
+<li>持续拥塞时丢空间增强层或只保留基础层。</li>
+<li>网络恢复后等待关键帧，再逐步恢复更高层。</li>
+</ol>
+<h2 id="seq-重写和-NACK-翻译是核心"><a href="#seq-重写和-NACK-翻译是核心" class="headerlink" title="seq 重写和 NACK 翻译是核心"></a>seq 重写和 NACK 翻译是核心</h2><p>服务端主动丢层后，下行 seq 必须保持连续:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">上游 seq:    3000 3001 3002 3003 3004<br>策略结果:    保留 丢弃 保留 保留 丢弃<br>下行 seq:    3000      3001 3002<br></code></pre></td></tr></table></figure>
+
+<p>这要求服务端在发送每个保留包时记录双向映射:</p>
+<ul>
+<li><code>source seq -&gt; downlink seq</code>: 用于后续 RTX 重传恢复。</li>
+<li><code>downlink seq -&gt; source seq</code>: 用于把接收端 NACK 翻译回上游缓存。</li>
+</ul>
+<p>当拉流端真的在网络中丢了一个包，它 NACK 的是自己看到的 downlink seq。服务端需要先把它翻译成 source seq，再从 UplinkStream 的上游 RTP 缓存里找原始包。</p>
+<p>同时，服务端还要识别“这个包本来就是策略丢掉的增强层”。这类包不能因为 NACK 又被重传出去，否则丢层策略会被破坏，还会把弱网链路重新压垮。</p>
+<p>也就是说，一套完整的 SVC 丢层链路必须同时区分两类“缺包”:</p>
+<ul>
+<li>服务端主动策略丢弃: 不应该重传。</li>
+<li>下行网络真实丢包: 应该翻译 seq 并走 RTX 恢复。</li>
+</ul>
+<p>这部分处理不好，表面上看是 SVC 丢层，实际播放体验可能会更差。</p>
+<h2 id="关键帧和层级恢复"><a href="#关键帧和层级恢复" class="headerlink" title="关键帧和层级恢复"></a>关键帧和层级恢复</h2><p>从低层级恢复到高层级时，还会遇到解码参考关系的问题。尤其是空间层切换后，接收端可能短时间内缺少完整参考帧，导致花屏、等待或恢复慢。</p>
+<p>NMRTC 在强降级或恢复强降级策略时，会向上游请求关键帧。这样做不是 SVC 丢层的必要条件，但能显著提升策略切换后的稳定性。对实时系统来说，切换策略能生效只是第一步，切换后尽快回到可观看状态才是最终目标。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>SVC 给 SFU 带来的核心能力，是让服务端在不解码、不重新编码的前提下，对不同下行用户做差异化带宽适配。但服务端 SVC 丢层并不是简单识别字段然后丢包，它涉及 RTP frame 级处理、NAL 分片完整性、marker 修正、seq 重写、NACK 翻译和 RTX 恢复。</p>
+<p>从 NMRTC 的实践看，比较稳妥的实现路径是先把固定策略做正确，再接入下行拥塞控制和 pacer 状态，让每一路 DownlinkStream 根据自己的网络质量独立选择 SVC 层级。这样既符合 SFU 架构的低成本转发模型，也能为后续更完整的弱网自适应打好基础。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>SFU 服务端做 SVC 丢层适配：从“能转发”到“能抗弱网”</div>
+      <div>https://alberthello.github.io/2026/05/10/webrtc/svc/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年5月10日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/05/11/AI/rag_system/" title="生产环境的大型 RAG 知识库系统怎么工作的">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">生产环境的大型 RAG 知识库系统怎么工作的</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/05/01/sth/Note/" title="常用开发笔记">
+                        <span class="hidden-mobile">常用开发笔记</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

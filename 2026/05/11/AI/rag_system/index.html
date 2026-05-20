@@ -1,0 +1,1463 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="你可以把它理解成搜索引擎：  Google 不会在你搜索时重新读一遍全网网页；它早就把网页爬取、解析、建索引了。你搜索时查的是索引，不是重新加载所有网页。  RAG 也是一样。  一、一个大型 RAG 系统的整体流程典型生产级 RAG 分成两个阶段： 12345678910111213141516171819阶段一：离线建库阶段文档上传  -&gt; 文档解析  -&gt; 清洗  -&gt; 切">
+<meta property="og:type" content="article">
+<meta property="og:title" content="生产环境的大型 RAG 知识库系统怎么工作的">
+<meta property="og:url" content="https://alberthello.github.io/2026/05/11/AI/rag_system/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="你可以把它理解成搜索引擎：  Google 不会在你搜索时重新读一遍全网网页；它早就把网页爬取、解析、建索引了。你搜索时查的是索引，不是重新加载所有网页。  RAG 也是一样。  一、一个大型 RAG 系统的整体流程典型生产级 RAG 分成两个阶段： 12345678910111213141516171819阶段一：离线建库阶段文档上传  -&gt; 文档解析  -&gt; 清洗  -&gt; 切">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-11T15:39:17.000Z">
+<meta property="article:modified_time" content="2026-05-20T13:10:39.212Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="RAG">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>生产环境的大型 RAG 知识库系统怎么工作的 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="生产环境的大型 RAG 知识库系统怎么工作的"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-05-11 23:39" pubdate>
+          2026年5月11日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          16k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">生产环境的大型 RAG 知识库系统怎么工作的</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-05-20T21:10:39+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <p>你可以把它理解成搜索引擎：</p>
+<blockquote>
+<p>Google 不会在你搜索时重新读一遍全网网页；<br>它早就把网页爬取、解析、建索引了。<br>你搜索时查的是索引，不是重新加载所有网页。</p>
+</blockquote>
+<p>RAG 也是一样。</p>
+<hr>
+<h1 id="一、一个大型-RAG-系统的整体流程"><a href="#一、一个大型-RAG-系统的整体流程" class="headerlink" title="一、一个大型 RAG 系统的整体流程"></a>一、一个大型 RAG 系统的整体流程</h1><p>典型生产级 RAG 分成两个阶段：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs text">阶段一：离线建库阶段<br>文档上传<br>  -&gt; 文档解析<br>  -&gt; 清洗<br>  -&gt; 切分 Chunk<br>  -&gt; 生成 Embedding<br>  -&gt; 写入向量数据库 / 搜索引擎 / 文档库<br>  -&gt; 建立索引<br><br>阶段二：在线查询阶段<br>用户问题<br>  -&gt; 问题改写 / 意图识别<br>  -&gt; 生成 Query Embedding<br>  -&gt; 查向量索引 / 关键词索引<br>  -&gt; 得到少量候选 Chunk<br>  -&gt; 重排序 Rerank<br>  -&gt; 拼接上下文<br>  -&gt; LLM 生成答案<br>  -&gt; 返回答案和引用来源<br></code></pre></td></tr></table></figure>
+
+<p>重点是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">离线阶段：处理全部文档<br>在线阶段：只查索引，只取少量相关内容<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="二、假设有-5000-份文档，每份-100-页，系统到底怎么处理？"><a href="#二、假设有-5000-份文档，每份-100-页，系统到底怎么处理？" class="headerlink" title="二、假设有 5000 份文档，每份 100 页，系统到底怎么处理？"></a>二、假设有 5000 份文档，每份 100 页，系统到底怎么处理？</h1><p>假设：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">文档数量：5000 份<br>每份页数：100 页<br>总页数：500,000 页<br></code></pre></td></tr></table></figure>
+
+<p>这 50 万页不会在用户每次提问时被重新加载。</p>
+<p>系统会先在后台做一次“建库”。</p>
+<hr>
+<h2 id="第-1-步：文档进入系统"><a href="#第-1-步：文档进入系统" class="headerlink" title="第 1 步：文档进入系统"></a>第 1 步：文档进入系统</h2><p>文档来源可能是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs text">PDF<br>Word<br>Excel<br>网页<br>数据库<br>知识库系统<br>Confluence<br>飞书文档<br>Notion<br>企业内部文档<br>客服工单<br>产品手册<br>合同<br>政策文件<br></code></pre></td></tr></table></figure>
+
+<p>上传后，系统会先保存原始文件，例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">raw_docs/<br>  doc_001.pdf<br>  doc_002.pdf<br>  ...<br></code></pre></td></tr></table></figure>
+
+<p>生产环境里，原始文档通常放在：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">对象存储：S3 / MinIO / OSS<br>文件系统：NFS<br>数据库：PostgreSQL / MongoDB<br>文档平台：Google Drive / SharePoint / 飞书<br></code></pre></td></tr></table></figure>
+
+<p>但是注意，<strong>原始文档只是存档，不是每次查询都重新读它。</strong></p>
+<hr>
+<h1 id="三、离线建库阶段：系统怎么“提前知道”文档内容？"><a href="#三、离线建库阶段：系统怎么“提前知道”文档内容？" class="headerlink" title="三、离线建库阶段：系统怎么“提前知道”文档内容？"></a>三、离线建库阶段：系统怎么“提前知道”文档内容？</h1><h2 id="第-2-步：文档解析"><a href="#第-2-步：文档解析" class="headerlink" title="第 2 步：文档解析"></a>第 2 步：文档解析</h2><p>PDF、Word、网页这些格式不能直接给向量数据库用，需要先解析成文本。</p>
+<p>例如一份 PDF 被解析成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">doc_id: doc_001<br>title: 退款政策说明书<br>page_1: 本文介绍公司退款政策...<br>page_2: 退款申请需要满足以下条件...<br>page_3: 特殊情形包括...<br>...<br></code></pre></td></tr></table></figure>
+
+<p>同时会提取元数据：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">doc_id: doc_001<br>title: 退款政策说明书<br>author: 法务部<br>department: customer_service<br>created_at: 2024-03-12<br>version: v3<br>permission: 售后团队可见<br>page_count: 100<br></code></pre></td></tr></table></figure>
+
+<p>生产环境里，元数据非常重要，因为后面查询时会用来做过滤，例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">只能查当前用户有权限看的文档<br>只查某个部门的文档<br>只查最近一年更新的文档<br>只查产品 A 的文档<br>只查中文文档<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第-3-步：文本清洗"><a href="#第-3-步：文本清洗" class="headerlink" title="第 3 步：文本清洗"></a>第 3 步：文本清洗</h2><p>解析出来的文本通常很脏，比如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs text">页眉<br>页脚<br>目录<br>页码<br>重复水印<br>乱码<br>换行错误<br>表格错乱<br>OCR 错误<br>无意义符号<br></code></pre></td></tr></table></figure>
+
+<p>系统会做清洗：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">删除重复页眉页脚<br>修复断行<br>去掉无意义符号<br>保留标题层级<br>识别表格<br>识别章节<br>保留页码<br>保留来源路径<br></code></pre></td></tr></table></figure>
+
+<p>例如原始文本：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">公司退款政策说明书<br>第 12 页 / 共 100 页<br><br>3.2 特殊退款场景<br>如用户因系统故障导致重复扣费，可申请全额退款。<br>公司退款政策说明书<br>第 13 页 / 共 100 页<br></code></pre></td></tr></table></figure>
+
+<p>清洗后：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">章节：3.2 特殊退款场景<br>内容：如用户因系统故障导致重复扣费，可申请全额退款。<br>来源：doc_001.pdf，第 12-13 页<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="四、为什么要-Chunking？"><a href="#四、为什么要-Chunking？" class="headerlink" title="四、为什么要 Chunking？"></a>四、为什么要 Chunking？</h1><p>LLM 和向量数据库通常不是按“整篇文档”处理，而是按 <strong>Chunk</strong> 处理。</p>
+<p>因为一份 100 页的文档太大了。</p>
+<p>如果直接把整份文档变成一个向量，会有几个问题：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">1. 信息太多，向量表达会变得模糊<br>2. 用户问的是某一页、某一节，整篇文档粒度太粗<br>3. LLM 上下文放不下整篇文档<br>4. 检索结果无法精准定位<br></code></pre></td></tr></table></figure>
+
+<p>所以会把文档切成小块。</p>
+<hr>
+<h2 id="第-4-步：把文档切成-Chunk"><a href="#第-4-步：把文档切成-Chunk" class="headerlink" title="第 4 步：把文档切成 Chunk"></a>第 4 步：把文档切成 Chunk</h2><p>例如一份文档：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">doc_001.pdf<br>  第 1 章：退款政策总览<br>  第 2 章：退款条件<br>  第 3 章：特殊退款场景<br>  第 4 章：不予退款情形<br></code></pre></td></tr></table></figure>
+
+<p>会被切成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs text">chunk_001:<br>  doc_id: doc_001<br>  page: 1-2<br>  text: 退款政策总览...<br><br>chunk_002:<br>  doc_id: doc_001<br>  page: 3-4<br>  text: 退款申请条件包括...<br><br>chunk_003:<br>  doc_id: doc_001<br>  page: 5-6<br>  text: 特殊退款场景包括系统重复扣费...<br><br>chunk_004:<br>  doc_id: doc_001<br>  page: 7-8<br>  text: 以下情况不予退款...<br></code></pre></td></tr></table></figure>
+
+<p>每个 Chunk 会带上来源信息：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs text">chunk_id<br>doc_id<br>文档标题<br>页码<br>章节标题<br>正文内容<br>权限信息<br>更新时间<br>向量<br></code></pre></td></tr></table></figure>
+
+<p>一个真实的 Chunk 记录可能长这样：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-punctuation">&#123;</span><br>  <span class="hljs-attr">&quot;chunk_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;doc_001_chunk_003&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;doc_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;doc_001&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;退款政策说明书&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;section&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;3.2 特殊退款场景&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;page_start&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">12</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;page_end&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">13</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;text&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;如用户因系统故障导致重复扣费，可申请全额退款...&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;department&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;customer_service&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;permission_group&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;after_sales&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;legal&quot;</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;updated_at&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;2024-03-12&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;embedding&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-number">0.021</span><span class="hljs-punctuation">,</span> <span class="hljs-number">-0.043</span><span class="hljs-punctuation">,</span> <span class="hljs-number">0.118</span><span class="hljs-punctuation">,</span> ...<span class="hljs-punctuation">]</span><br><span class="hljs-punctuation">&#125;</span><br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="五、Embedding-是什么？"><a href="#五、Embedding-是什么？" class="headerlink" title="五、Embedding 是什么？"></a>五、Embedding 是什么？</h1><h2 id="第-5-步：给每个-Chunk-生成向量"><a href="#第-5-步：给每个-Chunk-生成向量" class="headerlink" title="第 5 步：给每个 Chunk 生成向量"></a>第 5 步：给每个 Chunk 生成向量</h2><p>Embedding 模型会把文本变成一串数字。</p>
+<p>例如这段文本：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">如用户因系统故障导致重复扣费，可申请全额退款。<br></code></pre></td></tr></table></figure>
+
+<p>会变成类似这样的向量：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">[0.021, -0.043, 0.118, 0.006, -0.092, ...]<br></code></pre></td></tr></table></figure>
+
+<p>真实向量可能有：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">384 维<br>768 维<br>1024 维<br>1536 维<br>3072 维<br></code></pre></td></tr></table></figure>
+
+<p>向量的意义是：<strong>语义相近的文本，在向量空间里的距离也比较近。</strong></p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">A: 用户被重复扣费怎么办？<br>B: 系统故障导致重复扣费可以退款。<br>C: 公司年会什么时候举行？<br></code></pre></td></tr></table></figure>
+
+<p>A 和 B 的向量会比较接近。</p>
+<p>A 和 C 的向量会比较远。</p>
+<hr>
+<h1 id="六、关键问题：如果不加载-5000-份文档，系统怎么知道哪个文档相关？"><a href="#六、关键问题：如果不加载-5000-份文档，系统怎么知道哪个文档相关？" class="headerlink" title="六、关键问题：如果不加载 5000 份文档，系统怎么知道哪个文档相关？"></a>六、关键问题：如果不加载 5000 份文档，系统怎么知道哪个文档相关？</h1><p>答案是：</p>
+<blockquote>
+<p>系统不是靠实时读文档知道的，而是靠提前建好的索引知道的。</p>
+</blockquote>
+<p>就像图书馆：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">你问管理员：“有没有讲退款政策的书？”<br>管理员不会把所有书从书架上搬下来读一遍。<br>管理员查的是图书目录、标签、索引卡片。<br></code></pre></td></tr></table></figure>
+
+<p>RAG 里也是这样。</p>
+<p>文档在离线阶段已经被处理成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">chunk 文本<br>chunk 向量<br>chunk 元数据<br>chunk 到原文的映射关系<br></code></pre></td></tr></table></figure>
+
+<p>并写入了数据库。</p>
+<p>用户查询时，系统只需要：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">把用户问题变成 query 向量<br>拿 query 向量去向量索引里查最近的 chunk 向量<br>返回 top-k 个 chunk<br></code></pre></td></tr></table></figure>
+
+<p>不需要重新加载所有原始文档。</p>
+<hr>
+<h1 id="七、向量数据库里到底存了什么？"><a href="#七、向量数据库里到底存了什么？" class="headerlink" title="七、向量数据库里到底存了什么？"></a>七、向量数据库里到底存了什么？</h1><p>一个生产级 RAG 通常不是只用一个数据库，而是多种存储配合。</p>
+<p>常见结构是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs text">1. 原始文档存储<br>   用来保存 PDF、Word、Excel 原文件<br><br>2. 文档元数据库<br>   保存 doc_id、标题、作者、权限、更新时间、版本等<br><br>3. Chunk 文本库<br>   保存每个 chunk 的正文内容<br><br>4. 向量数据库<br>   保存每个 chunk 的 embedding 向量和索引<br><br>5. 关键词搜索引擎<br>   保存倒排索引，用于 BM25 / 关键词搜索<br></code></pre></td></tr></table></figure>
+
+<p>可能的技术组合：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">原始文档：S3 / MinIO / OSS<br>元数据：PostgreSQL / MySQL / MongoDB<br>Chunk 文本：PostgreSQL / Elasticsearch / OpenSearch<br>向量库：Milvus / Qdrant / Weaviate / Pinecone / FAISS<br>关键词检索：Elasticsearch / OpenSearch<br>缓存：Redis<br>任务队列：Kafka / RabbitMQ / Celery<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="八、向量数据库是不是要逐个比较所有-Chunk？"><a href="#八、向量数据库是不是要逐个比较所有-Chunk？" class="headerlink" title="八、向量数据库是不是要逐个比较所有 Chunk？"></a>八、向量数据库是不是要逐个比较所有 Chunk？</h1><p>理论上，最简单的方法是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">query_vector 和每个 chunk_vector 都算一次相似度<br>然后排序<br></code></pre></td></tr></table></figure>
+
+<p>这叫暴力检索。</p>
+<p>如果有 100 万个 Chunk，每次都算 100 万次相似度，当然可以做，但延迟和成本可能比较高。</p>
+<p>生产环境通常会使用 <strong>近似最近邻索引 ANN</strong>。</p>
+<p>ANN 的意思是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">Approximate Nearest Neighbor<br>近似最近邻搜索<br></code></pre></td></tr></table></figure>
+
+<p>它不是傻傻地扫全库，而是提前建立一种数据结构，让搜索更快。</p>
+<hr>
+<h2 id="常见向量索引方式"><a href="#常见向量索引方式" class="headerlink" title="常见向量索引方式"></a>常见向量索引方式</h2><h3 id="1-HNSW"><a href="#1-HNSW" class="headerlink" title="1. HNSW"></a>1. HNSW</h3><p>HNSW 可以理解成“向量之间的高速公路网络”。</p>
+<p>每个向量是一个点，系统会提前把相近的点连起来。</p>
+<p>查询时不是全量扫描，而是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">从一个入口点开始<br>沿着越来越接近 query 的方向跳转<br>逐步找到最近的一批向量<br></code></pre></td></tr></table></figure>
+
+<p>它可能只访问几千个节点，而不是访问 100 万个节点。</p>
+<hr>
+<h3 id="2-IVF"><a href="#2-IVF" class="headerlink" title="2. IVF"></a>2. IVF</h3><p>IVF 可以理解成“先分区，再查区内”。</p>
+<p>系统先把所有向量聚成很多簇：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">簇 1：退款、订单、支付相关<br>簇 2：合同、法务、条款相关<br>簇 3：服务器、部署、运维相关<br>簇 4：人事、考勤、薪酬相关<br></code></pre></td></tr></table></figure>
+
+<p>用户问题来了以后，先判断 query 最接近哪些簇，然后只在这些簇里查。</p>
+<p>例如用户问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">用户重复扣费怎么退款？<br></code></pre></td></tr></table></figure>
+
+<p>系统可能只查：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">支付相关簇<br>退款相关簇<br>订单相关簇<br></code></pre></td></tr></table></figure>
+
+<p>不会查所有簇。</p>
+<hr>
+<h3 id="3-PQ-SQ-量化"><a href="#3-PQ-SQ-量化" class="headerlink" title="3. PQ &#x2F; SQ &#x2F; 量化"></a>3. PQ &#x2F; SQ &#x2F; 量化</h3><p>当向量特别多时，可以把向量压缩，减少内存和存储。</p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">float32 向量<br>压缩成 float16<br>或者量化成 int8<br></code></pre></td></tr></table></figure>
+
+<p>好处是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">占用更少内存<br>搜索更快<br>成本更低<br></code></pre></td></tr></table></figure>
+
+<p>代价是精度可能略有下降。</p>
+<hr>
+<h1 id="九、5000-份-100-页文档大概会变成多少-Chunk？"><a href="#九、5000-份-100-页文档大概会变成多少-Chunk？" class="headerlink" title="九、5000 份 100 页文档大概会变成多少 Chunk？"></a>九、5000 份 100 页文档大概会变成多少 Chunk？</h1><p>粗略估算一下。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">5000 份文档 × 100 页 = 500,000 页<br></code></pre></td></tr></table></figure>
+
+<p>假设每页切成 1 到 3 个 Chunk。</p>
+<p>那么可能有：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">500,000 到 1,500,000 个 Chunk<br></code></pre></td></tr></table></figure>
+
+<p>也就是 50 万到 150 万条向量。</p>
+<p>这在生产级向量检索里并不算特别夸张。</p>
+<p>假设：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">Chunk 数量：1,000,000<br>向量维度：1024<br>每个维度 float32：4 字节<br></code></pre></td></tr></table></figure>
+
+<p>那么纯向量大小约为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">1,000,000 × 1024 × 4 bytes<br>≈ 4GB<br></code></pre></td></tr></table></figure>
+
+<p>加上索引结构、元数据、文本存储，可能变成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">十几 GB 到几十 GB<br></code></pre></td></tr></table></figure>
+
+<p>这完全可以由专门的向量数据库、搜索引擎和对象存储来承载。</p>
+<p>用户查询时不会读这 50 万页原文，而是查向量索引。</p>
+<hr>
+<h1 id="十、在线查询阶段：用户随机输入一个问题后发生了什么？"><a href="#十、在线查询阶段：用户随机输入一个问题后发生了什么？" class="headerlink" title="十、在线查询阶段：用户随机输入一个问题后发生了什么？"></a>十、在线查询阶段：用户随机输入一个问题后发生了什么？</h1><p>假设用户输入：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">用户因为系统故障被重复扣费，能不能全额退款？<br></code></pre></td></tr></table></figure>
+
+<p>生产 RAG 的在线流程大概如下。</p>
+<hr>
+<h2 id="第-1-步：接收-Query"><a href="#第-1-步：接收-Query" class="headerlink" title="第 1 步：接收 Query"></a>第 1 步：接收 Query</h2><p>系统拿到用户问题：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">query = &quot;用户因为系统故障被重复扣费，能不能全额退款？&quot;<br></code></pre></td></tr></table></figure>
+
+<p>同时会拿到用户信息：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">user_id<br>tenant_id<br>department<br>permission_groups<br>language<br>session_id<br></code></pre></td></tr></table></figure>
+
+<p>这些信息用于权限过滤和个性化检索。</p>
+<hr>
+<h2 id="第-2-步：权限和范围过滤"><a href="#第-2-步：权限和范围过滤" class="headerlink" title="第 2 步：权限和范围过滤"></a>第 2 步：权限和范围过滤</h2><p>生产环境里，权限非常重要。</p>
+<p>系统不能先把所有相关文档都取出来，再让 LLM 决定能不能看。</p>
+<p>正确做法是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">检索阶段就过滤掉用户无权限访问的文档<br></code></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">tenant_id = 当前租户<br>permission_group in 当前用户权限组<br>doc_status = published<br></code></pre></td></tr></table></figure>
+
+<p>否则可能发生知识泄漏。</p>
+<hr>
+<h2 id="第-3-步：Query-预处理"><a href="#第-3-步：Query-预处理" class="headerlink" title="第 3 步：Query 预处理"></a>第 3 步：Query 预处理</h2><p>系统可能会对用户问题做一些处理：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs text">纠错<br>语言识别<br>意图识别<br>关键词提取<br>时间范围识别<br>产品名识别<br>部门识别<br>问题改写<br>多轮对话补全<br></code></pre></td></tr></table></figure>
+
+<p>比如用户在多轮对话中问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">那这个情况能退款吗？<br></code></pre></td></tr></table></figure>
+
+<p>这句话本身信息不足。</p>
+<p>系统会结合历史对话改写成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">用户因为系统故障导致重复扣费，这种情况能否全额退款？<br></code></pre></td></tr></table></figure>
+
+<p>这叫 query rewrite。</p>
+<hr>
+<h2 id="第-4-步：生成-Query-Embedding"><a href="#第-4-步：生成-Query-Embedding" class="headerlink" title="第 4 步：生成 Query Embedding"></a>第 4 步：生成 Query Embedding</h2><p>用和建库阶段相同的 embedding 模型，把用户问题变成向量：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">query_embedding = embed(&quot;用户因为系统故障被重复扣费，能不能全额退款？&quot;)<br></code></pre></td></tr></table></figure>
+
+<p>得到：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">[0.018, -0.052, 0.127, ...]<br></code></pre></td></tr></table></figure>
+
+<p>这个 query 向量会进入向量数据库检索。</p>
+<hr>
+<h2 id="第-5-步：向量检索"><a href="#第-5-步：向量检索" class="headerlink" title="第 5 步：向量检索"></a>第 5 步：向量检索</h2><p>系统去向量数据库里查：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">在用户有权限访问的 chunk 中，<br>找到和 query_embedding 最相近的 top 100 个 chunk。<br></code></pre></td></tr></table></figure>
+
+<p>伪代码类似：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python">results = vector_db.search(<br>    vector=query_embedding,<br>    top_k=<span class="hljs-number">100</span>,<br>    <span class="hljs-built_in">filter</span>=&#123;<br>        <span class="hljs-string">&quot;tenant_id&quot;</span>: current_tenant,<br>        <span class="hljs-string">&quot;permission_group&quot;</span>: user_groups,<br>        <span class="hljs-string">&quot;doc_status&quot;</span>: <span class="hljs-string">&quot;published&quot;</span><br>    &#125;<br>)<br></code></pre></td></tr></table></figure>
+
+<p>返回结果可能是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs text">1. doc_001_chunk_003，相似度 0.87<br>   标题：退款政策说明书<br>   页码：12-13<br>   内容：如用户因系统故障导致重复扣费，可申请全额退款。<br><br>2. doc_283_chunk_018，相似度 0.82<br>   标题：支付异常处理手册<br>   页码：45<br>   内容：重复扣款工单应转交售后团队处理。<br><br>3. doc_119_chunk_044，相似度 0.78<br>   标题：客服退款话术<br>   页码：8<br>   内容：用户反馈重复扣费时，应核实支付流水。<br></code></pre></td></tr></table></figure>
+
+<p>注意，这里返回的是少量 Chunk，不是 5000 份文档。</p>
+<hr>
+<h1 id="十一、为什么生产-RAG-不只用向量检索？"><a href="#十一、为什么生产-RAG-不只用向量检索？" class="headerlink" title="十一、为什么生产 RAG 不只用向量检索？"></a>十一、为什么生产 RAG 不只用向量检索？</h1><p>因为向量检索擅长语义相似，但不擅长所有场景。</p>
+<p>例如用户问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">合同编号 HT-2024-00391 的付款条款是什么？<br></code></pre></td></tr></table></figure>
+
+<p>这种问题里面的编号非常重要。</p>
+<p>向量检索可能觉得很多“合同付款条款”都相似，但用户真正要的是精确编号。</p>
+<p>所以生产系统通常会做 <strong>混合检索 Hybrid Retrieval</strong>。</p>
+<hr>
+<h2 id="混合检索通常包括"><a href="#混合检索通常包括" class="headerlink" title="混合检索通常包括"></a>混合检索通常包括</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs text">1. 向量检索 Dense Retrieval<br>   适合语义相似问题<br><br>2. 关键词检索 Sparse Retrieval / BM25<br>   适合编号、专有名词、精确匹配<br><br>3. 元数据过滤 Metadata Filter<br>   适合时间、部门、产品、权限、语言过滤<br><br>4. 规则检索<br>   适合强业务规则<br><br>5. 图谱 / SQL 检索<br>   适合结构化关系和统计问题<br></code></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">用户问：HT-2024-00391 的付款条款是什么？<br></code></pre></td></tr></table></figure>
+
+<p>系统可能会同时做：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">向量检索：找付款条款语义相关内容<br>BM25 检索：精确匹配 HT-2024-00391<br>元数据过滤：只查合同类文档<br></code></pre></td></tr></table></figure>
+
+<p>最后把结果融合。</p>
+<hr>
+<h1 id="十二、候选召回后为什么还要-Rerank？"><a href="#十二、候选召回后为什么还要-Rerank？" class="headerlink" title="十二、候选召回后为什么还要 Rerank？"></a>十二、候选召回后为什么还要 Rerank？</h1><p>向量检索返回的 top 100 不一定排序完美。</p>
+<p>Embedding 是把文本压缩成向量，速度快，但判断不够精细。</p>
+<p>所以生产环境一般会加一层 <strong>重排序 Rerank</strong>。</p>
+<p>流程是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">第一阶段：快速召回 100 个候选 Chunk<br>第二阶段：用更精细的模型重新判断 query 和每个 chunk 的相关性<br>第三阶段：保留 top 5 到 top 20<br></code></pre></td></tr></table></figure>
+
+<p>Reranker 的判断方式不是简单算向量距离，而是把：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">query + chunk text<br></code></pre></td></tr></table></figure>
+
+<p>一起输入模型，让模型判断它们是否真的相关。</p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs text">query:<br>用户因为系统故障被重复扣费，能不能全额退款？<br><br>chunk A:<br>如用户因系统故障导致重复扣费，可申请全额退款。<br><br>chunk B:<br>重复扣款工单应转交售后团队处理。<br><br>chunk C:<br>退款申请一般需要在订单完成后 7 天内提交。<br></code></pre></td></tr></table></figure>
+
+<p>Reranker 会更精确地判断：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">chunk A 最相关<br>chunk B 次相关<br>chunk C 相关性较弱<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="十三、上下文是怎么拼给-LLM-的？"><a href="#十三、上下文是怎么拼给-LLM-的？" class="headerlink" title="十三、上下文是怎么拼给 LLM 的？"></a>十三、上下文是怎么拼给 LLM 的？</h1><p>最终不会把 top 100 都塞给 LLM。</p>
+<p>因为 LLM 的上下文窗口有限，而且塞太多无关信息会降低答案质量。</p>
+<p>系统通常会选：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">top 5<br>top 10<br>top 20<br></code></pre></td></tr></table></figure>
+
+<p>然后拼成 Prompt。</p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs text">你是企业知识库问答助手。<br>请只根据下面提供的资料回答问题。<br>如果资料中没有答案，请说“知识库中没有找到明确依据”。<br><br>用户问题：<br>用户因为系统故障被重复扣费，能不能全额退款？<br><br>可用资料：<br>[资料 1]<br>来源：退款政策说明书，第 12-13 页<br>内容：如用户因系统故障导致重复扣费，可申请全额退款。<br><br>[资料 2]<br>来源：支付异常处理手册，第 45 页<br>内容：重复扣款工单应核实支付流水，并转交售后团队处理。<br><br>请回答：<br></code></pre></td></tr></table></figure>
+
+<p>LLM 看到的不是全部 5000 份文档，而是检索出来的几个相关片段。</p>
+<p>然后它生成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">可以。根据《退款政策说明书》第 12-13 页，如果用户因系统故障导致重复扣费，可以申请全额退款。实际处理时还需要核实支付流水，并按《支付异常处理手册》的要求转交售后团队处理。<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="十四、系统如何从-Chunk-回到原文？"><a href="#十四、系统如何从-Chunk-回到原文？" class="headerlink" title="十四、系统如何从 Chunk 回到原文？"></a>十四、系统如何从 Chunk 回到原文？</h1><p>每个 Chunk 都有元数据。</p>
+<p>例如：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-punctuation">&#123;</span><br>  <span class="hljs-attr">&quot;chunk_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;doc_001_chunk_003&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;doc_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;doc_001&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;退款政策说明书&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;page_start&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">12</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;page_end&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">13</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;source_url&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;s3://docs/refund_policy.pdf&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;text&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;如用户因系统故障导致重复扣费，可申请全额退款。&quot;</span><br><span class="hljs-punctuation">&#125;</span><br></code></pre></td></tr></table></figure>
+
+<p>所以当检索到 chunk 后，系统可以知道：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">它来自哪份文档<br>哪一页<br>哪个章节<br>原文链接是什么<br>用户有没有权限查看<br></code></pre></td></tr></table></figure>
+
+<p>这就是为什么 RAG 能返回引用来源。</p>
+<hr>
+<h1 id="十五、生产级-RAG-的核心不是“查文档”，而是“查索引”"><a href="#十五、生产级-RAG-的核心不是“查文档”，而是“查索引”" class="headerlink" title="十五、生产级 RAG 的核心不是“查文档”，而是“查索引”"></a>十五、生产级 RAG 的核心不是“查文档”，而是“查索引”</h1><p>用户的问题其实对应这个流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">用户 query<br>  -&gt; query embedding<br>  -&gt; 查向量索引<br>  -&gt; 得到 chunk_id<br>  -&gt; 根据 chunk_id 取文本<br>  -&gt; 组装上下文<br>  -&gt; LLM 回答<br></code></pre></td></tr></table></figure>
+
+<p>所以它不是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">每次加载 5000 份文档<br>每次读取 50 万页<br>每次全文扫描<br></code></pre></td></tr></table></figure>
+
+<p>而是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">提前处理 5000 份文档<br>提前生成几十万或上百万个 chunk<br>提前生成 embedding<br>提前建索引<br>查询时只查索引<br>查询后只取少量 chunk<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="十六、一个完整的生产-RAG-架构"><a href="#十六、一个完整的生产-RAG-架构" class="headerlink" title="十六、一个完整的生产 RAG 架构"></a>十六、一个完整的生产 RAG 架构</h1><p>可以理解成下面这个结构：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><code class="hljs text">                  ┌─────────────────────┐<br>                  │      文档来源        │<br>                  │ PDF / Word / DB / Web│<br>                  └──────────┬──────────┘<br>                             │<br>                             ▼<br>                  ┌─────────────────────┐<br>                  │     文档解析层       │<br>                  │ OCR / Parser / ETL   │<br>                  └──────────┬──────────┘<br>                             │<br>                             ▼<br>                  ┌─────────────────────┐<br>                  │     文本清洗层       │<br>                  │ 去噪 / 去重 / 纠错   │<br>                  └──────────┬──────────┘<br>                             │<br>                             ▼<br>                  ┌─────────────────────┐<br>                  │     Chunking 层      │<br>                  │ 语义切分 / 重叠窗口  │<br>                  └──────────┬──────────┘<br>                             │<br>                             ▼<br>                  ┌─────────────────────┐<br>                  │    Embedding 层      │<br>                  │ 批量生成文本向量     │<br>                  └──────────┬──────────┘<br>                             │<br>          ┌──────────────────┼──────────────────┐<br>          ▼                  ▼                  ▼<br>┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐<br>│   向量数据库     │ │   关键词索引     │ │   元数据数据库   │<br>│ Milvus/Qdrant   │ │ ElasticSearch    │ │ PostgreSQL      │<br>└────────┬────────┘ └────────┬────────┘ └────────┬────────┘<br>         │                   │                   │<br>         └───────────────────┼───────────────────┘<br>                             ▼<br>                  ┌─────────────────────┐<br>                  │      检索服务        │<br>                  │ Hybrid Retrieval     │<br>                  └──────────┬──────────┘<br>                             │<br>                             ▼<br>                  ┌─────────────────────┐<br>                  │      Rerank 层       │<br>                  │ 精排候选片段         │<br>                  └──────────┬──────────┘<br>                             │<br>                             ▼<br>                  ┌─────────────────────┐<br>                  │    Context Builder   │<br>                  │ 组装上下文和引用     │<br>                  └──────────┬──────────┘<br>                             │<br>                             ▼<br>                  ┌─────────────────────┐<br>                  │        LLM           │<br>                  │      生成答案        │<br>                  └─────────────────────┘<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="十七、生产环境的-RAG-查询详细步骤"><a href="#十七、生产环境的-RAG-查询详细步骤" class="headerlink" title="十七、生产环境的 RAG 查询详细步骤"></a>十七、生产环境的 RAG 查询详细步骤</h1><p>下面按一次真实查询完整走一遍。</p>
+<hr>
+<h2 id="1-用户输入问题"><a href="#1-用户输入问题" class="headerlink" title="1. 用户输入问题"></a>1. 用户输入问题</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">用户：系统故障导致用户重复扣费，退款规则是什么？<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="2-系统识别用户身份"><a href="#2-系统识别用户身份" class="headerlink" title="2. 系统识别用户身份"></a>2. 系统识别用户身份</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">user_id = u_123<br>tenant_id = company_a<br>department = customer_service<br>permission_groups = [&quot;after_sales&quot;, &quot;support&quot;]<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="3-系统改写问题"><a href="#3-系统改写问题" class="headerlink" title="3. 系统改写问题"></a>3. 系统改写问题</h2><p>原问题：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">系统故障导致用户重复扣费，退款规则是什么？<br></code></pre></td></tr></table></figure>
+
+<p>改写后：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">查询公司知识库中关于“系统故障导致重复扣费”的退款政策、处理流程和是否可以全额退款。<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="4-系统提取过滤条件"><a href="#4-系统提取过滤条件" class="headerlink" title="4. 系统提取过滤条件"></a>4. 系统提取过滤条件</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">主题：退款政策<br>场景：系统故障、重复扣费<br>文档类型：政策、客服手册、支付异常处理手册<br>权限：after_sales / support 可见<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="5-生成-Query-Embedding"><a href="#5-生成-Query-Embedding" class="headerlink" title="5. 生成 Query Embedding"></a>5. 生成 Query Embedding</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">query_vector = embedding_model.encode(query)<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="6-多路召回"><a href="#6-多路召回" class="headerlink" title="6. 多路召回"></a>6. 多路召回</h2><p>系统可能同时做几种检索。</p>
+<h3 id="向量检索"><a href="#向量检索" class="headerlink" title="向量检索"></a>向量检索</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">找语义相似的 chunk<br></code></pre></td></tr></table></figure>
+
+<p>例如返回：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">退款政策说明书 chunk 003<br>支付异常处理手册 chunk 018<br>客服退款话术 chunk 044<br></code></pre></td></tr></table></figure>
+
+<h3 id="关键词检索"><a href="#关键词检索" class="headerlink" title="关键词检索"></a>关键词检索</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">查关键词：系统故障、重复扣费、全额退款、退款规则<br></code></pre></td></tr></table></figure>
+
+<p>返回：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">退款政策说明书 chunk 003<br>异常支付处理规范 chunk 009<br></code></pre></td></tr></table></figure>
+
+<h3 id="元数据过滤"><a href="#元数据过滤" class="headerlink" title="元数据过滤"></a>元数据过滤</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">只查 company_a<br>只查用户有权限看的文档<br>只查已发布版本<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="7-结果融合"><a href="#7-结果融合" class="headerlink" title="7. 结果融合"></a>7. 结果融合</h2><p>不同检索方式返回的结果要合并。</p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">向量检索 top 100<br>关键词检索 top 100<br>规则检索 top 20<br></code></pre></td></tr></table></figure>
+
+<p>合并去重后可能得到：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">候选 chunk 150 个<br></code></pre></td></tr></table></figure>
+
+<p>然后用融合算法排序，例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">RRF<br>加权打分<br>业务规则加权<br>时间加权<br>文档可信度加权<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="8-Rerank-精排"><a href="#8-Rerank-精排" class="headerlink" title="8. Rerank 精排"></a>8. Rerank 精排</h2><p>把候选 150 个缩小到最相关的 10 个。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">rerank(query, candidate_chunks) -&gt; top 10<br></code></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">1. 退款政策说明书，第 12-13 页<br>2. 支付异常处理手册，第 45 页<br>3. 客服退款话术，第 8 页<br>4. 退款审批流程，第 21 页<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="9-上下文扩展"><a href="#9-上下文扩展" class="headerlink" title="9. 上下文扩展"></a>9. 上下文扩展</h2><p>有时一个 Chunk 太短，缺少前后文。</p>
+<p>比如检索到的是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">chunk_003：如用户因系统故障导致重复扣费，可申请全额退款。<br></code></pre></td></tr></table></figure>
+
+<p>系统可能会顺便取：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">chunk_002：退款申请条件<br>chunk_003：特殊退款场景<br>chunk_004：退款审批流程<br></code></pre></td></tr></table></figure>
+
+<p>这叫：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">邻近 Chunk 扩展<br>Parent Document Retrieval<br>Context Window Expansion<br></code></pre></td></tr></table></figure>
+
+<p>但是它只扩展少量相邻片段，不会加载整份 100 页文档。</p>
+<hr>
+<h2 id="10-Context-Packing"><a href="#10-Context-Packing" class="headerlink" title="10. Context Packing"></a>10. Context Packing</h2><p>系统按照 token 预算选择内容。</p>
+<p>例如 LLM 最多能放 32K tokens，但系统不会全塞满。</p>
+<p>它会控制：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">用户问题：几百 tokens<br>系统提示词：几百 tokens<br>检索资料：几千到一两万 tokens<br>输出预留：几千 tokens<br></code></pre></td></tr></table></figure>
+
+<p>然后组装：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs text">[系统指令]<br>你是企业知识库助手。只能根据资料回答。<br><br>[用户问题]<br>系统故障导致用户重复扣费，退款规则是什么？<br><br>[资料 1]<br>来源：退款政策说明书，第 12-13 页<br>内容：...<br><br>[资料 2]<br>来源：支付异常处理手册，第 45 页<br>内容：...<br><br>[资料 3]<br>来源：退款审批流程，第 21 页<br>内容：...<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="11-LLM-生成答案"><a href="#11-LLM-生成答案" class="headerlink" title="11. LLM 生成答案"></a>11. LLM 生成答案</h2><p>LLM 根据上下文生成答案：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">根据知识库资料，系统故障导致用户重复扣费属于特殊退款场景，用户可以申请全额退款。处理时需要先核实支付流水，确认确实存在重复扣款，然后由售后团队发起退款流程。若金额超过审批阈值，还需要按照退款审批流程提交审批。<br></code></pre></td></tr></table></figure>
+
+<p>同时附引用：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">来源：<br>1. 退款政策说明书，第 12-13 页<br>2. 支付异常处理手册，第 45 页<br>3. 退款审批流程，第 21 页<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="12-置信度判断"><a href="#12-置信度判断" class="headerlink" title="12. 置信度判断"></a>12. 置信度判断</h2><p>如果检索结果很差，生产系统应该拒答，而不是胡编。</p>
+<p>例如用户问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">CEO 明天几点来上海办公室？<br></code></pre></td></tr></table></figure>
+
+<p>知识库没有相关内容。</p>
+<p>系统应该判断：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">检索分数低<br>rerank 分数低<br>没有可靠来源<br></code></pre></td></tr></table></figure>
+
+<p>然后回答：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">知识库中没有找到关于 CEO 明天到访上海办公室时间的明确资料。<br></code></pre></td></tr></table></figure>
+
+<p>而不是编一个时间。</p>
+<hr>
+<h1 id="十八、生产环境为什么经常使用“两阶段检索”？"><a href="#十八、生产环境为什么经常使用“两阶段检索”？" class="headerlink" title="十八、生产环境为什么经常使用“两阶段检索”？"></a>十八、生产环境为什么经常使用“两阶段检索”？</h1><p>因为单阶段检索很难同时做到：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">快<br>准<br>便宜<br>可扩展<br></code></pre></td></tr></table></figure>
+
+<p>所以通常是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">第一阶段：召回<br>目标：宁可多拿，不要漏掉<br>返回：50 到 500 个候选<br><br>第二阶段：精排<br>目标：更准确地排序<br>返回：5 到 20 个最终上下文<br></code></pre></td></tr></table></figure>
+
+<p>可以理解成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">召回：从 100 万个 chunk 中快速找出可能相关的 200 个<br>精排：从 200 个里面认真挑出最相关的 10 个<br></code></pre></td></tr></table></figure>
+
+<p>这比直接让大模型读 100 万个 chunk 便宜太多。</p>
+<hr>
+<h1 id="十九、Chunk-粒度怎么设计？"><a href="#十九、Chunk-粒度怎么设计？" class="headerlink" title="十九、Chunk 粒度怎么设计？"></a>十九、Chunk 粒度怎么设计？</h1><p>Chunk 太大或太小都会有问题。</p>
+<h2 id="Chunk-太小"><a href="#Chunk-太小" class="headerlink" title="Chunk 太小"></a>Chunk 太小</h2><p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">“可以申请退款。”<br></code></pre></td></tr></table></figure>
+
+<p>这个 Chunk 太短，缺少上下文。</p>
+<p>LLM 不知道：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">谁可以申请？<br>什么情况下可以申请？<br>是全额退款还是部分退款？<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="Chunk-太大"><a href="#Chunk-太大" class="headerlink" title="Chunk 太大"></a>Chunk 太大</h2><p>例如一整个章节 20 页：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">退款政策、订单处理、支付异常、审批流程、客服话术...<br></code></pre></td></tr></table></figure>
+
+<p>这个 Chunk 太大，向量会变得模糊。</p>
+<p>用户问“重复扣费能否全额退款”，这个大 Chunk 里虽然有答案，但还混了很多无关内容。</p>
+<hr>
+<h2 id="常见-Chunk-策略"><a href="#常见-Chunk-策略" class="headerlink" title="常见 Chunk 策略"></a>常见 Chunk 策略</h2><p>生产中常用：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">按标题和章节切<br>按段落切<br>按语义边界切<br>固定 token 长度兜底<br>保留 overlap<br>保留页码和标题<br></code></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">chunk_size: 500 到 1200 tokens<br>overlap: 50 到 200 tokens<br></code></pre></td></tr></table></figure>
+
+<p>但这不是固定答案，要看业务文档类型。</p>
+<hr>
+<h1 id="二十、生产-RAG-常用的高级检索策略"><a href="#二十、生产-RAG-常用的高级检索策略" class="headerlink" title="二十、生产 RAG 常用的高级检索策略"></a>二十、生产 RAG 常用的高级检索策略</h1><h2 id="1-Parent-Child-Retrieval"><a href="#1-Parent-Child-Retrieval" class="headerlink" title="1. Parent-Child Retrieval"></a>1. Parent-Child Retrieval</h2><p>用小 Chunk 做检索，用大 Chunk 给 LLM。</p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">Child Chunk：200 tokens，用于精准匹配<br>Parent Chunk：1000 tokens，用于提供完整上下文<br></code></pre></td></tr></table></figure>
+
+<p>流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">用户 query -&gt; 检索 child chunk -&gt; 找到 parent chunk -&gt; 把 parent chunk 给 LLM<br></code></pre></td></tr></table></figure>
+
+<p>好处：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">检索精准<br>上下文完整<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="2-Hierarchical-Retrieval"><a href="#2-Hierarchical-Retrieval" class="headerlink" title="2. Hierarchical Retrieval"></a>2. Hierarchical Retrieval</h2><p>大型文档库可能先做文档级检索，再做片段级检索。</p>
+<p>流程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">先找相关文档<br>再在相关文档内部找相关 chunk<br></code></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">5000 份文档<br>先找出 20 份可能相关的文档<br>再从这 20 份文档的 chunk 中找 top 20<br></code></pre></td></tr></table></figure>
+
+<p>这种方式适合文档特别多、结构清晰的知识库。</p>
+<p>不过很多系统也会直接对所有 Chunk 建索引，直接跨全库检索，这也很常见。</p>
+<hr>
+<h2 id="3-Summary-Index"><a href="#3-Summary-Index" class="headerlink" title="3. Summary Index"></a>3. Summary Index</h2><p>给每份文档、每个章节生成摘要，然后也建索引。</p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">doc_001_summary:<br>本文档主要描述退款政策、重复扣费处理、特殊退款场景和审批流程。<br></code></pre></td></tr></table></figure>
+
+<p>查询时可以先查摘要，快速判断哪些文档可能相关。</p>
+<hr>
+<h2 id="4-Hybrid-Search"><a href="#4-Hybrid-Search" class="headerlink" title="4. Hybrid Search"></a>4. Hybrid Search</h2><p>同时使用：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">向量搜索<br>BM25 关键词搜索<br>元数据过滤<br></code></pre></td></tr></table></figure>
+
+<p>这是生产环境非常常见的方案。</p>
+<p>因为只靠向量搜索容易漏掉：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">编号<br>人名<br>合同号<br>产品型号<br>错误码<br>专业术语<br>精确金额<br>日期<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="5-Multi-Query-Retrieval"><a href="#5-Multi-Query-Retrieval" class="headerlink" title="5. Multi-Query Retrieval"></a>5. Multi-Query Retrieval</h2><p>用户的问题可能表达不完整。</p>
+<p>系统可以生成多个等价查询：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">原问题：<br>系统故障重复扣费能退款吗？<br><br>扩展查询：<br>1. 系统故障导致重复扣款是否可以全额退款<br>2. 重复扣费退款政策<br>3. 支付异常退款处理流程<br>4. 用户重复扣款售后处理规则<br></code></pre></td></tr></table></figure>
+
+<p>然后分别检索，再合并结果。</p>
+<p>这样召回率更高。</p>
+<hr>
+<h2 id="6-Query-Decomposition"><a href="#6-Query-Decomposition" class="headerlink" title="6. Query Decomposition"></a>6. Query Decomposition</h2><p>复杂问题可以拆成多个子问题。</p>
+<p>例如用户问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">重复扣费退款需要什么材料，审批多久，超过 5000 元谁审批？<br></code></pre></td></tr></table></figure>
+
+<p>可以拆成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">1. 重复扣费退款需要什么材料？<br>2. 重复扣费退款审批时长是多少？<br>3. 超过 5000 元的退款由谁审批？<br></code></pre></td></tr></table></figure>
+
+<p>每个子问题单独检索，再综合回答。</p>
+<hr>
+<h2 id="7-MMR-去冗余"><a href="#7-MMR-去冗余" class="headerlink" title="7. MMR 去冗余"></a>7. MMR 去冗余</h2><p>检索出来的前 10 个 Chunk 可能内容都差不多。</p>
+<p>MMR 会尽量选择：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">既相关<br>又不重复<br></code></pre></td></tr></table></figure>
+
+<p>避免上下文里全是同一段话的变体。</p>
+<hr>
+<h1 id="二十一、如果用户的问题真的和知识库没关系怎么办？"><a href="#二十一、如果用户的问题真的和知识库没关系怎么办？" class="headerlink" title="二十一、如果用户的问题真的和知识库没关系怎么办？"></a>二十一、如果用户的问题真的和知识库没关系怎么办？</h1><p>生产 RAG 必须处理“无答案”场景。</p>
+<p>例如用户问：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">今天晚上北京哪家火锅店最好吃？<br></code></pre></td></tr></table></figure>
+
+<p>企业退款知识库当然没有答案。</p>
+<p>系统应该：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">检索不到高相关内容<br>rerank 分数低<br>没有可靠引用<br></code></pre></td></tr></table></figure>
+
+<p>然后回答：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">当前知识库中没有找到与该问题相关的资料。<br></code></pre></td></tr></table></figure>
+
+<p>这比胡编更重要。</p>
+<p>常见控制方式：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">相似度阈值<br>rerank 阈值<br>最小证据数量<br>答案引用校验<br>LLM 自检<br>人工反馈<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="二十二、RAG-系统里的“加载”到底发生在哪里？"><a href="#二十二、RAG-系统里的“加载”到底发生在哪里？" class="headerlink" title="二十二、RAG 系统里的“加载”到底发生在哪里？"></a>二十二、RAG 系统里的“加载”到底发生在哪里？</h1><p>这个问题很关键。</p>
+<h2 id="离线建库时"><a href="#离线建库时" class="headerlink" title="离线建库时"></a>离线建库时</h2><p>系统会加载文档。</p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">读取 5000 份文档<br>解析 50 万页<br>切成 100 万个 chunk<br>生成 100 万个 embedding<br>写入数据库<br>建立索引<br></code></pre></td></tr></table></figure>
+
+<p>这是后台任务，不是用户查询时做。</p>
+<hr>
+<h2 id="在线查询时"><a href="#在线查询时" class="headerlink" title="在线查询时"></a>在线查询时</h2><p>系统不会加载 5000 份文档。</p>
+<p>它加载的是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">query embedding 模型<br>向量索引<br>少量候选 chunk<br>少量原文片段<br></code></pre></td></tr></table></figure>
+
+<p>如果检索 top_k &#x3D; 20，那么可能只取：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">20 个 chunk<br>每个 chunk 500 到 1000 tokens<br>总共几千到一两万 tokens<br></code></pre></td></tr></table></figure>
+
+<p>不是 50 万页。</p>
+<hr>
+<h1 id="二十三、生产级-RAG-的数据表可以怎么设计？"><a href="#二十三、生产级-RAG-的数据表可以怎么设计？" class="headerlink" title="二十三、生产级 RAG 的数据表可以怎么设计？"></a>二十三、生产级 RAG 的数据表可以怎么设计？</h1><p>简化版可能是这样。</p>
+<h2 id="documents-表"><a href="#documents-表" class="headerlink" title="documents 表"></a>documents 表</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs text">doc_id<br>title<br>source_type<br>source_url<br>author<br>department<br>tenant_id<br>permission_group<br>created_at<br>updated_at<br>version<br>status<br></code></pre></td></tr></table></figure>
+
+<h2 id="chunks-表"><a href="#chunks-表" class="headerlink" title="chunks 表"></a>chunks 表</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs text">chunk_id<br>doc_id<br>chunk_index<br>section_title<br>page_start<br>page_end<br>text<br>token_count<br>hash<br>created_at<br>updated_at<br></code></pre></td></tr></table></figure>
+
+<h2 id="embeddings-表-vector-store"><a href="#embeddings-表-vector-store" class="headerlink" title="embeddings 表 &#x2F; vector store"></a>embeddings 表 &#x2F; vector store</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">chunk_id<br>embedding<br>embedding_model<br>embedding_version<br>metadata<br></code></pre></td></tr></table></figure>
+
+<h2 id="query-logs-表"><a href="#query-logs-表" class="headerlink" title="query_logs 表"></a>query_logs 表</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">query_id<br>user_id<br>query_text<br>retrieved_chunks<br>answer<br>latency<br>feedback<br>created_at<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="二十四、一次查询的伪代码"><a href="#二十四、一次查询的伪代码" class="headerlink" title="二十四、一次查询的伪代码"></a>二十四、一次查询的伪代码</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">answer_question</span>(<span class="hljs-params">user, question</span>):<br>    <span class="hljs-comment"># 1. 改写问题</span><br>    rewritten_query = rewrite_query(question, chat_history=<span class="hljs-literal">None</span>)<br><br>    <span class="hljs-comment"># 2. 构造权限过滤条件</span><br>    filters = &#123;<br>        <span class="hljs-string">&quot;tenant_id&quot;</span>: user.tenant_id,<br>        <span class="hljs-string">&quot;permission_group&quot;</span>: user.permission_groups,<br>        <span class="hljs-string">&quot;status&quot;</span>: <span class="hljs-string">&quot;published&quot;</span><br>    &#125;<br><br>    <span class="hljs-comment"># 3. 生成 query embedding</span><br>    query_vector = embedding_model.encode(rewritten_query)<br><br>    <span class="hljs-comment"># 4. 向量召回</span><br>    vector_results = vector_db.search(<br>        vector=query_vector,<br>        top_k=<span class="hljs-number">100</span>,<br>        filters=filters<br>    )<br><br>    <span class="hljs-comment"># 5. 关键词召回</span><br>    keyword_results = search_engine.bm25_search(<br>        query=rewritten_query,<br>        top_k=<span class="hljs-number">100</span>,<br>        filters=filters<br>    )<br><br>    <span class="hljs-comment"># 6. 合并去重</span><br>    candidates = merge_and_deduplicate(vector_results, keyword_results)<br><br>    <span class="hljs-comment"># 7. Rerank</span><br>    ranked_chunks = reranker.rank(<br>        query=rewritten_query,<br>        chunks=candidates<br>    )<br><br>    <span class="hljs-comment"># 8. 选择 top N</span><br>    top_chunks = ranked_chunks[:<span class="hljs-number">10</span>]<br><br>    <span class="hljs-comment"># 9. 分数过低则拒答</span><br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> enough_evidence(top_chunks):<br>        <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;知识库中没有找到足够明确的依据。&quot;</span><br><br>    <span class="hljs-comment"># 10. 构造上下文</span><br>    context = build_context(top_chunks)<br><br>    <span class="hljs-comment"># 11. 调用 LLM</span><br>    answer = llm.generate(<br>        system_prompt=<span class="hljs-string">&quot;请只根据提供的资料回答，并给出来源。&quot;</span>,<br>        question=question,<br>        context=context<br>    )<br><br>    <span class="hljs-comment"># 12. 返回答案和引用</span><br>    <span class="hljs-keyword">return</span> answer<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="二十五、这个系统和-Naive-RAG-的区别"><a href="#二十五、这个系统和-Naive-RAG-的区别" class="headerlink" title="二十五、这个系统和 Naive RAG 的区别"></a>二十五、这个系统和 Naive RAG 的区别</h1><p>你图里提到的 Naive RAG 是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">Query -&gt; Retriever -&gt; Context -&gt; Generator<br></code></pre></td></tr></table></figure>
+
+<p>这是最基础流程。</p>
+<p>生产级 RAG 通常会变成：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs text">用户问题<br>  -&gt; 权限校验<br>  -&gt; Query 改写<br>  -&gt; Query 分类<br>  -&gt; 多路召回<br>      -&gt; 向量检索<br>      -&gt; BM25 检索<br>      -&gt; 元数据过滤<br>      -&gt; 结构化数据库查询<br>  -&gt; 结果融合<br>  -&gt; Rerank<br>  -&gt; 上下文扩展<br>  -&gt; 去重压缩<br>  -&gt; Prompt 构造<br>  -&gt; LLM 生成<br>  -&gt; 引用校验<br>  -&gt; 置信度判断<br>  -&gt; 日志与反馈<br></code></pre></td></tr></table></figure>
+
+<p>生产系统的复杂度主要在 Retriever 前后，而不只是 LLM。</p>
+<hr>
+<h1 id="二十六、生产-RAG-最容易踩的坑"><a href="#二十六、生产-RAG-最容易踩的坑" class="headerlink" title="二十六、生产 RAG 最容易踩的坑"></a>二十六、生产 RAG 最容易踩的坑</h1><h2 id="1-只用向量检索"><a href="#1-只用向量检索" class="headerlink" title="1. 只用向量检索"></a>1. 只用向量检索</h2><p>只用向量检索会漏掉很多精确问题。</p>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">错误码 ERR-8942<br>合同编号 HT-2024-00391<br>产品型号 XG-17A<br></code></pre></td></tr></table></figure>
+
+<p>这些更适合关键词检索。</p>
+<hr>
+<h2 id="2-Chunk-切得不好"><a href="#2-Chunk-切得不好" class="headerlink" title="2. Chunk 切得不好"></a>2. Chunk 切得不好</h2><p>切得太碎，答案没上下文。</p>
+<p>切得太大，检索不精准。</p>
+<p>生产环境里，Chunking 往往需要反复调参。</p>
+<hr>
+<h2 id="3-不做权限过滤"><a href="#3-不做权限过滤" class="headerlink" title="3. 不做权限过滤"></a>3. 不做权限过滤</h2><p>这是严重问题。</p>
+<p>RAG 很容易把不该给用户看的内容检索出来。</p>
+<p>正确做法是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">检索阶段就做权限过滤<br></code></pre></td></tr></table></figure>
+
+<p>不是生成后再过滤。</p>
+<hr>
+<h2 id="4-没有-Rerank"><a href="#4-没有-Rerank" class="headerlink" title="4. 没有 Rerank"></a>4. 没有 Rerank</h2><p>直接把向量 top 5 给 LLM，经常会混入看起来相似但实际不相关的内容。</p>
+<p>Rerank 对生产质量影响很大。</p>
+<hr>
+<h2 id="5-没有拒答机制"><a href="#5-没有拒答机制" class="headerlink" title="5. 没有拒答机制"></a>5. 没有拒答机制</h2><p>如果知识库没有答案，系统应该承认没有找到。</p>
+<p>没有拒答机制的 RAG 很容易幻觉。</p>
+<hr>
+<h2 id="6-不记录引用来源"><a href="#6-不记录引用来源" class="headerlink" title="6. 不记录引用来源"></a>6. 不记录引用来源</h2><p>企业知识库问答一定要能追溯：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">答案来自哪份文档？<br>第几页？<br>哪个版本？<br>谁发布的？<br></code></pre></td></tr></table></figure>
+
+<p>否则用户很难信任。</p>
+<hr>
+<h2 id="7-文档更新后没有重新索引"><a href="#7-文档更新后没有重新索引" class="headerlink" title="7. 文档更新后没有重新索引"></a>7. 文档更新后没有重新索引</h2><p>如果文档改了，但向量库没更新，系统会回答旧内容。</p>
+<p>所以生产系统必须支持：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">增量更新<br>版本管理<br>删除同步<br>重新 embedding<br>索引重建<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="二十七、文档更新时怎么处理？"><a href="#二十七、文档更新时怎么处理？" class="headerlink" title="二十七、文档更新时怎么处理？"></a>二十七、文档更新时怎么处理？</h1><p>假设 <code>退款政策说明书</code> 更新了。</p>
+<p>系统不会每次全量重建所有 5000 份文档。</p>
+<p>它会做增量处理：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">检测 doc_001 发生变化<br>重新解析 doc_001<br>重新切分 doc_001<br>删除旧 chunk 或标记过期<br>生成新 chunk embedding<br>写入向量库<br>更新索引<br>更新版本号<br></code></pre></td></tr></table></figure>
+
+<p>对于没变的 4999 份文档，不需要重新处理。</p>
+<hr>
+<h1 id="二十八、一个成熟-RAG-系统通常有哪些模块？"><a href="#二十八、一个成熟-RAG-系统通常有哪些模块？" class="headerlink" title="二十八、一个成熟 RAG 系统通常有哪些模块？"></a>二十八、一个成熟 RAG 系统通常有哪些模块？</h1><p>可以分成 10 个核心模块。</p>
+<h2 id="1-Document-Loader"><a href="#1-Document-Loader" class="headerlink" title="1. Document Loader"></a>1. Document Loader</h2><p>负责从不同数据源读取文档：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">PDF<br>Word<br>Excel<br>网页<br>数据库<br>对象存储<br>企业文档系统<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="2-Parser"><a href="#2-Parser" class="headerlink" title="2. Parser"></a>2. Parser</h2><p>负责解析内容：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">文本<br>标题<br>段落<br>表格<br>图片 OCR<br>页码<br>目录结构<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="3-Chunker"><a href="#3-Chunker" class="headerlink" title="3. Chunker"></a>3. Chunker</h2><p>负责切分：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">固定长度切分<br>递归切分<br>语义切分<br>标题层级切分<br>表格特殊切分<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="4-Embedder"><a href="#4-Embedder" class="headerlink" title="4. Embedder"></a>4. Embedder</h2><p>负责生成向量：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">批量 embedding<br>失败重试<br>模型版本管理<br>向量归一化<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="5-Indexer"><a href="#5-Indexer" class="headerlink" title="5. Indexer"></a>5. Indexer</h2><p>负责写入索引：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">向量索引<br>关键词索引<br>元数据索引<br>权限索引<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="6-Retriever"><a href="#6-Retriever" class="headerlink" title="6. Retriever"></a>6. Retriever</h2><p>负责召回候选内容：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">向量检索<br>BM25<br>Hybrid Search<br>Metadata Filter<br>Multi-query<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="7-Reranker"><a href="#7-Reranker" class="headerlink" title="7. Reranker"></a>7. Reranker</h2><p>负责精排：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">Cross Encoder Rerank<br>LLM Rerank<br>业务规则加权<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="8-Context-Builder"><a href="#8-Context-Builder" class="headerlink" title="8. Context Builder"></a>8. Context Builder</h2><p>负责构造上下文：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs text">去重<br>排序<br>扩展前后文<br>压缩<br>控制 token 预算<br>添加来源信息<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="9-Generator"><a href="#9-Generator" class="headerlink" title="9. Generator"></a>9. Generator</h2><p>负责调用 LLM 生成答案：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">基于资料回答<br>引用来源<br>不确定时拒答<br>结构化输出<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="10-Evaluator-Monitor"><a href="#10-Evaluator-Monitor" class="headerlink" title="10. Evaluator &#x2F; Monitor"></a>10. Evaluator &#x2F; Monitor</h2><p>负责评估和监控：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">检索召回率<br>答案准确率<br>幻觉率<br>延迟<br>成本<br>用户反馈<br>失败样本分析<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="二十九、RAG-查询速度为什么可以很快？"><a href="#二十九、RAG-查询速度为什么可以很快？" class="headerlink" title="二十九、RAG 查询速度为什么可以很快？"></a>二十九、RAG 查询速度为什么可以很快？</h1><p>因为查询时主要操作是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">1. 生成 query embedding<br>2. 查向量索引<br>3. 查关键词索引<br>4. rerank 少量候选<br>5. 调用 LLM<br></code></pre></td></tr></table></figure>
+
+<p>其中最慢的通常不是“查 5000 份文档”，因为根本没有查原始文档。</p>
+<p>延迟大概来自：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">Embedding：几十毫秒到几百毫秒<br>向量检索：几十毫秒到几百毫秒<br>BM25 检索：几十毫秒<br>Rerank：几十到几百毫秒，视候选数量而定<br>LLM 生成：几百毫秒到数秒<br></code></pre></td></tr></table></figure>
+
+<p>实际延迟取决于模型大小、索引规模、硬件、网络和生成长度。</p>
+<hr>
+<h1 id="三十、最终回答你的核心疑问"><a href="#三十、最终回答你的核心疑问" class="headerlink" title="三十、最终回答你的核心疑问"></a>三十、最终回答你的核心疑问</h1><p>你的问题是：</p>
+<blockquote>
+<p>假如有 5000 份文档，每份 100 页文字，用户随机输入了一个问题，难不成 RAG 系统需要加载 5000 份文档？再去查和用户 query 向量相似度吗？</p>
+</blockquote>
+<p>答案是：</p>
+<blockquote>
+<p><strong>不需要。</strong></p>
+</blockquote>
+<p>正确流程是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs text">1. 文档在用户提问前已经被处理完<br>2. 每个文档被切成很多 chunk<br>3. 每个 chunk 已经提前生成 embedding<br>4. chunk embedding 已经写入向量数据库<br>5. 向量数据库已经提前建立索引<br>6. 用户提问时只生成 query embedding<br>7. 用 query embedding 查询向量索引<br>8. 向量索引快速返回最相关的少量 chunk_id<br>9. 系统只读取这些 chunk 的文本<br>10. LLM 只基于这些 chunk 回答<br></code></pre></td></tr></table></figure>
+
+<p>所以不是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">用户提问<br>  -&gt; 加载 5000 份文档<br>  -&gt; 扫描 50 万页<br>  -&gt; 全部算相似度<br></code></pre></td></tr></table></figure>
+
+<p>而是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">用户提问<br>  -&gt; 查提前建好的索引<br>  -&gt; 取 top 10 / top 20 相关片段<br>  -&gt; 给 LLM 生成答案<br></code></pre></td></tr></table></figure>
+
+<p>一句话总结：</p>
+<blockquote>
+<p><strong>大型 RAG 的本质是：离线全量建索引，在线小范围检索，最后让 LLM 基于少量高相关证据回答。</strong></p>
+</blockquote>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/AI/" class="category-chain-item">AI</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/RAG/" class="print-no-link">#RAG</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>生产环境的大型 RAG 知识库系统怎么工作的</div>
+      <div>https://alberthello.github.io/2026/05/11/AI/rag_system/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年5月11日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/05/20/webrtc/mediasoup_cc_pacer_svc/" title="深入 mediasoup 服务端下行拥塞控制">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">深入 mediasoup 服务端下行拥塞控制</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/05/10/webrtc/svc/" title="SFU 服务端做 SVC 丢层适配：从“能转发”到“能抗弱网”">
+                        <span class="hidden-mobile">SFU 服务端做 SVC 丢层适配：从“能转发”到“能抗弱网”</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

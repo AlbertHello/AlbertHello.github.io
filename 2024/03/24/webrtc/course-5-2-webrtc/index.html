@@ -1,0 +1,874 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="webrtc 的线程rtc::Thread   1234567891011121314151617&#x2F;&#x2F; 线程在队列中取数据get(...)peek(...)&#x2F;&#x2F; 线程切换post(...)postTask(...)send(...)invoke(...)&#x2F;&#x2F; 线程控制start(...)run(...)stop(...)   webrtc中的Thread是一个对象，不是一个线程，对象里会有真正线程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="5.2 webrtc 的线程">
+<meta property="og:url" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="webrtc 的线程rtc::Thread   1234567891011121314151617&#x2F;&#x2F; 线程在队列中取数据get(...)peek(...)&#x2F;&#x2F; 线程切换post(...)postTask(...)send(...)invoke(...)&#x2F;&#x2F; 线程控制start(...)run(...)stop(...)   webrtc中的Thread是一个对象，不是一个线程，对象里会有真正线程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112525507275.jpg">
+<meta property="og:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112526763176.jpg">
+<meta property="og:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112527325611.jpg">
+<meta property="og:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112527617340.jpg">
+<meta property="og:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112530741131.jpg">
+<meta property="og:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112531804522.jpg">
+<meta property="og:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112554169077.jpg">
+<meta property="og:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112554404008.jpg">
+<meta property="og:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112554671010.jpg">
+<meta property="og:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112540160033.jpg">
+<meta property="article:published_time" content="2024-03-24T04:51:13.000Z">
+<meta property="article:modified_time" content="2026-05-20T13:10:39.850Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="WebRTC">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/17112525507275.jpg">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>5.2 webrtc 的线程 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="5.2 webrtc 的线程"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-03-24 12:51" pubdate>
+          2024年3月24日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.3k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">5.2 webrtc 的线程</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-05-20T21:10:39+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="webrtc-的线程"><a href="#webrtc-的线程" class="headerlink" title="webrtc 的线程"></a>webrtc 的线程</h1><h2 id="rtc-Thread"><a href="#rtc-Thread" class="headerlink" title="rtc::Thread"></a>rtc::Thread</h2><img src="/2024/03/24/webrtc/course-5-2-webrtc/17112525507275.jpg" srcset="/img/loading.gif" lazyload class="">
+<img src="/2024/03/24/webrtc/course-5-2-webrtc/17112526763176.jpg" srcset="/img/loading.gif" lazyload class="">
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// 线程在队列中取数据</span><br><span class="hljs-built_in">get</span>(...)<br><span class="hljs-built_in">peek</span>(...)<br><br><br><span class="hljs-comment">// 线程切换</span><br><span class="hljs-built_in">post</span>(...)<br><span class="hljs-built_in">postTask</span>(...)<br><span class="hljs-built_in">send</span>(...)<br><span class="hljs-built_in">invoke</span>(...)<br><br><span class="hljs-comment">// 线程控制</span><br><span class="hljs-built_in">start</span>(...)<br><span class="hljs-built_in">run</span>(...)<br><span class="hljs-built_in">stop</span>(...)<br><br><br></code></pre></td></tr></table></figure>
+<img src="/2024/03/24/webrtc/course-5-2-webrtc/17112527325611.jpg" srcset="/img/loading.gif" lazyload class="">
+<ul>
+<li>webrtc中的Thread是一个对象，不是一个线程，对象里会有真正线程的句柄</li>
+<li>wertc中的线程是有队列的</li>
+<li>webrtc中的线程是以事件驱动的。即收到某哥事件时才会去队列中取消息，根据消息做具体的动作。</li>
+</ul>
+<img src="/2024/03/24/webrtc/course-5-2-webrtc/17112527617340.jpg" srcset="/img/loading.gif" lazyload class="">
+<h2 id="ThreadManager"><a href="#ThreadManager" class="headerlink" title="ThreadManager"></a>ThreadManager</h2> <img src="/2024/03/24/webrtc/course-5-2-webrtc/17112530741131.jpg" srcset="/img/loading.gif" lazyload class="">
+<p>主要成员：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs cpp">&#123;<br>...<br><span class="hljs-comment">// manager静态构造器</span><br><span class="hljs-function"><span class="hljs-type">static</span> ThreadManager* <span class="hljs-title">Instance</span><span class="hljs-params">()</span></span>;<br><span class="hljs-comment">// This list contains all live Threads.</span><br><span class="hljs-comment">// manager 通过该数组管理所有的thread对象</span><br><span class="hljs-function">std::vector&lt;Thread*&gt; message_queues_ <span class="hljs-title">RTC_GUARDED_BY</span><span class="hljs-params">(crit_)</span></span>;<br><span class="hljs-comment">// ThreadManager的SetCurrentThread函数</span><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetCurrentThreadInternal</span><span class="hljs-params">(Thread* thread)</span></span>;<br><span class="hljs-comment">// 每个key对应一个thread对象指针</span><br><span class="hljs-type">pthread_key_t</span> key_;<br>...<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>解释一下key_的作用：</p>
+<ul>
+<li>ThreadManager有两个队列，一个是存储thread对象指针的队列，一个是线程私有存储队列（可以这么理解）。</li>
+<li>比如一个有全局变量，多线程环境下，每个线程都可以取访问、修改，但如果每个线程只想单独拥有它，自己线程修改的该全局变量的值，只允许自己线程中的函数访问，不希望其他线程来访问自己的值，那么这就需要创建线程的私有数据，这个数据会屏蔽其他线程，但全句变量还是那一个全局变量。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-type">pthread_key_t</span> <span class="hljs-comment">// key 类型</span><br>pthread_key_create <span class="hljs-comment">// 创建key</span><br>pthread_getspecific <span class="hljs-comment">// 通过key获取存储的值</span><br>pthread_setspecific <span class="hljs-comment">// 通过key，set一个值</span><br><br></code></pre></td></tr></table></figure>
+<h3 id="message-queues-和-key"><a href="#message-queues-和-key" class="headerlink" title="message_queues_ 和 key_"></a>message_queues_ 和 key_</h3><img src="/2024/03/24/webrtc/course-5-2-webrtc/17112531804522.jpg" srcset="/img/loading.gif" lazyload class="">
+
+<ul>
+<li>message_queue中的thread对象和thread local storage map 表中的 thread 对象对应</li>
+<li>message_queues_ 队列存储thread对象指针。<ul>
+<li>thread对象构造时就会被加入到该队列中</li>
+</ul>
+</li>
+<li>thread local storge队列这是系统的，是个map表，key-value。和 message_queues_ 中的元素一一对应。<ul>
+<li>线程执行时，当调用SetCurrentThread，当前线程与thread对象绑定，又调用ThreadManager的SetCurrentThreadInternal，最终调用pthread_setspecific存储起来。</li>
+</ul>
+</li>
+</ul>
+<h3 id="thread-构造函数："><a href="#thread-构造函数：" class="headerlink" title="thread 构造函数："></a>thread 构造函数：</h3><img src="/2024/03/24/webrtc/course-5-2-webrtc/17112554169077.jpg" srcset="/img/loading.gif" lazyload class="">
+<h4 id="Thread-DoInit"><a href="#Thread-DoInit" class="headerlink" title="Thread::DoInit"></a>Thread::DoInit</h4><img src="/2024/03/24/webrtc/course-5-2-webrtc/17112554404008.jpg" srcset="/img/loading.gif" lazyload class="">
+
+<h4 id="ThreadManager-AddInternal"><a href="#ThreadManager-AddInternal" class="headerlink" title="ThreadManager::AddInternal"></a>ThreadManager::AddInternal</h4><img src="/2024/03/24/webrtc/course-5-2-webrtc/17112554671010.jpg" srcset="/img/loading.gif" lazyload class="">
+
+<ul>
+<li>当Thread对象构造时，最终调用了ThreadManager::AddInternal</li>
+<li>在AddInternal 函数中把 Thread 对象指针加入到了ThreadManager 的 message_queues_ 队列中</li>
+</ul>
+<h4 id="ThreadManager-SetCurrentThread"><a href="#ThreadManager-SetCurrentThread" class="headerlink" title="ThreadManager::SetCurrentThread"></a>ThreadManager::SetCurrentThread</h4><ul>
+<li>该函数会把当前线程和传入的Thread对象进行绑定。</li>
+</ul>
+<h3 id="windows"><a href="#windows" class="headerlink" title="windows"></a>windows</h3><img src="/2024/03/24/webrtc/course-5-2-webrtc/17112540160033.jpg" srcset="/img/loading.gif" lazyload class="">
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">if</span> defined(WEBRTC_WIN)</span><br>ThreadManager::<span class="hljs-built_in">ThreadManager</span>() : <span class="hljs-built_in">key_</span>(<span class="hljs-built_in">TlsAlloc</span>()) &#123;&#125;<br><br><span class="hljs-function">Thread* <span class="hljs-title">ThreadManager::CurrentThread</span><span class="hljs-params">()</span> </span>&#123;<br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">static_cast</span>&lt;Thread*&gt;(<span class="hljs-built_in">TlsGetValue</span>(key_));<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">ThreadManager::SetCurrentThreadInternal</span><span class="hljs-params">(Thread* thread)</span> </span>&#123;<br>  <span class="hljs-built_in">TlsSetValue</span>(key_, thread);<br>&#125;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="POSIX"><a href="#POSIX" class="headerlink" title="POSIX"></a>POSIX</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs cpp">ThreadManager::<span class="hljs-built_in">ThreadManager</span>() &#123;<br><span class="hljs-meta">#<span class="hljs-keyword">if</span> defined(WEBRTC_MAC)</span><br>  <span class="hljs-built_in">InitCocoaMultiThreading</span>();<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><span class="hljs-comment">// 创建key，给key创建一个值，就是内存中一个map表的索引值，通过这个索引值，找到内存中的map表。map表的key是线程id，value就是咱们设置的thread对象</span><br>  <span class="hljs-built_in">pthread_key_create</span>(&amp;key_, <span class="hljs-literal">nullptr</span>);<br>&#125;<br><br><span class="hljs-function">Thread* <span class="hljs-title">ThreadManager::CurrentThread</span><span class="hljs-params">()</span> </span>&#123;<br><span class="hljs-comment">// 通过 key 找到map 表，内部又会根据当前线程的 tid，找到对应的 thread 对象。</span><br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">static_cast</span>&lt;Thread*&gt;(<span class="hljs-built_in">pthread_getspecific</span>(key_));<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">ThreadManager::SetCurrentThreadInternal</span><span class="hljs-params">(Thread* thread)</span> </span>&#123;<br><span class="hljs-comment">// 把 thread 对象保存到 map 表中</span><br>  <span class="hljs-built_in">pthread_setspecific</span>(key_, thread);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/WebRTC/" class="print-no-link">#WebRTC</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>5.2 webrtc 的线程</div>
+      <div>https://alberthello.github.io/2024/03/24/webrtc/course-5-2-webrtc/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年3月24日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/03/24/webrtc/course-5-3/" title="5.3 三大线程">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">5.3 三大线程</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/03/23/webrtc/course-5-1/" title="5.1 线程基础知识">
+                        <span class="hidden-mobile">5.1 线程基础知识</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,876 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="M4 电脑在通过 UTM 装 arm64架构 Ubuntu 22.04 虚拟机编译 webrtc在 Ubuntu 22.04 上将 Clang 和 LLVM 升级到 17 版本，通常需要通过 LLVM 官方提供的 APT 仓库来完成，因为 Ubuntu 默认的软件源中的版本可能不够新。以下是详细的步骤和命令，你可以在你的 Ubuntu 虚拟机中执行这些操作。 升级步骤1. 添加 LLVM GPG">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ubuntu2204 编译 webrtc">
+<meta property="og:url" content="https://alberthello.github.io/2025/10/15/webrtc/ubuntu2204-build-webrtc/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="M4 电脑在通过 UTM 装 arm64架构 Ubuntu 22.04 虚拟机编译 webrtc在 Ubuntu 22.04 上将 Clang 和 LLVM 升级到 17 版本，通常需要通过 LLVM 官方提供的 APT 仓库来完成，因为 Ubuntu 默认的软件源中的版本可能不够新。以下是详细的步骤和命令，你可以在你的 Ubuntu 虚拟机中执行这些操作。 升级步骤1. 添加 LLVM GPG">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-10-15T02:07:50.000Z">
+<meta property="article:modified_time" content="2026-05-20T13:10:39.933Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="WebRTC">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Ubuntu2204 编译 webrtc - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Ubuntu2204 编译 webrtc"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-10-15 10:07" pubdate>
+          2025年10月15日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.5k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Ubuntu2204 编译 webrtc</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-05-20T21:10:39+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="M4-电脑在通过-UTM-装-arm64架构-Ubuntu-22-04-虚拟机编译-webrtc"><a href="#M4-电脑在通过-UTM-装-arm64架构-Ubuntu-22-04-虚拟机编译-webrtc" class="headerlink" title="M4 电脑在通过 UTM 装 arm64架构 Ubuntu 22.04 虚拟机编译 webrtc"></a>M4 电脑在通过 UTM 装 arm64架构 Ubuntu 22.04 虚拟机编译 webrtc</h2><p>在 Ubuntu 22.04 上将 Clang 和 LLVM 升级到 17 版本，通常需要通过 LLVM 官方提供的 APT 仓库来完成，因为 Ubuntu 默认的软件源中的版本可能不够新。<br>以下是详细的步骤和命令，你可以在你的 Ubuntu 虚拟机中执行这些操作。</p>
+<h3 id="升级步骤"><a href="#升级步骤" class="headerlink" title="升级步骤"></a>升级步骤</h3><h4 id="1-添加-LLVM-GPG-密钥和软件源"><a href="#1-添加-LLVM-GPG-密钥和软件源" class="headerlink" title="1. 添加 LLVM GPG 密钥和软件源"></a>1. 添加 LLVM GPG 密钥和软件源</h4><p>首先，你需要下载并添加 LLVM 仓库的 GPG 密钥，以确保你下载的软件包是官方且未经篡改的。然后，将 LLVM 的软件源添加到你的系统中。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">wget https://apt.llvm.org/llvm.sh<br><span class="hljs-built_in">chmod</span> +x llvm.sh<br><span class="hljs-built_in">sudo</span> ./llvm.sh 17<br></code></pre></td></tr></table></figure>
+
+<p>这个脚本会自动检测你的 Ubuntu 版本，并为你添加正确的 GPG 密钥和 APT 软件源。我们指定 <code>17</code> 作为参数，表示我们希望安装 17 版本的工具链。</p>
+<h4 id="2-安装-Clang-17-和相关工具"><a href="#2-安装-Clang-17-和相关工具" class="headerlink" title="2. 安装 Clang 17 和相关工具"></a>2. 安装 Clang 17 和相关工具</h4><p>添加完软件源后，你就可以使用 <code>apt</code> 来安装 <code>clang-17</code> 和 <code>llvm-17</code> 了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt-get update<br><span class="hljs-built_in">sudo</span> apt-get install -y clang-17 lld-17<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>clang-17</code>: C&#x2F;C++&#x2F;Objective-C 编译器。</li>
+<li><code>lld-17</code>: LLVM 的链接器，通常与 Clang 配合使用，性能很高。</li>
+</ul>
+<h4 id="3-可选-设置-Clang-17-为默认编译器"><a href="#3-可选-设置-Clang-17-为默认编译器" class="headerlink" title="3. (可选) 设置 Clang 17 为默认编译器"></a>3. (可选) 设置 Clang 17 为默认编译器</h4><p>为了方便使用，你可以使用 <code>update-alternatives</code> 系统将新安装的 <code>clang-17</code> 设置为系统默认的 <code>clang</code> 和 <code>clang++</code>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 100<br><span class="hljs-built_in">sudo</span> update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 100<br></code></pre></td></tr></table></figure>
+
+<p>执行后，你可以通过以下命令验证默认版本是否已切换成功：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">clang --version<br></code></pre></td></tr></table></figure>
+
+<p>输出应该会显示 Clang 17 的版本信息。</p>
+<p>你已经正确安装了 <code>clang-17</code> 并运行了 <code>update-alternatives</code>，但 <code>clang++ --version</code> 仍然显示 <strong>Clang 16</strong>，说明 <strong><code>update-alternatives</code> 没有生效</strong>。</p>
+<hr>
+<h2 id="🔍-原因分析"><a href="#🔍-原因分析" class="headerlink" title="🔍 原因分析"></a>🔍 原因分析</h2><p>最可能的原因是：<strong>系统中存在多个 <code>update-alternatives</code> 配置，或优先级冲突</strong>。</p>
+<p>你可以通过以下命令检查当前生效的版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">update-alternatives --display clang++<br></code></pre></td></tr></table></figure>
+
+<p>你会看到类似输出：</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">clang++ - auto mode<br>  link best <span class="hljs-keyword">version</span> is <span class="hljs-string">/usr/bin/clang</span>++-17<br>  <span class="hljs-string">...</span><br>  <span class="hljs-string">/usr/bin/clang</span>++-16 - priority 100<br>  <span class="hljs-string">/usr/bin/clang</span>++-17 - priority 100   ← 两个优先级相同！<br></code></pre></td></tr></table></figure>
+
+<p>当多个版本的 <strong>priority 相同</strong> 时，<code>update-alternatives</code> <strong>不会自动切换</strong>，而是保持当前选择（可能仍是 Clang 16）。</p>
+<hr>
+<h2 id="✅-正确解决方案：手动选择-Clang-17"><a href="#✅-正确解决方案：手动选择-Clang-17" class="headerlink" title="✅ 正确解决方案：手动选择 Clang 17"></a>✅ 正确解决方案：<strong>手动选择 Clang 17</strong></h2><p>运行交互式配置命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> update-alternatives --config clang++<br></code></pre></td></tr></table></figure>
+
+<p>你会看到类似：</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs asciidoc">There are 2 choices for the alternative clang<span class="hljs-code">++ (providing /usr/bin/clang+</span>+).<br><br><span class="hljs-section">  Selection    Path                   Priority   Status</span><br><span class="hljs-section">------------------------------------------------------------</span><br><span class="hljs-bullet">* </span>0            /usr/bin/clang++-16     100       auto mode<br><span class="hljs-code">  1            /usr/bin/clang++-16     100       manual mode</span><br><span class="hljs-code">  2            /usr/bin/clang++-17     100       manual mode</span><br><br>Press &lt;enter&gt; to keep the current choice [*], or type selection number:<br></code></pre></td></tr></table></figure>
+
+<p>👉 <strong>输入 <code>2</code> 并回车</strong>，强制选择 Clang 17。</p>
+<p>同样操作用于 <code>clang</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> update-alternatives --config clang<br><span class="hljs-comment"># 选择 clang-17</span><br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="✅-验证是否生效"><a href="#✅-验证是否生效" class="headerlink" title="✅ 验证是否生效"></a>✅ 验证是否生效</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">clang++ --version<br></code></pre></td></tr></table></figure>
+
+<p>✅ 现在应该显示：</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">Ubuntu clang <span class="hljs-keyword">version</span> 17.0.6 <span class="hljs-params">(...)</span><br>Target: aarch64-unknown-linux-gnu<br><span class="hljs-string">...</span><br></code></pre></td></tr></table></figure>
+
+<hr>
+<p>使用17仍然报错，切换到18就OK了：<br>第一版最终的构建参数：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs makefile">gn gen out/release-static --args=&#x27;<br>target_cpu = <span class="hljs-string">&quot;arm64&quot;</span><br>is_debug = false<br>is_clang = true<br>clang_base_path = <span class="hljs-string">&quot;/usr&quot;</span><br>use_custom_libcxx = false<br>use_glib = false<br>rtc_use_h264 = false<br>rtc_include_tests = false<br>rtc_build_examples = false<br>rtc_build_tools = false<br>use_sysroot = false<br>use_ozone = false<br>treat_warnings_as_errors = false<br>clang_use_chrome_plugins = false<br>&#x27;<br></code></pre></td></tr></table></figure>
+
+<p><code>ninja -C out/release-static</code></p>
+<p>收集散落的各个目录的静态库和头文件的脚本：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python3</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">不合并，仅收集 webrtc 自有 .a 和头文件</span><br><span class="hljs-string">python3 collect_webrtc.py \</span><br><span class="hljs-string">  --obj-dir out/release-static/obj \</span><br><span class="hljs-string">  --lib-dir  out/release-static/lib \</span><br><span class="hljs-string">  --include-dir out/release-static/include</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-keyword">import</span> os, subprocess, argparse, shutil<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">run</span>(<span class="hljs-params">cmd, cwd=<span class="hljs-literal">None</span></span>):<br>    subprocess.check_call(cmd, shell=<span class="hljs-literal">True</span>, cwd=cwd)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">collect_libs</span>(<span class="hljs-params">obj_dir, lib_dir</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;按目录结构原样拷贝 .a&quot;&quot;&quot;</span><br>    webrtc_dirs = [<br>        <span class="hljs-string">&#x27;api&#x27;</span>, <span class="hljs-string">&#x27;call&#x27;</span>, <span class="hljs-string">&#x27;common_audio&#x27;</span>, <span class="hljs-string">&#x27;common_video&#x27;</span>, <span class="hljs-string">&#x27;logging&#x27;</span>,<br>        <span class="hljs-string">&#x27;media&#x27;</span>, <span class="hljs-string">&#x27;modules&#x27;</span>, <span class="hljs-string">&#x27;p2p&#x27;</span>, <span class="hljs-string">&#x27;pc&#x27;</span>, <span class="hljs-string">&#x27;rtc_base&#x27;</span>,<br>        <span class="hljs-string">&#x27;sdk&#x27;</span>, <span class="hljs-string">&#x27;stats&#x27;</span>, <span class="hljs-string">&#x27;system_wrappers&#x27;</span>, <span class="hljs-string">&#x27;video&#x27;</span><br>    ]<br>    <span class="hljs-keyword">for</span> subdir <span class="hljs-keyword">in</span> webrtc_dirs:<br>        src_root = os.path.join(obj_dir, subdir)<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> os.path.isdir(src_root):<br>            <span class="hljs-keyword">continue</span><br>        <span class="hljs-keyword">for</span> cur, _, files <span class="hljs-keyword">in</span> os.walk(src_root):<br>            <span class="hljs-keyword">for</span> f <span class="hljs-keyword">in</span> files:<br>                <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> f.endswith(<span class="hljs-string">&#x27;.a&#x27;</span>):<br>                    <span class="hljs-keyword">continue</span><br>                src = os.path.join(cur, f)<br>                dst = os.path.join(lib_dir, os.path.relpath(src, obj_dir))<br>                os.makedirs(os.path.dirname(dst), exist_ok=<span class="hljs-literal">True</span>)<br>                shutil.copy2(src, dst)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;&gt;&gt;&gt; 已收集 .a 到：&#x27;</span>, lib_dir)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">export_headers</span>(<span class="hljs-params">repo_root, include_dir</span>):<br>    dirs = [<br>        <span class="hljs-string">&#x27;api&#x27;</span>, <span class="hljs-string">&#x27;rtc_base&#x27;</span>, <span class="hljs-string">&#x27;modules&#x27;</span>, <span class="hljs-string">&#x27;common_audio&#x27;</span>, <span class="hljs-string">&#x27;common_video&#x27;</span>,<br>        <span class="hljs-string">&#x27;p2p&#x27;</span>, <span class="hljs-string">&#x27;pc&#x27;</span>, <span class="hljs-string">&#x27;call&#x27;</span>, <span class="hljs-string">&#x27;video&#x27;</span>, <span class="hljs-string">&#x27;audio&#x27;</span>, <span class="hljs-string">&#x27;logging&#x27;</span>,<br>        <span class="hljs-string">&#x27;media&#x27;</span>, <span class="hljs-string">&#x27;system_wrappers&#x27;</span><br>    ]<br>    <span class="hljs-keyword">for</span> d <span class="hljs-keyword">in</span> dirs:<br>        src = os.path.join(repo_root, d)<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> os.path.isdir(src):<br>            <span class="hljs-keyword">continue</span><br>        run(<span class="hljs-string">f&#x27;find <span class="hljs-subst">&#123;d&#125;</span> -name &quot;*.h&quot; -exec cp --parents -t <span class="hljs-subst">&#123;include_dir&#125;</span>/ &#123;&#123;&#125;&#125; +&#x27;</span>, cwd=repo_root)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;&gt;&gt;&gt; 头文件已导出到：&#x27;</span>, include_dir)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">main</span>():<br>    parser = argparse.ArgumentParser()<br>    parser.add_argument(<span class="hljs-string">&#x27;--obj-dir&#x27;</span>, required=<span class="hljs-literal">True</span>)<br>    parser.add_argument(<span class="hljs-string">&#x27;--lib-dir&#x27;</span>, required=<span class="hljs-literal">True</span>)<br>    parser.add_argument(<span class="hljs-string">&#x27;--include-dir&#x27;</span>, required=<span class="hljs-literal">True</span>)<br>    args = parser.parse_args()<br><br>    repo_root = os.path.abspath(<span class="hljs-string">&#x27;.&#x27;</span>)<br>    os.makedirs(args.lib_dir, exist_ok=<span class="hljs-literal">True</span>)<br>    os.makedirs(args.include_dir, exist_ok=<span class="hljs-literal">True</span>)<br><br>    collect_libs(args.obj_dir, args.lib_dir)<br>    export_headers(repo_root, args.include_dir)<br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    main()<br></code></pre></td></tr></table></figure>
+
+<p>第二版：</p>
+<figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs nix">gn gen out<span class="hljs-symbol">/third</span> <span class="hljs-operator">-</span>-args<span class="hljs-operator">=</span>&#x27;<br>t<span class="hljs-attr">arget_cpu</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;arm64&quot;</span><br>i<span class="hljs-attr">s_debug</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span><br>i<span class="hljs-attr">s_clang</span> <span class="hljs-operator">=</span> <span class="hljs-literal">true</span><br>c<span class="hljs-attr">lang_base_path</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;/usr&quot;</span><br>u<span class="hljs-attr">se_custom_libcxx</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span><br>u<span class="hljs-attr">se_glib</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span><br>r<span class="hljs-attr">tc_include_tests</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span><br>r<span class="hljs-attr">tc_build_examples</span> <span class="hljs-operator">=</span> <span class="hljs-literal">true</span><br>r<span class="hljs-attr">tc_build_tools</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span><br>u<span class="hljs-attr">se_sysroot</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span><br>u<span class="hljs-attr">se_ozone</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span><br>t<span class="hljs-attr">reat_warnings_as_errors</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span><br>c<span class="hljs-attr">lang_use_chrome_plugins</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span><br>&#x27;<br><br>ninja <span class="hljs-operator">-</span>C out<span class="hljs-symbol">/third</span><br><br>漏掉了video 的内置 encoder 和 decoder 的函数符号<br>ninja <span class="hljs-operator">-</span>C out<span class="hljs-symbol">/third</span> api<span class="hljs-operator">/</span>video_codecs:builtin_video_decoder_factory<br>ninja <span class="hljs-operator">-</span>C out<span class="hljs-symbol">/third</span> api<span class="hljs-operator">/</span>video_codecs:builtin_video_encoder_factory<br></code></pre></td></tr></table></figure>
+
+
+
+<h2 id="M4-电脑在-docker-里跑-linux-x86-64-架构的-Ubuntu-22-04-编译-webrtc"><a href="#M4-电脑在-docker-里跑-linux-x86-64-架构的-Ubuntu-22-04-编译-webrtc" class="headerlink" title="M4 电脑在 docker 里跑 linux x86_64 架构的 Ubuntu 22.04 编译 webrtc"></a>M4 电脑在 docker 里跑 linux x86_64 架构的 Ubuntu 22.04 编译 webrtc</h2><p>源码在mac里面，只在docker里面下载depot_tools等一些依赖库</p>
+<h4 id="脚本"><a href="#脚本" class="headerlink" title="脚本"></a>脚本</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">#</span><span class="language-bash">!/usr/bin/env bash</span><br>set -e<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">1. 使用 buildx 构建镜像，确保 --platform 标志生效</span><br>docker buildx build --platform linux/amd64 -t webrtc-build-env --load .<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">2. 运行编译 (同样指定平台)</span><br>docker run --rm --platform linux/amd64 \<br>  -v &quot;$(pwd)&quot;:/webrtc \<br>  -v &quot;$(pwd)/output&quot;:/output \<br>  webrtc-build-env \<br>  bash -c &quot;<br>    set -e<br>    cd /webrtc<br>    # ------------------- 重要说明：编译模式选择 -------------------<br>    #<br>    # 【模式一：首次编译或更新分支】<br>    # 运行下面的 &#x27;gclient sync&#x27;。它会完整同步所有依赖，但速度较慢。<br>    # echo &#x27;Syncing dependencies for a full build...&#x27;<br>    # gclient sync --with_branch_heads --force<br><br>    # 【模式二：日常增量编译】<br>    # 为了快速编译，请注释掉上面的 &#x27;gclient sync&#x27;，<br>    # 然后取消下面 &#x27;gclient runhooks&#x27; 的注释。<br>    # &#x27;runhooks&#x27; 会跳过缓慢的依赖检查，只执行必要的环境设置，速度很快。<br>    #<br>    echo &#x27;Running hooks for an incremental build...&#x27;<br>    gclient runhooks<br><br>    # --- 后续步骤都在 /webrtc/src 目录中执行 ---<br>    cd /webrtc/src<br><br>    # c. 安装 sysroot<br>    echo &#x27;Installing sysroot...&#x27;<br>    build/linux/sysroot_scripts/install-sysroot.py --arch=amd64<br><br>    # d. 编译<br>    echo &#x27;Generating build files...&#x27;<br>    gn gen out/linux --args=&#x27;<br>    is_debug = false<br>    is_clang = true<br>    clang_base_path = \&quot;/usr\&quot;<br>    use_custom_libcxx = false<br>    rtc_use_h264 = true<br>    use_glib = false<br>    rtc_include_tests = false<br>    rtc_build_examples = false<br>    rtc_build_tools = false<br>    use_sysroot = false<br>    use_ozone = false<br>    rtc_include_internal_audio_device = false<br>    treat_warnings_as_errors = false<br>    clang_use_chrome_plugins = false <br>    target_os=\&quot;linux\&quot; target_cpu=\&quot;x64\&quot;&#x27;<br>    <br>    echo &#x27;Building WebRTC...&#x27;<br>    ninja -C out/linux<br><br>    # e. 合并所有 .a 文件成一个大的 libwebrtc.a<br>    echo &#x27;Combining archives...&#x27;<br>    # 创建一个 MRI 脚本来执行合并操作<br>    echo \&quot;create /output/libwebrtc.a\&quot; &gt; /tmp/archive.mri<br>    find out/linux/obj -name \&quot;*.a\&quot; -exec echo \&quot;addlib &#123;&#125;\&quot; \; &gt;&gt; /tmp/archive.mri<br>    echo \&quot;save\&quot; &gt;&gt; /tmp/archive.mri<br>    echo \&quot;end\&quot; &gt;&gt; /tmp/archive.mri<br>    ar -M &lt; /tmp/archive.mri<br><br>    # f. 拷产物<br>    echo &#x27;Copying artifacts...&#x27;<br>    mkdir -p /output/include<br>    # cp out/linux/obj/buildtools/third_party/libc++/libc++.a /output/<br>    # cp out/linux/obj/buildtools/third_party/libc++abi/libc++abi.a /output/<br>    mkdir -p /output/include<br>    find api rtc_base modules common_audio common_video p2p pc call video audio logging media system_wrappers -name &#x27;*.h&#x27; -exec cp --parents -t /output/include/ &#123;&#125; +<br>  &quot;<br>echo &quot;✅ Linux 版 libwebrtc.a 已生成在 $(pwd)/output/&quot;<br></code></pre></td></tr></table></figure>
+<h4 id="dockerfile"><a href="#dockerfile" class="headerlink" title="dockerfile"></a>dockerfile</h4><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><code class="hljs dockerfile"><span class="hljs-comment"># 使用一个基础的 Ubuntu 镜像</span><br><span class="hljs-keyword">FROM</span> --platform=linux/amd64 ubuntu:<span class="hljs-number">22.04</span><br><br><span class="hljs-comment"># 设置非交互式安装，避免 apt-get 提问</span><br><span class="hljs-keyword">ENV</span> DEBIAN_FRONTEND=noninteractive<br><br><span class="hljs-comment"># 1. 更新软件源并安装所有依赖</span><br><span class="hljs-comment">#    - software-properties-common: 提供 add-apt-repository 命令，llvm.sh 脚本需要</span><br><span class="hljs-comment">#    - lsb-release: llvm.sh 脚本需要用它来判断操作系统版本</span><br><span class="hljs-comment">#    - wget 和 gpg: 用于添加 LLVM 的软件源</span><br><span class="hljs-comment">#    - 其他是编译 WebRTC 的核心依赖</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> apt-get update &amp;&amp; apt-get install -y \</span><br><span class="language-bash">    git \</span><br><span class="language-bash">    python3 \</span><br><span class="language-bash">    python3-distutils \</span><br><span class="language-bash">    python3-pip \</span><br><span class="language-bash">    build-essential \</span><br><span class="language-bash">    ninja-build \</span><br><span class="language-bash">    pkg-config \</span><br><span class="language-bash">    curl \</span><br><span class="language-bash">    wget \</span><br><span class="language-bash">    gpg \</span><br><span class="language-bash">    lsb-release \</span><br><span class="language-bash">    software-properties-common</span><br><br><span class="hljs-comment"># 2. 使用 LLVM 官方脚本添加其软件源并安装 clang-18</span><br><span class="hljs-comment">#    这个脚本会自动处理 GPG 密钥和源列表</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> wget https://apt.llvm.org/llvm.sh &amp;&amp; \</span><br><span class="language-bash">    <span class="hljs-built_in">chmod</span> +x llvm.sh &amp;&amp; \</span><br><span class="language-bash">    ./llvm.sh 18 &amp;&amp; \</span><br><span class="language-bash">    <span class="hljs-built_in">rm</span> llvm.sh</span><br><br><span class="hljs-comment"># 3. 设置系统默认的 clang/clang++ 及其他 LLVM 工具为我们安装的 18 版本</span><br><span class="hljs-comment">#    - llvm-ar: 用于创建静态库 (.a)</span><br><span class="hljs-comment">#    - llvm-nm: 用于分析符号</span><br><span class="hljs-comment">#    - ld.lld: LLVM 的链接器</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 120 &amp;&amp; \</span><br><span class="language-bash">    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 120 &amp;&amp; \</span><br><span class="language-bash">    update-alternatives --install /usr/bin/llvm-ar llvm-ar /usr/bin/llvm-ar-18 120 &amp;&amp; \</span><br><span class="language-bash">    update-alternatives --install /usr/bin/llvm-nm llvm-nm /usr/bin/llvm-nm-18 120 &amp;&amp; \</span><br><span class="language-bash">    update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/ld.lld-18 120</span><br><br><span class="hljs-comment"># 4. 安装 depot_tools (Google 的构建工具集)</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> git <span class="hljs-built_in">clone</span> https://chromium.googlesource.com/chromium/tools/depot_tools.git /opt/depot_tools</span><br><span class="hljs-keyword">ENV</span> PATH=<span class="hljs-string">&quot;/opt/depot_tools:$&#123;PATH&#125;&quot;</span><br><br><span class="hljs-comment"># 5. 安装 gclient 需要的 python 依赖</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> pip3 install httplib2</span><br><br><span class="hljs-comment"># 6. 验证 gclient 是否安装成功</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> python3 /opt/depot_tools/gclient.py --version</span><br><br><span class="hljs-comment"># 7. 清理 apt 缓存</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> <span class="hljs-built_in">rm</span> -rf /var/lib/apt/lists/*</span><br><br></code></pre></td></tr></table></figure>
+<p>最终跑完后，同样在out&#x2F;linux&#x2F;obj&#x2F;api&#x2F;video_codecs&#x2F;下缺少video的相关内置编解码器的函数符号，同样手动执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker run --rm \<br>  --platform linux/amd64 \<br>  -v &quot;$(pwd)&quot;:/webrtc \<br>  webrtc-build-env:latest \<br>  bash -c &quot;<br>    cd /webrtc/src &amp;&amp;<br>    ninja -C out/linux \<br>      api/video_codecs:builtin_video_encoder_factory \<br>      api/video_codecs:builtin_video_decoder_factory \<br>      media:rtc_internal_video_codecs \<br>      modules/video_coding:webrtc_vp8 \<br>      modules/video_coding:webrtc_vp9 \<br>      modules/video_coding:webrtc_h264<br>  &quot;<br></code></pre></td></tr></table></figure>
+
+<p>在 mac 电脑上查看 linux x86_64 架构静态库中是否包含某个函数符号：<br><code>x86_64-elf-nm output/libwebrtc.a | grep CreateBuiltinAudioEncoderFactory</code></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/WebRTC/" class="print-no-link">#WebRTC</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Ubuntu2204 编译 webrtc</div>
+      <div>https://alberthello.github.io/2025/10/15/webrtc/ubuntu2204-build-webrtc/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年10月15日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/04/23/webrtc/get-build-run/" title="webrtc最佳实践">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">webrtc最佳实践</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/09/02/webrtc/webrtc-third-party-libs/" title="webrtc的一些依赖库的制作">
+                        <span class="hidden-mobile">webrtc的一些依赖库的制作</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

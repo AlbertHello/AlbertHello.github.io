@@ -1,0 +1,869 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="RTC音视频同步原理一、音视频同步简介在实时音视频通信中，视频和音频的数据会经历从采集、编码、发送到接收、解码、渲染这些基本过程。在发送端，音频和视频数据有对应的采集时间，在接收端渲染音视频数据时，希望尽可能的保持音频和视频渲染的同步性，即同一时刻采集的音视频数据，在渲染时也同时刻播放(也称“唇音同步”)。在实时音视频通信的系统中，音频和视频的传输过程的任何一个环节(编码、网络传输、解码等)都可能">
+<meta property="og:type" content="article">
+<meta property="og:title" content="01音视频同步原理">
+<meta property="og:url" content="https://alberthello.github.io/2024/02/24/webrtc/av-sync/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="RTC音视频同步原理一、音视频同步简介在实时音视频通信中，视频和音频的数据会经历从采集、编码、发送到接收、解码、渲染这些基本过程。在发送端，音频和视频数据有对应的采集时间，在接收端渲染音视频数据时，希望尽可能的保持音频和视频渲染的同步性，即同一时刻采集的音视频数据，在渲染时也同时刻播放(也称“唇音同步”)。在实时音视频通信的系统中，音频和视频的传输过程的任何一个环节(编码、网络传输、解码等)都可能">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://alberthello.github.io/2024/02/24/webrtc/av-sync/AV-Sync.png">
+<meta property="article:published_time" content="2024-02-24T02:20:06.000Z">
+<meta property="article:modified_time" content="2026-05-20T13:10:39.412Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="WebRTC">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://alberthello.github.io/2024/02/24/webrtc/av-sync/AV-Sync.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>01音视频同步原理 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="01音视频同步原理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-02-24 10:20" pubdate>
+          2024年2月24日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          16k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">01音视频同步原理</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-05-20T21:10:39+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="RTC音视频同步原理"><a href="#RTC音视频同步原理" class="headerlink" title="RTC音视频同步原理"></a>RTC音视频同步原理</h2><h3 id="一、音视频同步简介"><a href="#一、音视频同步简介" class="headerlink" title="一、音视频同步简介"></a>一、音视频同步简介</h3><p>在实时音视频通信中，视频和音频的数据会经历从采集、编码、发送到接收、解码、渲染这些基本过程。在发送端，音频和视频数据有对应的采集时间，在接收端渲染音视频数据时，希望尽可能的保持音频和视频渲染的同步性，即同一时刻采集的音视频数据，在渲染时也同时刻播放(也称“唇音同步”)。在实时音视频通信的系统中，音频和视频的传输过程的任何一个环节(编码、网络传输、解码等)都可能导致音频和视频的不同步(例如编解码耗时、网络传输的抖动)，如果不在渲染时进行音视频的对齐(同步)，用户看到的将是“唇音错位”的音视频效果，影响用户主观体验的质量。<br>因此，在进行音频和视频的播放时，需要对音频和视频的播放速度、播放时刻进行控制，以实现音频和视频保持同步，即所谓的音视频同步。<br>音视频的同步策略，一般有如下几种：</p>
+<ul>
+<li>视频同步到音频，即音频为主时钟</li>
+<li>音频同步到视频，即视频为主时钟</li>
+<li>视频、音频同步到外部时钟，即外部时钟（系统时间）为主时钟<br>在WebRTC中，解决音视频同步的问题是通过将发送端的音频和视频采集时间戳(音频和视频都对齐某个参考时钟)在生成音视频数据包时，填充到数据包头里(打上时间戳)。在接收端渲染播放时，通过采集时间戳的相对关系来调整音视频的渲染时间(例:如果视频快于音频，则放慢视频的渲染)以对齐和同步音视频。</li>
+</ul>
+<h3 id="二、WebRTC的音视频同步"><a href="#二、WebRTC的音视频同步" class="headerlink" title="二、WebRTC的音视频同步"></a>二、WebRTC的音视频同步</h3><p>WebRTC的音视频同步主要涉及: 发送端音视频包的RTP时间戳的产生、RTCP SenderReport报文的构造、发送和接收、接收端音视频同步模块。每个音视频数据包都携带了RTP时间戳，而RTCP SR报文是完成RTP时间戳和NTP时间转换的桥梁。下面分别介绍这些模块。</p>
+<h4 id="RTP时间戳"><a href="#RTP时间戳" class="headerlink" title="RTP时间戳"></a>RTP时间戳</h4><p>RTP协议的标准定义中，RTP头部有包含序号和时间戳两个重要字段。其中RTP时间戳定义了媒体负载数据的采集时刻，描述了负载数据的帧间顺序；而RTP序号，描述了RTP数据包的先后顺序，描述了媒体包的帧内顺序。关于RTP的时间戳，摘录RFC3550的定义如下:<br><em>The timestamp reflects the sampling instant of the first octet in the RTP data packet. The sampling instant must be derived from a clock that increments monotonically and linearly in time to allow synchronization and jitter calculations. The resolution of the clock must be sufficient for the desired synchronization accuracy and for measuring packet arrival jitter (one tick per video frame is typically not sufficient).</em><br>    由以上定义可知，RTP时间戳反映RTP负载数据的采样时刻，从单调线性递增的时钟中获取。时钟的精度由RTP负载数据的采样频率决定，比如视频的采样频率一般是90khz，那么时间戳增加1，则实际时间增加1&#x2F;90000秒。<br>    RTP包头的第2个32bits即为RTP包的时间戳，TimeStamp ，占32位。时间戳反映了RTP分组中的数据的第一个字节的采样时刻。在一次会话开始时的时间戳初值也是随机选择的。即使是没有信号发送时，时间戳的数值也要随时间不断的增加。接收端使用时间戳可准确知道应当在什么时间还原哪一个数据块，从而消除传输中的抖动。<br>    以视频为例: 采集时间 -&gt; RTP时间 (采集时间映射成内部的RTC时间）</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">ObjCVideoTrackSource::OnCapturedFrame</span><span class="hljs-params">(RTCVideoFrame *frame)</span> </span>&#123;<br>...<br>  <span class="hljs-type">const</span> <span class="hljs-type">int64_t</span> timestamp_us = frame.timeStampNs / rtc::kNumNanosecsPerMicrosec;<br>  <span class="hljs-type">const</span> <span class="hljs-type">int64_t</span> translated_timestamp_us =<br>      timestamp_aligner_.<span class="hljs-built_in">TranslateTimestamp</span>(timestamp_us, rtc::<span class="hljs-built_in">TimeMicros</span>());<br>...  <span class="hljs-comment">// 这里很关键 有个外部时间 和 RTC内部时间的对齐操作</span><br>  buffer-&gt;<span class="hljs-built_in">setFlip</span>(frame.flip);<br>  <span class="hljs-built_in">OnFrame</span>(VideoFrame::<span class="hljs-built_in">Builder</span>()<br>              .<span class="hljs-built_in">set_video_frame_buffer</span>(buffer)<br>              .<span class="hljs-built_in">set_rotation</span>(rotation)<br>              .<span class="hljs-built_in">set_timestamp_us</span>(translated_timestamp_us)<br>              .<span class="hljs-built_in">build</span>());<br><br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">VideoStreamEncoder::OnFrame</span><span class="hljs-params">(<span class="hljs-type">const</span> VideoFrame&amp; video_frame)</span> </span>&#123;<br>  <span class="hljs-built_in">RTC_DCHECK_RUNS_SERIALIZED</span>(&amp;incoming_frame_race_checker_);<br>  VideoFrame incoming_frame = video_frame;<br>...<br><span class="hljs-comment">// Local time in webrtc time base.</span><br>  <span class="hljs-type">int64_t</span> current_time_us = clock_-&gt;<span class="hljs-built_in">TimeInMicroseconds</span>();<br>  <span class="hljs-type">int64_t</span> current_time_ms = current_time_us / rtc::kNumMicrosecsPerMillisec;<br>  <span class="hljs-comment">// In some cases, e.g., when the frame from decoder is fed to encoder,</span><br>  <span class="hljs-comment">// the timestamp may be set to the future. As the encoding pipeline assumes</span><br>  <span class="hljs-comment">// capture time to be less than present time, we should reset the capture</span><br>  <span class="hljs-comment">// timestamps here. Otherwise there may be issues with RTP send stream.</span><br>  <span class="hljs-keyword">if</span> (incoming_frame.<span class="hljs-built_in">timestamp_us</span>() &gt; current_time_us)<br>    incoming_frame.<span class="hljs-built_in">set_timestamp_us</span>(current_time_us);<br><br><br>  <span class="hljs-comment">// Capture time may come from clock with an offset and drift from clock_.</span><br>  <span class="hljs-type">int64_t</span> capture_ntp_time_ms;<br>  <span class="hljs-keyword">if</span> (video_frame.<span class="hljs-built_in">ntp_time_ms</span>() &gt; <span class="hljs-number">0</span>) &#123;<br>    capture_ntp_time_ms = video_frame.<span class="hljs-built_in">ntp_time_ms</span>();<br>  &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (video_frame.<span class="hljs-built_in">render_time_ms</span>() != <span class="hljs-number">0</span>) &#123;<br>    capture_ntp_time_ms = video_frame.<span class="hljs-built_in">render_time_ms</span>() + delta_ntp_internal_ms_;<br>  &#125; <span class="hljs-keyword">else</span> &#123;<br>    capture_ntp_time_ms = current_time_ms + delta_ntp_internal_ms_;<br>  &#125;<br>  incoming_frame.<span class="hljs-built_in">set_ntp_time_ms</span>(capture_ntp_time_ms);<br><br><br>  <span class="hljs-comment">// Convert NTP time, in ms, to RTP timestamp.</span><br>  <span class="hljs-type">const</span> <span class="hljs-type">int</span> kMsToRtpTimestamp = <span class="hljs-number">90</span>;<br>  incoming_frame.<span class="hljs-built_in">set_timestamp</span>(<br>      kMsToRtpTimestamp * <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">uint32_t</span>&gt;(incoming_frame.<span class="hljs-built_in">ntp_time_ms</span>()));<br>...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>RTP时间: 采集时间 + 随机偏移量(初始化时获得的随机偏移量)</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">RTC_EXPORT</span> VideoFrame &#123;<br>  <span class="hljs-comment">// Set frame timestamp (90kHz).</span><br>  <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">set_timestamp</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> timestamp)</span> </span>&#123; timestamp_rtp_ = timestamp; &#125;<br>  <span class="hljs-comment">// Get frame timestamp (90kHz).</span><br>  <span class="hljs-function"><span class="hljs-type">uint32_t</span> <span class="hljs-title">timestamp</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123; <span class="hljs-keyword">return</span> timestamp_rtp_; &#125;<br>&#125;<br><br>EncodedImage:<br>  <span class="hljs-comment">// Set frame timestamp (90kHz).</span><br>  <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetTimestamp</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> timestamp)</span> </span>&#123; timestamp_rtp_ = timestamp; &#125;<br>  <span class="hljs-comment">// Get frame timestamp (90kHz).</span><br>  <span class="hljs-function"><span class="hljs-type">uint32_t</span> <span class="hljs-title">Timestamp</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123; <span class="hljs-keyword">return</span> timestamp_rtp_; &#125;<br><br><br><span class="hljs-function">EncodedImageCallback::Result <span class="hljs-title">RtpVideoSender::OnEncodedImage</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    EncodedImage&amp; encoded_image,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> CodecSpecificInfo* codec_specific_info,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> RTPFragmentationHeader* fragmentation)</span> </span>&#123;<br>...<br>  <span class="hljs-type">bool</span> send_result = rtp_modules_[stream_index]-&gt;<span class="hljs-built_in">SendOutgoingData</span>(<br>      encoded_image._frameType, rtp_config_.payload_type,<br>      encoded_image.<span class="hljs-built_in">Timestamp</span>(), encoded_image.capture_time_ms_,<br>      encoded_image.<span class="hljs-built_in">data</span>(), encoded_image.<span class="hljs-built_in">size</span>(), fragmentation,<br>      &amp;rtp_video_header, &amp;frame_id);<br>...<br>&#125;<br><span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">RTPSender::SendOutgoingData</span><span class="hljs-params">(FrameType frame_type,</span></span><br><span class="hljs-params"><span class="hljs-function">                                 <span class="hljs-type">int8_t</span> payload_type,</span></span><br><span class="hljs-params"><span class="hljs-function">                                 <span class="hljs-type">uint32_t</span> capture_timestamp,</span></span><br><span class="hljs-params"><span class="hljs-function">                                 <span class="hljs-type">int64_t</span> capture_time_ms,</span></span><br><span class="hljs-params"><span class="hljs-function">                                 <span class="hljs-type">const</span> <span class="hljs-type">uint8_t</span>* payload_data,</span></span><br><span class="hljs-params"><span class="hljs-function">                                 <span class="hljs-type">size_t</span> payload_size,</span></span><br><span class="hljs-params"><span class="hljs-function">                                 <span class="hljs-type">const</span> RTPFragmentationHeader* fragmentation,</span></span><br><span class="hljs-params"><span class="hljs-function">                                 <span class="hljs-type">const</span> RTPVideoHeader* rtp_header,</span></span><br><span class="hljs-params"><span class="hljs-function">                                 <span class="hljs-type">uint32_t</span>* transport_frame_id_out,</span></span><br><span class="hljs-params"><span class="hljs-function">                                 <span class="hljs-type">int64_t</span> expected_retransmission_time_ms)</span> </span>&#123;<br>  <span class="hljs-type">uint32_t</span> ssrc;<br>  <span class="hljs-type">uint16_t</span> sequence_number;<br>  <span class="hljs-type">uint32_t</span> rtp_timestamp;<br>  &#123;<br>    <span class="hljs-comment">// Drop this packet if we&#x27;re not sending media packets.</span><br>    <span class="hljs-function">rtc::CritScope <span class="hljs-title">lock</span><span class="hljs-params">(&amp;send_critsect_)</span></span>;<br>    <span class="hljs-built_in">RTC_DCHECK</span>(ssrc_);<br><br><br>    ssrc = *ssrc_;<br>    sequence_number = sequence_number_;<br>    rtp_timestamp = timestamp_offset_ + capture_timestamp;<br>...<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="NTP时间"><a href="#NTP时间" class="headerlink" title="NTP时间"></a>NTP时间</h4><ul>
+<li>NTP是Network Time Protocol的简称，在rfc3550#section-4中有详细的解释。它用于表示从格林时间(UTC)1900年1月1日以来的秒数。通常它用一个uint64_t表示（SR包中的SenderInfo部分的NTP时间戳就是用64位表示），分为整数部分（前32位表示妙）和小数部分（后32位表示1&#x2F;0x100000000秒{&#x3D;（0x1 &lt;&lt; 32）&#x3D;（ 2^32 ）}）。在一些更紧凑的领域(SR和RR中的ReportBlobck中的LSR和DLSR就是使用32位表示)使用32位表示NTP时间戳，前16位表示整数部分，后16位表示小数部分。WebRTC中RTT的计算方式就是用当前接收时刻的NTP时间戳 - 上一次发送的NTP时间戳 - 处理时间戳，这部分可以看HandleReportBlock函数。</li>
+<li>NtpTime 是WebRTC中一个用来表示NTP时间戳的类，从构造函数可以知道NTP时间戳的组成和上面的说法是吻合的。ToMs是一个NTP时间戳转换为普通时间戳（单位是毫秒）的方式。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-type">static</span> <span class="hljs-keyword">constexpr</span> <span class="hljs-type">uint64_t</span> kFractionsPerSecond = <span class="hljs-number">0x100000000</span>; <span class="hljs-comment">//前32bit单位是秒</span><br><span class="hljs-built_in">NtpTime</span>(<span class="hljs-type">uint32_t</span> seconds, <span class="hljs-type">uint32_t</span> fractions)<br>    : <span class="hljs-built_in">value_</span>(seconds * kFractionsPerSecond + fractions) &#123;&#125; <span class="hljs-comment">// seconds 秒 + </span><br><span class="hljs-comment">// fractions</span><br><span class="hljs-function"><span class="hljs-type">int64_t</span> <span class="hljs-title">ToMs</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123;<br>    <span class="hljs-type">static</span> <span class="hljs-keyword">constexpr</span> <span class="hljs-type">double</span> kNtpFracPerMs = <span class="hljs-number">4.294967296E6</span>;  <span class="hljs-comment">// 2^32 / 1000.</span><br>    <span class="hljs-type">const</span> <span class="hljs-type">double</span> frac_ms = <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">double</span>&gt;(<span class="hljs-built_in">fractions</span>()) / kNtpFracPerMs;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">1000</span> * <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">int64_t</span>&gt;(<span class="hljs-built_in">seconds</span>()) +<br>        <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">int64_t</span>&gt;(frac_ms + <span class="hljs-number">0.5</span>); <span class="hljs-comment">// 秒 转换成 ms</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>WebRTC中NTP时间戳的获取<ul>
+<li>获取当前时间戳，这个是系统相关的，posix的通过gettimeofday获取<br>把获取后的时间戳加上1970到1900之间间隔的时间（kNtpJan1970），再转换为NTP的格式（前32位表示秒，后32位表示 1&#x2F;2^32 秒）；kNtpJan1970的值等于(1900到1970经过的秒数）；kMagicNtpFractionalUnit等于2^32</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// January 1970, in NTP seconds.</span><br><span class="hljs-type">const</span> <span class="hljs-type">uint32_t</span> kNtpJan1970 = <span class="hljs-number">2208988800UL</span>;<br><span class="hljs-comment">// Magic NTP fractional unit.</span><br><span class="hljs-type">const</span> <span class="hljs-type">double</span> kMagicNtpFractionalUnit = <span class="hljs-number">4.294967296E+9</span>;<br><br><span class="hljs-function">NtpTime <span class="hljs-title">CurrentNtpTime</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">override</span> </span>&#123;<br>    timeval tv = <span class="hljs-built_in">CurrentTimeVal</span>(); <span class="hljs-comment">// 当前时间</span><br>    <span class="hljs-type">double</span> microseconds_in_seconds; <span class="hljs-comment">// 小数s =&gt;  0.2s =&gt; fractions= 0.2/(1/2^32)</span><br>    <span class="hljs-type">uint32_t</span> seconds; <span class="hljs-comment">// 整数s</span><br>    <span class="hljs-built_in">Adjust</span>(tv, &amp;seconds, &amp;microseconds_in_seconds); <span class="hljs-comment">// 增加时间补偿</span><br>    <span class="hljs-type">uint32_t</span> fractions = <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">uint32_t</span>&gt;(<br>            microseconds_in_seconds * kMagicNtpFractionalUnit + <span class="hljs-number">0.5</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">NtpTime</span>(seconds, fractions); <span class="hljs-comment">// 前32bits|后32bits = seconds &lt;&lt; 32 + fractions</span><br>&#125;<br><span class="hljs-function">timeval <span class="hljs-title">CurrentTimeVal</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">override</span> </span>&#123;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">timeval</span> tv;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">timezone</span> tz;<br>    tz.tz_minuteswest = <span class="hljs-number">0</span>;<br>    tz.tz_dsttime = <span class="hljs-number">0</span>;<br>    <span class="hljs-built_in">gettimeofday</span>(&amp;tv, &amp;tz);<br>    <span class="hljs-keyword">return</span> tv;<br>&#125;<br><span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title">Adjust</span><span class="hljs-params">(<span class="hljs-type">const</span> timeval&amp; tv, <span class="hljs-type">uint32_t</span>* adjusted_s,</span></span><br><span class="hljs-params"><span class="hljs-function">        <span class="hljs-type">double</span>* adjusted_us_in_s)</span> </span>&#123;<br>    *adjusted_s = tv.tv_sec + kNtpJan1970; <span class="hljs-comment">// 补偿增加时间偏移量 </span><br>    *adjusted_us_in_s = tv.tv_usec / <span class="hljs-number">1e6</span>; <span class="hljs-comment">// us/10^6 = s</span><br><br>    <span class="hljs-keyword">if</span> (*adjusted_us_in_s &gt;= <span class="hljs-number">1</span>) &#123; <span class="hljs-comment">// 大于1s 进位+1</span><br>        *adjusted_us_in_s -= <span class="hljs-number">1</span>;<br>        ++*adjusted_s; <span class="hljs-comment">// +1</span><br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (*adjusted_us_in_s &lt; <span class="hljs-number">-1</span>) &#123;<br>        *adjusted_us_in_s += <span class="hljs-number">1</span>;<br>        --*adjusted_s;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="NTP和RTP时间的映射"><a href="#NTP和RTP时间的映射" class="headerlink" title="NTP和RTP时间的映射"></a>NTP和RTP时间的映射</h4><p>以视频为例，每一帧的采集时间经过转换(绝对的系统时间转换为相对的RTP时间)后，填充到每一帧的各个RTP包的包头TimeStamp字段，经过网络传输到达接收端。而音频和视频都是从同一的绝对时间映射到不同的RTP时间，如果要比较音频和视频数据包的RTP时间，必须在接收端将相对时间转换回绝对时间(映射到统一的参考时间)才可进行比较。为了实现音视频RTP时间映射回统一的参考时间，RTCP的Sender Report报文中携带了绝对时间(NTP时间)和RTP时间，即一个SendReport包含一组&lt; NTP Timestamp, RTP Timestamp&gt;的映射关系。接收端通过持续收到的Sender Report(SR1、SR2、SR3、…、SRk)提取到一系列映射关系对{(Ntp1, Rtp1),(Ntp2, Rtp2), Ntp3, Rtp3),…, Ntpk, Rtpk)}，从而可以通过线性回归得到RTP到NTP的映射关系。</p>
+<h5 id="SR报文的构造和发送"><a href="#SR报文的构造和发送" class="headerlink" title="SR报文的构造和发送"></a>SR报文的构造和发送</h5><figure class="highlight zephir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs zephir">std::unique_ptr&lt;rtcp::RtcpPacket&gt; RTCPSender::BuildSR(<span class="hljs-keyword">const</span> RtcpContext&amp; ctx) &#123;<br>  <span class="hljs-comment">// Timestamp shouldn&#x27;t be estimated before first media frame.</span><br>  RTC_DCHECK_GE(last_frame_capture_time_ms_, <span class="hljs-number">0</span>);<br>  <span class="hljs-comment">// The timestamp of this RTCP packet should be estimated as the timestamp of</span><br>  <span class="hljs-comment">// the frame being captured at this moment. We are calculating that</span><br>  <span class="hljs-comment">// timestamp as the last frame&#x27;s timestamp + the time since the last frame</span><br>  <span class="hljs-comment">// was captured.</span><br>  <span class="hljs-keyword">int</span> rtp_rate = rtp_clock_rates_khz_[last_payload_type_];<br>  <span class="hljs-keyword">if</span> (rtp_rate &lt;= <span class="hljs-number">0</span>) &#123;<br>    rtp_rate =<br>        (audio_ ? kBogusRtpRateForAudioRtcp : kVideoPayloadTypeFrequency) /<br>        <span class="hljs-number">1000</span>;<br>  &#125;<br>  <span class="hljs-comment">// Round now_us_ to the closest millisecond, because Ntp time is rounded</span><br>  <span class="hljs-comment">// when converted to milliseconds,</span><br><span class="hljs-comment">// 将系统时间转换为RTP时间</span><br><span class="hljs-comment">// last_frame_capture_time_ms_ 是对应的采集时间（RTC内部时间）</span><br><span class="hljs-comment">// last_rtp_timestamp_ 是对应的采集时间的RTP时间</span><br><span class="hljs-comment">// ctx.now_us_ 当前时间 RTC内部系统时间</span><br>  uint32_t rtp_timestamp =<br>      timestamp_offset_ + last_rtp_timestamp_ +<br>      ((ctx.now_us_ + <span class="hljs-number">500</span>) / <span class="hljs-number">1000</span> - last_frame_capture_time_ms_) * rtp_rate;<br><br>last_rtp_timestamp_:<br><br>  rtcp::SenderReport* report = <span class="hljs-keyword">new</span> rtcp::SenderReport();<br>  report-&gt;SetSenderSsrc(ssrc_);<br>  <span class="hljs-comment">// 系统时间对应的NTP时间 设置到SenderReport的NTP时间字段</span><br>  report-&gt;SetNtp(TimeMicrosToNtp(ctx.now_us_));<span class="hljs-comment">//system time of this rtcp packet</span><br> <span class="hljs-comment">// 系统时间对应的RTP时间 设置到SenderReport的RTP时间字段</span><br>  report-&gt;SetRtpTimestamp(rtp_timestamp);<span class="hljs-comment">//rtp of this sender report rtcp packet</span><br>  report-&gt;SetPacketCount(ctx.feedback_state_.packets_sent);<br>  report-&gt;SetOctetCount(ctx.feedback_state_.media_bytes_sent);<br>  report-&gt;SetReportBlocks(CreateReportBlocks(ctx.feedback_state_));<br><br>  <span class="hljs-keyword">return</span> std::unique_ptr&lt;rtcp::RtcpPacket&gt;(report);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>其中 ctx.now_us_是当前时间</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">int32_t</span> <span class="hljs-title">RTCPSender::SendCompoundRTCP</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> FeedbackState&amp; feedback_state,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> std::set&lt;RTCPPacketType&gt;&amp; packet_types,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">int32_t</span> nack_size,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> <span class="hljs-type">uint16_t</span>* nack_list)</span> </span>&#123;<br>...<br>    <span class="hljs-comment">// We need to send our NTP even if we haven&#x27;t received any reports.</span><br>    <span class="hljs-function">RtcpContext <span class="hljs-title">context</span><span class="hljs-params">(feedback_state, nack_size, nack_list,</span></span><br><span class="hljs-params"><span class="hljs-function">                        clock_-&gt;TimeInMicroseconds())</span></span>;<br>...<br>      BuilderFunc func = builder_it-&gt;second;<br>      std::unique_ptr&lt;rtcp::RtcpPacket&gt; packet = (<span class="hljs-keyword">this</span>-&gt;*func)(context);<br>      <span class="hljs-keyword">if</span> (packet.<span class="hljs-built_in">get</span>() == <span class="hljs-literal">nullptr</span>)<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>...<br>&#125;<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">RealTimeClock</span> : <span class="hljs-keyword">public</span> Clock &#123;<br>  <span class="hljs-comment">// Return a timestamp in milliseconds relative to some arbitrary source; the</span><br>  <span class="hljs-comment">// source is fixed for this clock.</span><br>  <span class="hljs-function"><span class="hljs-type">int64_t</span> <span class="hljs-title">TimeInMilliseconds</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">override</span> </span>&#123; <span class="hljs-keyword">return</span> rtc::<span class="hljs-built_in">TimeMillis</span>(); &#125;<br>   <span class="hljs-comment">// RTC的ms</span><br>  <span class="hljs-comment">// Return a timestamp in microseconds relative to some arbitrary source; the</span><br>  <span class="hljs-comment">// source is fixed for this clock.</span><br>  <span class="hljs-function"><span class="hljs-type">int64_t</span> <span class="hljs-title">TimeInMicroseconds</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">override</span> </span>&#123; <span class="hljs-keyword">return</span> rtc::<span class="hljs-built_in">TimeMicros</span>(); &#125; <span class="hljs-comment">// RTC的us</span><br></code></pre></td></tr></table></figure>
+<p>TimeMicrosToNtp: 当前时间转换成NTP时间</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">NtpTime <span class="hljs-title">TimeMicrosToNtp</span><span class="hljs-params">(<span class="hljs-type">int64_t</span> time_us)</span> </span>&#123;<br>  <span class="hljs-comment">// Since this doesn&#x27;t return a wallclock time, but only NTP representation</span><br>  <span class="hljs-comment">// of rtc::TimeMillis() clock, the exact offset doesn&#x27;t matter.</span><br>  <span class="hljs-comment">// To simplify conversions between NTP and RTP time, this offset is</span><br>  <span class="hljs-comment">// limited to milliseconds in resolution.</span><br>  <span class="hljs-type">int64_t</span> time_ntp_us = time_us + <span class="hljs-built_in">NtpOffsetMs</span>() * <span class="hljs-number">1000</span>; <span class="hljs-comment">// 将当前时间 转换成NTP时间us</span><br>  <span class="hljs-built_in">RTC_DCHECK_GE</span>(time_ntp_us, <span class="hljs-number">0</span>);  <span class="hljs-comment">// Time before year 1900 is unsupported.</span><br><br>  <span class="hljs-comment">// TODO(danilchap): Convert both seconds and fraction together using int128</span><br>  <span class="hljs-comment">// when that type is easily available.</span><br>  <span class="hljs-comment">// Currently conversion is done separetly for seconds and fraction of a second</span><br>  <span class="hljs-comment">// to avoid overflow.</span><br><br>  <span class="hljs-comment">// Convert seconds to uint32 through uint64 for well-defined cast.</span><br>  <span class="hljs-comment">// Wrap around (will happen in 2036) is expected for ntp time.</span><br>  <span class="hljs-type">uint32_t</span> ntp_seconds =<br>      <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">uint64_t</span>&gt;(time_ntp_us / rtc::kNumMicrosecsPerSec); <span class="hljs-comment">// 1000000 us-&gt;sec</span><br><br>  <span class="hljs-comment">// Scale fractions of the second to ntp resolution.</span><br>  <span class="hljs-keyword">constexpr</span> <span class="hljs-type">int64_t</span> kNtpInSecond = <span class="hljs-number">1LL</span> &lt;&lt; <span class="hljs-number">32</span>;<br>  <span class="hljs-type">int64_t</span> us_fractions = time_ntp_us % rtc::kNumMicrosecsPerSec;<br>  <span class="hljs-type">uint32_t</span> ntp_fractions =<br>      us_fractions * kNtpInSecond / rtc::kNumMicrosecsPerSec;<br><span class="hljs-comment">// ( %10^6 = fraction_us)  fraction_us/1000 / (1^2^32) = fraction_us*2^32/1000</span><br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">NtpTime</span>(ntp_seconds, ntp_fractions);<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">int64_t</span> <span class="hljs-title">NtpOffsetMs</span><span class="hljs-params">()</span> </span>&#123;<br>  <span class="hljs-comment">// Calculate the offset once.</span><br>  <span class="hljs-type">static</span> <span class="hljs-type">int64_t</span> ntp_offset_ms = <span class="hljs-built_in">NtpOffsetMsCalledOnce</span>(); <span class="hljs-comment">//只会调用一次</span><br>  <span class="hljs-keyword">return</span> ntp_offset_ms;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">int64_t</span> <span class="hljs-title">NtpOffsetMsCalledOnce</span><span class="hljs-params">()</span> </span>&#123;<br>  <span class="hljs-keyword">constexpr</span> <span class="hljs-type">int64_t</span> kNtpJan1970Sec = <span class="hljs-number">2208988800</span>; <span class="hljs-comment">// 补偿时间 sec</span><br>  <span class="hljs-type">int64_t</span> clock_time = rtc::<span class="hljs-built_in">TimeMillis</span>();<br>  <span class="hljs-type">int64_t</span> utc_time = rtc::<span class="hljs-built_in">TimeUTCMillis</span>();<br>  <span class="hljs-keyword">return</span> utc_time - clock_time + kNtpJan1970Sec * rtc::kNumMillisecsPerSec;<br>&#125; <span class="hljs-comment">// RTC内部用的是clock_time 计算和UTC的偏移量</span><br></code></pre></td></tr></table></figure>
+<p>采集时间(RTC时间)-&gt;RTP时间<br>SenderReport: (维护了RTP和NTP的映射关系)</p>
+<ul>
+<li>RTC时间 -&gt; NTP时间 </li>
+<li>RTC时间 -&gt; RTP时间<br>&#x3D;&gt; RTP包的RTP时间 + (RTP&amp;NTP的映射关系) &#x3D;&gt; NTP时间</li>
+</ul>
+<h5 id="SR报文的接收和映射估计"><a href="#SR报文的接收和映射估计" class="headerlink" title="SR报文的接收和映射估计"></a>SR报文的接收和映射估计</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// 提取RTCP SenderReport的NTP和RTP时间            </span><br>sync_info.capture_time_ntp_frac = sr.<span class="hljs-built_in">ntp</span>().<span class="hljs-built_in">fractions</span>();<br>sync_info.capture_time_ntp_secs = sr.<span class="hljs-built_in">ntp</span>().<span class="hljs-built_in">seconds</span>();<br>sync_info.capture_time_source_clock = sr.<span class="hljs-built_in">rtp_timestamp</span>();<br><br><span class="hljs-comment">// Rtp时间到NTP时间的映射估计   pair（ntp时间、rtp时间）</span><br><span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">RtpToNtpEstimator::UpdateMeasurements</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> ntp_secs, <span class="hljs-type">uint32_t</span> ntp_frac, <span class="hljs-type">uint32_t</span> rtp_timestamp,</span></span><br><span class="hljs-params"><span class="hljs-function">                                           <span class="hljs-type">bool</span>* new_rtcp_sr)</span> </span>&#123;<br>    *new_rtcp_sr = <span class="hljs-literal">false</span>;<br><br>    <span class="hljs-type">int64_t</span> unwrapped_rtp_timestamp = unwrapper_.<span class="hljs-built_in">Unwrap</span>(rtp_timestamp);<br><br>    <span class="hljs-function">RtcpMeasurement <span class="hljs-title">new_measurement</span><span class="hljs-params">(ntp_secs, ntp_frac, unwrapped_rtp_timestamp)</span></span>;<br><br>...<br>    <span class="hljs-comment">// Insert new RTCP SR report.</span><br>    <span class="hljs-keyword">if</span> (measurements_.<span class="hljs-built_in">size</span>() == kNumRtcpReportsToUse)<br>        measurements_.<span class="hljs-built_in">pop_back</span>();<br><br><br>    measurements_.<span class="hljs-built_in">push_front</span>(new_measurement);<br>    *new_rtcp_sr = <span class="hljs-literal">true</span>;<br><br><br>    <span class="hljs-comment">// List updated, calculate new parameters.</span><br>    <span class="hljs-built_in">UpdateParameters</span>();<br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">RtpToNtpEstimator::UpdateParameters</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">if</span> (measurements_.<span class="hljs-built_in">size</span>() &lt; <span class="hljs-number">2</span>)<br>        <span class="hljs-keyword">return</span>;<br><br>    std::vector&lt;<span class="hljs-type">double</span>&gt; x;<br>    std::vector&lt;<span class="hljs-type">double</span>&gt; y;<br>    x.<span class="hljs-built_in">reserve</span>(measurements_.<span class="hljs-built_in">size</span>());<br>    y.<span class="hljs-built_in">reserve</span>(measurements_.<span class="hljs-built_in">size</span>());<br>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> it = measurements_.<span class="hljs-built_in">begin</span>(); it != measurements_.<span class="hljs-built_in">end</span>(); ++it) &#123;<br>        x.<span class="hljs-built_in">push_back</span>(it-&gt;unwrapped_rtp_timestamp);<br>        y.<span class="hljs-built_in">push_back</span>(it-&gt;ntp_time.<span class="hljs-built_in">ToMs</span>());<br>    &#125;<br>    <span class="hljs-type">double</span> slope, offset;<br><br>    <span class="hljs-comment">// 线性回归 得到 RTP时间到NTP时间的映射关系: 斜率和偏移量</span><br>    <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">LinearRegression</span>(x, y, &amp;slope, &amp;offset)) &#123;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br><br><br>    params_.<span class="hljs-built_in">emplace</span>(<span class="hljs-number">1</span> / slope, offset);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="接收端音视频同步"><a href="#接收端音视频同步" class="headerlink" title="接收端音视频同步"></a>接收端音视频同步</h4><p>设在接收端音频和视频当前帧的渲染时间为A_pt, V_pt(PlayoutTime),这两帧对应的采集时间A_ct, V_ct (CapTime), 在接收端如果要控制音频和视频的渲染时间的同步，是希望(V_pt - V_ct)和(A_pt - A_ct)的差值尽可能小，等价于(V_ct-A_ct)和(V_pt-A_pt)的差值要尽可能小，即尽量将音视频数据的渲染时间的相对情况恢复成采集时间的相对情况。特殊情况，同一时刻采集的音视频数据V_ct&#x3D;A_ct，希望接收端也在相同时刻渲染(V_pt &#x3D; A_pt)。<br>在WebRTC中，将采集到渲染的时间分为从采集到接收、从接收到渲染。通过SenderReport已经能将音视频帧的RTP时间映射回采集时间，因此，音视频数据从采集到接收的相对时间为:<br>av_transmit_relative_delay &#x3D; (Video_recvtime - Video_captime) - (Audio_recvtime - Audio_captime) &#x3D; (Video_recvtime - Audio_recvtime) - (Video_captime - Audio_captime)<br>音视频数据在接收端主要会经历接收、组帧、jitterbuffer缓存、解码、渲染这些步骤。以视频为例，从接收到渲染的时间可以估计为: jitterbuffer的缓存时间 + 解码时间 + 渲染时间，计为current_video_delay_ms。从采集到渲染的时间差值:</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs angelscript"><span class="hljs-comment">// Calculate the difference between the lowest possible video delay and</span><br>    <span class="hljs-comment">// the current audio delay.</span><br>    <span class="hljs-built_in">int</span> current_diff_ms = current_video_delay_ms - current_audio_delay_ms + relative_delay_ms;<br></code></pre></td></tr></table></figure>
+<p>音视频同步模块会根据音视频当前的渲染的相对快慢情况，调整音视频各自的jitterbuffer延时实现音视频同步，如果视频比音频慢，需要加快视频对齐音频 (减少视频buffer或者增加音频buffer)；反之，如果视频比音频快，需要增加视频buffer或者减少音频buffer。调整策略可以尽量采用渐进的方式，因为音视频同步是一个动态调节的过程，一次调整让音视频完全一致，没有必要，单次调整幅度太大可能会导致播放异常。</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs actionscript"><span class="hljs-keyword">if</span> (diff_ms &gt; <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-comment">// 视频比音频慢 需要加快视频对齐音频 (减少视频buffer或者增加音频buffer)</span><br>        <span class="hljs-comment">// The minimum video delay is longer than the current audio delay.</span><br>        <span class="hljs-comment">// We need to decrease extra video delay, or add extra audio delay.</span><br>        <span class="hljs-keyword">if</span> (channel_delay_.extra_video_delay_ms &gt; base_target_delay_ms_) &#123;<br>            <span class="hljs-comment">// We have extra delay added to ViE. Reduce this delay before adding</span><br>            <span class="hljs-comment">// extra delay to VoE.</span><br>            channel_delay_.extra_video_delay_ms -= diff_ms;<br>            channel_delay_.extra_audio_delay_ms = base_target_delay_ms_;<br>        &#125; <span class="hljs-keyword">else</span> &#123;  <span class="hljs-comment">// channel_delay_.extra_video_delay_ms &gt; 0</span><br>            <span class="hljs-comment">// We have no extra video delay to remove, increase the audio delay.</span><br>            channel_delay_.extra_audio_delay_ms += diff_ms;<br>            channel_delay_.extra_video_delay_ms = base_target_delay_ms_;<br>        &#125;<br>    &#125; <span class="hljs-keyword">else</span> &#123;  <span class="hljs-comment">// if (diff_ms &lt; 0)</span><br>        <span class="hljs-comment">// The video delay is lower than the current audio delay.</span><br>        <span class="hljs-comment">// We need to decrease extra audio delay, or add extra video delay.</span><br>        <span class="hljs-keyword">if</span> (channel_delay_.extra_audio_delay_ms &gt; base_target_delay_ms_) &#123;<br>            <span class="hljs-comment">// We have extra delay in VoiceEngine.</span><br>            <span class="hljs-comment">// Start with decreasing the voice delay.</span><br>            <span class="hljs-comment">// Note: diff_ms is negative; add the negative difference.</span><br>            channel_delay_.extra_audio_delay_ms += diff_ms;<br>            channel_delay_.extra_video_delay_ms = base_target_delay_ms_;<br>        &#125; <span class="hljs-keyword">else</span> &#123;  <span class="hljs-comment">// channel_delay_.extra_audio_delay_ms &gt; base_target_delay_ms_</span><br>            <span class="hljs-comment">// We have no extra delay in VoiceEngine, increase the video delay.</span><br>            <span class="hljs-comment">// Note: diff_ms is negative; subtract the negative difference.</span><br>            channel_delay_.extra_video_delay_ms -= diff_ms;  <span class="hljs-comment">// X - (-Y) = X + Y.</span><br>            channel_delay_.extra_audio_delay_ms = base_target_delay_ms_;<br>        &#125;<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>WebRTC接收端的音视频同步逻辑大致为:</p>
+<ul>
+<li>初始化: 配置需要执行音视频同步的音视频流信息，即对哪路接收的视频和音频进行同步</li>
+<li>Process定时处理（定时器 1000ms）<ul>
+<li>从音频、视频模块获取最新的SenderReport信息（ntp时间和rtp时间), 更新音频和视频的rtp-&gt;ntp时间的转换映射信息（RtpToNtpEstimator), 计算最新的音频和视频的接收时间和采集时间的差值，即relative_delay_ms</li>
+<li>获取音频和视频模块的接收端buffer、解码耗时、渲染耗时信息。</li>
+<li>音视频同步调整逻辑: 根据当前音频和视频的渲染的相对先后关系，调整音视频的jitterbuffer以获得相对的音视频同步。<br>重要结构体:</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs abnf">struct Info &#123;<br>    int64_t latest_receive_time_ms <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">;// 最新接收到rtp包的时刻</span><br>    uint32_t latest_received_capture_timestamp <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">; //最新接收到的rtp包的时间戳</span><br>    uint32_t capture_time_ntp_secs <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">; // 采集的ntp时间，秒的部分（从sr中获取得到，用于rtp至ntp的换算）</span><br>    uint32_t capture_time_ntp_frac <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">; // 采集的ntp时间，非秒的部分 (从sr中获取得到，用于rtp至ntp的换算）</span><br>    uint32_t capture_time_source_clock <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">; // rtp时间戳 （从sr中获取得到，用于rtp至ntp的换算）</span><br>    int current_delay_ms <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">;</span><br>  &#125;<span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+<p>音视频同步基本流程:</p>
+<img src="/2024/02/24/webrtc/av-sync/AV-Sync.png" srcset="/img/loading.gif" lazyload class="">
+
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><ul>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/lincaig/article/details/81209895">WebRTC音视频同步分析</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/3a4d24a71091">WebRTC音视频同步机制实现分析</a></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/WebRTC/" class="print-no-link">#WebRTC</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>01音视频同步原理</div>
+      <div>https://alberthello.github.io/2024/02/24/webrtc/av-sync/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年2月24日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/02/24/webrtc/course-11-1/" title="11.1 网络设备管理">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">11.1 网络设备管理</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/02/24/webrtc/course-11-4-ip/" title="11.4 获取本地默认IP和端口">
+                        <span class="hidden-mobile">11.4 获取本地默认IP和端口</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,1196 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="CategoryCategory的底层结构底层结构查看Objc源码，category定义在objc-runtime-new.h中。如下  分类编译后的结构创建如下分类：  每个分类的.h和.m如下：Test分类：    Eat分类：     使用xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc Person+Eat.m命令对该分类文件进行编译，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Category 底层原理">
+<meta property="og:url" content="https://alberthello.github.io/2024/04/01/ios/05-category/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="CategoryCategory的底层结构底层结构查看Objc源码，category定义在objc-runtime-new.h中。如下  分类编译后的结构创建如下分类：  每个分类的.h和.m如下：Test分类：    Eat分类：     使用xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc Person+Eat.m命令对该分类文件进行编译，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/01.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/02.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/03.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/04.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/05.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/06.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/07.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/08.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/09.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/10.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/11.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/12.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/13.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/14.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/15.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/16.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/17.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/18.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/19.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/20.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/27.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/28.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/26.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/24.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/25.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/21.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/22.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/23.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/29.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/30.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/31.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/33.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/34.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/35.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/36.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/37.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/38.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/32.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/39.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/41.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/40.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/42.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/43.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/44.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/45.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/46.png">
+<meta property="og:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/47.png">
+<meta property="article:published_time" content="2024-04-01T14:53:05.000Z">
+<meta property="article:modified_time" content="2026-05-20T13:10:39.260Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="Category">
+<meta property="article:tag" content="Objective-C">
+<meta property="article:tag" content="iOS">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://alberthello.github.io/2024/04/01/ios/05-category/01.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Category 底层原理 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Category 底层原理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-04-01 22:53" pubdate>
+          2024年4月1日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          8k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Category 底层原理</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-05-20T21:10:39+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="Category"><a href="#Category" class="headerlink" title="Category"></a>Category</h2><h3 id="Category的底层结构"><a href="#Category的底层结构" class="headerlink" title="Category的底层结构"></a>Category的底层结构</h3><h4 id="底层结构"><a href="#底层结构" class="headerlink" title="底层结构"></a>底层结构</h4><p>查看Objc源码，category定义在objc-runtime-new.h中。如下</p>
+<img src="/2024/04/01/ios/05-category/01.png" srcset="/img/loading.gif" lazyload class="" width="01">
+<h4 id="分类编译后的结构"><a href="#分类编译后的结构" class="headerlink" title="分类编译后的结构"></a>分类编译后的结构</h4><p>创建如下分类：</p>
+<img src="/2024/04/01/ios/05-category/02.png" srcset="/img/loading.gif" lazyload class="" width="02">
+<p>每个分类的.h和.m如下：<br>Test分类：</p>
+<img src="/2024/04/01/ios/05-category/03.png" srcset="/img/loading.gif" lazyload class="" width="03">
+<img src="/2024/04/01/ios/05-category/04.png" srcset="/img/loading.gif" lazyload class="" width="04">
+
+<p>Eat分类：</p>
+<img src="/2024/04/01/ios/05-category/05.png" srcset="/img/loading.gif" lazyload class="" width="05">
+<img src="/2024/04/01/ios/05-category/06.png" srcset="/img/loading.gif" lazyload class="" width="06">
+
+
+<p>使用<code>xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc Person+Eat.m</code>命令对该分类文件进行编译，得到一个传cpp文件，就是编译后的代码，其中可以看到有个_category_t结构体：</p>
+<img src="/2024/04/01/ios/05-category/07.png" srcset="/img/loading.gif" lazyload class="" width="07">
+<p>编译后eat分类中的对应代码生成如下：</p>
+<ul>
+<li>实例方法列表</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/08.png" srcset="/img/loading.gif" lazyload class="" width="08">
+<ul>
+<li>类方法列表</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/09.png" srcset="/img/loading.gif" lazyload class="" width="09">
+<ul>
+<li>属性列表</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/10.png" srcset="/img/loading.gif" lazyload class="" width="10">
+<ul>
+<li>同样还有遵守的协议不再继续添加图片。</li>
+</ul>
+<p><strong>总结</strong> 所以分类在编译后，会生成每个分类对应的category的结构体，方法、属性等都存在结构体中</p>
+<h3 id="Category的加载处理过程"><a href="#Category的加载处理过程" class="headerlink" title="Category的加载处理过程"></a>Category的加载处理过程</h3><h4 id="分类方法调用"><a href="#分类方法调用" class="headerlink" title="分类方法调用"></a>分类方法调用</h4><ul>
+<li>如果分类中实现了本类中的一个方法，在调用时是什么现象？</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/11.png" srcset="/img/loading.gif" lazyload class="" width="11">
+<p><strong>原因：</strong> 通过结构看到值打印了分类test里面的实现，而分类Eat和本来里面的实现没有打印。只打印分类Test的实现不打印分类Eat的实现，是因为编译顺序的问题，分类Test在分类Eat之后编译，最终运行时Test的方法列表在一个大数组前面；不打印本类是因为本类的方法在运行时就被安排到了方法大数组的最后面。只要找到一个对应的方法名，即调用。</p>
+<h4 id="源码分析分类数据加载过程"><a href="#源码分析分类数据加载过程" class="headerlink" title="源码分析分类数据加载过程"></a>源码分析分类数据加载过程</h4><ul>
+<li>objc-os.mm 这是运行时的入口<ul>
+<li>_objc_init 运行时初始化</li>
+<li>map_images 所有模块或镜像</li>
+<li>map_images_nolock 解锁所有模块或镜像</li>
+</ul>
+</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/12.png" srcset="/img/loading.gif" lazyload class="" width="12">
+<img src="/2024/04/01/ios/05-category/13.png" srcset="/img/loading.gif" lazyload class="" width="13">
+
+<ul>
+<li>objc-runtime-new.mm<ul>
+<li>_read_images</li>
+<li>remethodizeClass</li>
+<li>attachCategories</li>
+<li>attachLists</li>
+<li>realloc、memmove、 memcpy</li>
+</ul>
+</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/14.png" srcset="/img/loading.gif" lazyload class="" width="14">
+<img src="/2024/04/01/ios/05-category/15.png" srcset="/img/loading.gif" lazyload class="" width="15">
+<img src="/2024/04/01/ios/05-category/16.png" srcset="/img/loading.gif" lazyload class="" width="16">
+<img src="/2024/04/01/ios/05-category/17.png" srcset="/img/loading.gif" lazyload class="" width="17">
+
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><code class="hljs xl"><span class="hljs-comment">//cls  : 类</span><br><span class="hljs-comment">//cats : 该类对应的所有的分类，是个分类列表</span><br>static void attachCategories(Class cls, category_list *cats, bool flush_caches)&#123;<br>    <span class="hljs-keyword">if</span> (!cats) return;<br>    <span class="hljs-keyword">if</span> (PrintReplacedMethods) printReplacements(cls, cats);<br>    <span class="hljs-function"><span class="hljs-title">bool</span> isMeta = cls-&gt;</span>isMetaClass();<br>    <span class="hljs-comment">// fixme rearrange to remove these intermediate allocations</span><br>    <span class="hljs-comment">// 方法列表 二维数组 [[method_t, method_t], [method_t, method_t]]</span><br>    method_list_t **mlists = (method_list_t **)<br>        <span class="hljs-function"><span class="hljs-title">malloc</span>(cats-&gt;</span>count * sizeof(*mlists));<br>    <span class="hljs-comment">// 属性列表</span><br>    property_list_t **proplists = (property_list_t **)<br>        <span class="hljs-function"><span class="hljs-title">malloc</span>(cats-&gt;</span>count * sizeof(*proplists));<br>    <span class="hljs-comment">// 协议列表</span><br>    protocol_list_t **protolists = (protocol_list_t **)<br>        <span class="hljs-function"><span class="hljs-title">malloc</span>(cats-&gt;</span>count * sizeof(*protolists));<br><br>    <span class="hljs-comment">// Count backwards through cats to get newest categories first</span><br>    int mcount = <span class="hljs-number">0</span>;<br>    int propcount = <span class="hljs-number">0</span>;<br>    int protocount = <span class="hljs-number">0</span>;<br>    <span class="hljs-function"><span class="hljs-title">int</span> i = cats-&gt;</span>count;<br>    bool fromBundle = NO;<br>    <span class="hljs-keyword">while</span> (i--) &#123; <span class="hljs-comment">// i-- 从后向前遍历</span><br>        <span class="hljs-function"><span class="hljs-title">auto</span>&amp; entry = cats-&gt;</span>list[i];<span class="hljs-comment">// 取出分类</span><br><br>        <span class="hljs-comment">//取出分类方法列表</span><br>        <span class="hljs-function"><span class="hljs-title">method_list_t</span> *mlist = entry.cat-&gt;</span>methodsForMeta(isMeta);<br>        <span class="hljs-keyword">if</span> (mlist) &#123;<br>            <span class="hljs-comment">//把该分类的方法列表放入前面定义的大数组mlists中。</span><br>            <span class="hljs-comment">//mcount++ 是从0开始</span><br>            mlists[mcount++] = mlist;<br>            <span class="hljs-function"><span class="hljs-title">fromBundle</span> |= entry.hi-&gt;</span>isBundle();<br>        &#125;<br>        property_list_t *proplist = <br>            <span class="hljs-function"><span class="hljs-title">entry</span>.cat-&gt;</span>propertiesForMeta(isMeta, entry.hi);<br>        <span class="hljs-keyword">if</span> (proplist) &#123;<br>            proplists[propcount++] = proplist;<br>        &#125;<br>        <span class="hljs-function"><span class="hljs-title">protocol_list_t</span> *protolist = entry.cat-&gt;</span>protocols;<br>        <span class="hljs-keyword">if</span> (protolist) &#123;<br>            protolists[protocount++] = protolist;<br>        &#125;<br>    &#125;<br>    <span class="hljs-comment">// rw 是objc_class结构体中用来拿到类对象方法列表的一个数据结构</span><br>    <span class="hljs-comment">// 这是取出类对象中的数据</span><br>    <span class="hljs-function"><span class="hljs-title">auto</span> rw = cls-&gt;</span><span class="hljs-keyword">data</span>();<br><br>    prepareMethodLists(cls, mlists, mcount, NO, fromBundle);<br>    <span class="hljs-comment">//将所有分类的对象方法附加到类对象的方法列表中</span><br>    <span class="hljs-function"><span class="hljs-title">rw</span>-&gt;</span>methods.attachLists(mlists, mcount);<br>    free(mlists);<br>    <span class="hljs-keyword">if</span> (flush_caches  &amp;&amp;  mcount &gt; <span class="hljs-number">0</span>) flushCaches(cls);<br>    <br>    <span class="hljs-comment">////将所有分类的属性方法附加到类对象的属性列表中</span><br>    <span class="hljs-function"><span class="hljs-title">rw</span>-&gt;</span>properties.attachLists(proplists, propcount);<br>    free(proplists);<br>    <br>    <span class="hljs-comment">//将所有分类的协议附加到类对象的协议</span><br>    <span class="hljs-function"><span class="hljs-title">rw</span>-&gt;</span>protocols.attachLists(protolists, protocount);<br>    free(protolists);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs angelscript"><span class="hljs-built_in">void</span> attachLists(List* <span class="hljs-keyword">const</span> * addedLists, <span class="hljs-built_in">uint32</span>_t addedCount) &#123;<br>        <span class="hljs-keyword">if</span> (addedCount == <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span>;<br><br>        <span class="hljs-keyword">if</span> (hasArray()) &#123;<br>            <span class="hljs-comment">// many lists -&gt; many lists</span><br>            <span class="hljs-built_in">uint32</span>_t oldCount = <span class="hljs-built_in">array</span>()-&gt;count;<br>            <span class="hljs-comment">//数量增加分类的数量</span><br>            <span class="hljs-built_in">uint32</span>_t newCount = oldCount + addedCount;<br>            <span class="hljs-comment">//realloc重新初始化内存大小newCount</span><br>            setArray((<span class="hljs-built_in">array</span>_t *)realloc(<span class="hljs-built_in">array</span>(), <span class="hljs-built_in">array</span>_t::byteSize(newCount)));<br>            <span class="hljs-built_in">array</span>()-&gt;count = newCount;<br>            <br>            <span class="hljs-comment">//array()已经扩大内存了</span><br>            <span class="hljs-comment">//memmove是把array()-&gt;lists本类方法列表在大数组中往后移动addedCount个位置。</span><br>            <span class="hljs-comment">//addedCount就是本类拥有的分类个数，也就是本类所有分类的方法列表个数</span><br>            memmove(<span class="hljs-built_in">array</span>()-&gt;lists + addedCount, <span class="hljs-built_in">array</span>()-&gt;lists, <br>                    oldCount * sizeof(<span class="hljs-built_in">array</span>()-&gt;lists[<span class="hljs-number">0</span>]));<br>            <span class="hljs-comment">//把分类的方法列表addedLists移动到array()-&gt;lists数组的最前面</span><br>            <span class="hljs-comment">//本类自己的方法列表放在了最后面</span><br>            <span class="hljs-comment">//所以假如本类和分类都含有同名的方法，在运行时遍历到一个大数组中的第一个分类方法列表时</span><br>            <span class="hljs-comment">//如果找到该方法就直接调用了。</span><br>            <span class="hljs-comment">//而分类间的同名方法调用顺序则就完全依赖分类在大数组中的前后顺序了</span><br>            <span class="hljs-comment">//分类的前后顺序也就是编译顺序，XCode能控制。工程 -&gt; BUild Phases -&gt; Compile Source</span><br>            <span class="hljs-comment">//最后编译的最终会放到大数组的最前面</span><br>            memcpy(<span class="hljs-built_in">array</span>()-&gt;lists, addedLists, <br>                   addedCount * sizeof(<span class="hljs-built_in">array</span>()-&gt;lists[<span class="hljs-number">0</span>]));<br>        &#125;<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (!list  &amp;&amp;  addedCount == <span class="hljs-number">1</span>) &#123;<br>            <span class="hljs-comment">// 0 lists -&gt; 1 list</span><br>            list = addedLists[<span class="hljs-number">0</span>];<br>        &#125; <br>        <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-comment">// 1 list -&gt; many lists</span><br>            List* oldList = list;<br>            <span class="hljs-built_in">uint32</span>_t oldCount = oldList ? <span class="hljs-number">1</span> : <span class="hljs-number">0</span>;<br>            <span class="hljs-built_in">uint32</span>_t newCount = oldCount + addedCount;<br>            setArray((<span class="hljs-built_in">array</span>_t *)malloc(<span class="hljs-built_in">array</span>_t::byteSize(newCount)));<br>            <span class="hljs-built_in">array</span>()-&gt;count = newCount;<br>            <span class="hljs-keyword">if</span> (oldList) <span class="hljs-built_in">array</span>()-&gt;lists[addedCount] = oldList;<br>            memcpy(<span class="hljs-built_in">array</span>()-&gt;lists, addedLists, <br>                   addedCount * sizeof(<span class="hljs-built_in">array</span>()-&gt;lists[<span class="hljs-number">0</span>]));<br>        &#125;<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>形象些如下：</p>
+<img src="/2024/04/01/ios/05-category/18.png" srcset="/img/loading.gif" lazyload class="" width="18">
+<ul>
+<li>原理如下：<ul>
+<li>程序运行时通过Runtime加载某个类的所有Category数据</li>
+<li>把所有Category的方法、属性、协议数据，合并到一个大数组中，后参与编译的Category数据，会在数组的前面。</li>
+<li>将合并后的分类数据（方法、属性、协议），插入到类原来数据的前面。</li>
+</ul>
+</li>
+</ul>
+<h3 id="Category和Extension"><a href="#Category和Extension" class="headerlink" title="Category和Extension"></a>Category和Extension</h3><ul>
+<li>Category<ul>
+<li>Category编译之后的底层结构是struct category_t，里面存储着分类的对象方法、类方法、属性、协议信息</li>
+<li>在程序运行的时候，runtime会将Category的数据，合并到类信息中（类对象、元类对象中）</li>
+</ul>
+</li>
+<li>Extension<ul>
+<li>Extension在编译的时候，它的数据就已经包含在类信息中</li>
+<li>Category是在运行时，才会将数据合并到类信息中</li>
+</ul>
+</li>
+</ul>
+<h3 id="Load-方法"><a href="#Load-方法" class="headerlink" title="Load 方法"></a>Load 方法</h3><h4 id="load方法调用顺序"><a href="#load方法调用顺序" class="headerlink" title="load方法调用顺序"></a>load方法调用顺序</h4><p><strong>前提</strong></p>
+<ul>
+<li>示例中Son继承自Person，Person有两个分类Test和Eat；</li>
+<li>每个类中都有一个类方法load<br>看下面打印：</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/19.png" srcset="/img/loading.gif" lazyload class="" width="19">
+<p><strong>结果：</strong> 在没有import的情况下、没有调用的情况下，程序跑起来变打印出了load方法。且有如下调用顺序：</p>
+<ul>
+<li><strong>先调用父类的load （没有继承关系的类之间按照编译顺序调用，先编译则先调用）</strong></li>
+<li><strong>再调用子类的load</strong></li>
+<li><strong>最后调用分类的load（分类之间按照编译顺序调用，无论是否有继承关系，先编译则先调用）</strong></li>
+</ul>
+<p><strong>疑问</strong> </p>
+<ul>
+<li>根本还没有调用load方法，为什么就打印出来了？</li>
+<li>按照前面一节的知识来讲，当分类中存在与本类相同的方法时，调用的时候也会只调用分类的方法，为什么load方法无论分类还是本类都被调用了呢？</li>
+</ul>
+<p><strong>解答</strong></p>
+<ul>
+<li>+load方法会在运行时加载类、分类时自动被调用；每个类、分类的+load，在程序运行过程中只调用一次，且调用顺序和编译顺序有关。</li>
+<li>比如上节讲的run方法在分类和本类中和都有，但调用的确是分类中的run。<ul>
+<li>是因为**[person run ]**这种形式的本质是runtime的发消息机制：<strong>objc_msgSend</strong>；</li>
+<li>涉及到消息发送，就会按照isa指针找类对象或者元类对象中的对象方法或类方法调用，如果某个类恰巧存在分类则该分类中的那个方法就被调用了；</li>
+<li>而load方法调用机制不同：load方法在运行时加载所有类时，会直接拿到每个类中的load方法地址，直接调用执行，没有涉及到消息发送机制，也就不会按照isa机制来查找方法。</li>
+</ul>
+</li>
+</ul>
+<h4 id="load调用源码分析"><a href="#load调用源码分析" class="headerlink" title="load调用源码分析"></a>load调用源码分析</h4><p>源码解读：</p>
+<ul>
+<li>objc-os.mm<ul>
+<li>_objc_init 运行时加载类、分类</li>
+</ul>
+</li>
+<li>objc-runtime-new.mm<ul>
+<li>load_images</li>
+<li>prepare_load_methods 准备工作<ul>
+<li>schedule_class_load 定制规划类的顺序问题</li>
+<li>objc-loadmethod.mm<ul>
+<li>add_class_to_loadable_list 添加类到数组中</li>
+<li>add_category_to_loadable_list 添加分类到数组中</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>objc-loadmethod.mm<ul>
+<li>call_load_methods 依次调用数组中所有类的load方法<ul>
+<li>call_class_loads 调用类的load方法</li>
+<li>call_category_loads  调用分类的load方法</li>
+<li>(*load_method)(cls, SEL_load) 函数指针直接调用方法</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>下面分部看：</p>
+<ul>
+<li>_objc_init 运行时加载类、分类</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/20.png" srcset="/img/loading.gif" lazyload class="" width="20">
+<ul>
+<li>load_images</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/27.png" srcset="/img/loading.gif" lazyload class="" width="27">
+<ul>
+<li>prepare_load_methods 准备工作</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/28.png" srcset="/img/loading.gif" lazyload class="" width="28">
+<ul>
+<li>schedule_class_load 定制规划类的顺序问题</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/26.png" srcset="/img/loading.gif" lazyload class="" width="26">
+<ul>
+<li>add_class_to_loadable_list 添加类到数组中</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/24.png" srcset="/img/loading.gif" lazyload class="" width="24">
+<ul>
+<li>add_category_to_loadable_list 添加分类到数组中</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/25.png" srcset="/img/loading.gif" lazyload class="" width="25">
+<ul>
+<li>call_load_methods 依次调用数组中所有类的load方法</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/21.png" srcset="/img/loading.gif" lazyload class="" width="21">
+<ul>
+<li>call_class_loads 调用类的load方法</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/22.png" srcset="/img/loading.gif" lazyload class="" width="22">
+<ul>
+<li>call_category_loads  调用分类的load方法</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/23.png" srcset="/img/loading.gif" lazyload class="" width="23">
+<ul>
+<li>(*load_method)(cls, SEL_load) 函数指针直接调用方法</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/29.png" srcset="/img/loading.gif" lazyload class="" width="29">
+<h3 id="initialize-方法"><a href="#initialize-方法" class="headerlink" title="initialize 方法"></a>initialize 方法</h3><h4 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h4><ul>
+<li><p>+initialize方法会在类第一次接收到消息时调用。</p>
+</li>
+<li><p>调用顺序</p>
+<ul>
+<li>在父类和子类都实现了initialize的前提下，先调用父类的+initialize，再调用子类的+initialize，否则调用了你也不知道。</li>
+<li>先初始化父类，再初始化子类，每个类只会初始化1次</li>
+</ul>
+</li>
+<li><p><strong>+initialize方法会在类第一次接收到消息时调用</strong></p>
+</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/30.png" srcset="/img/loading.gif" lazyload class="" width="30">
+<ul>
+<li><strong>先初始化父类，再初始化子类，每个类只会初始化1次</strong></li>
+</ul>
+<img src="/2024/04/01/ios/05-category/31.png" srcset="/img/loading.gif" lazyload class="" width="31">
+<h4 id="initialize源码分析"><a href="#initialize源码分析" class="headerlink" title="initialize源码分析"></a>initialize源码分析</h4><p><strong>分析</strong> 因为initialize方法的调用是消息发送机制，而是仅仅在一次接收消息时调用。那么消息机制，就会涉及到根据ISA找到类对象或元类对象，再接着找方法(也就是第一次接收的消息的那个方法，比如alloc)。那么重点就是找方法：class_getInstanceMethod</p>
+<ul>
+<li><p>objc-runtime-new.mm</p>
+<ul>
+<li>class_getInstanceMethod 找方法</li>
+<li>lookUpImpOrNil 查询方法列表</li>
+<li>lookUpImpOrForward 实际查询函数地址</li>
+<li>objc-initialize.mm <ul>
+<li>_class_initialize 调用的初始化方法</li>
+<li>callinitialize 实际调用</li>
+<li>objc_msgSend(cls, SEL_initialize) 最终还是objc_msgSend</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>objc-msg-arm64.s &#x2F;&#x2F; arm64汇编文件</p>
+<ul>
+<li>objc_msgSend &#x2F;&#x2F; 我的乖乖，原来大名鼎鼎的objc_msgSend()方法是由汇编实现的</li>
+</ul>
+</li>
+<li><p><strong>class_getInstanceMethod</strong></p>
+</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/33.png" srcset="/img/loading.gif" lazyload class="" width="33">
+<ul>
+<li><strong>lookUpImpOrNil</strong></li>
+</ul>
+<img src="/2024/04/01/ios/05-category/34.png" srcset="/img/loading.gif" lazyload class="" width="34">
+<ul>
+<li><strong>_class_initialize</strong></li>
+</ul>
+<img src="/2024/04/01/ios/05-category/35.png" srcset="/img/loading.gif" lazyload class="" width="35">
+<ul>
+<li><strong>_class_initialize</strong></li>
+</ul>
+<img src="/2024/04/01/ios/05-category/36.png" srcset="/img/loading.gif" lazyload class="" width="36">
+<ul>
+<li><strong>callinitialize</strong></li>
+</ul>
+<img src="/2024/04/01/ios/05-category/37.png" srcset="/img/loading.gif" lazyload class="" width="37">
+<ul>
+<li><strong>callinitialize</strong></li>
+</ul>
+<img src="/2024/04/01/ios/05-category/38.png" srcset="/img/loading.gif" lazyload class="" width="38">
+<ul>
+<li><strong>objc_msgSend</strong></li>
+</ul>
+<img src="/2024/04/01/ios/05-category/32.png" srcset="/img/loading.gif" lazyload class="" width="32">
+<p><strong>延伸</strong> +initialize和+load的很大区别是，+initialize是通过objc_msgSend进行调用的，所以有以下特点：</p>
+<ul>
+<li>如果子类没有实现+initialize，会调用父类的+initialize（所以父类的+initialize可能会被调用多次）<ul>
+<li>比如，首先Person有一个分类，且本类和分类都实现了initialize方法</li>
+<li>Son和Teacher都是Person的子类，并且两个子类都没有实现initialize方法，也没有分类</li>
+<li>那么Son第一次接收消息时，首先会检查父类Person是否已经初始化，如果没有则先调用一次父类的initialize方法，又因为Person和其分类都实现了，所有最终会调用Person分类中实现的initialize，此时打印一次。</li>
+<li>父类调用完成，该调用Son自己的initialize，但Son没有实现，则会找到父类的该方法，进行调用。又打印一次。</li>
+<li>接着Teacher首次接收到了消息，那么首先会检查父类Person是否已经初始化，很明显前面已经初始化过了，不再调用。紧接着调用Teacher的initialize，但Teacher也没实现，那么就会查找父类的该方法，然后又被调用一次。第三次打印。</li>
+</ul>
+</li>
+<li>如果分类实现了+initialize，就覆盖类本身的+initialize调用<ul>
+<li>这种情况很好理解，这就是ISA的寻找方法的机制。分类和本类有同名方法，只调用分类的方法。</li>
+</ul>
+</li>
+</ul>
+<h3 id="分类添加成员变量"><a href="#分类添加成员变量" class="headerlink" title="分类添加成员变量"></a>分类添加成员变量</h3><ul>
+<li>默认情况下，因为分类底层结构的限制(没有ivars成员变量数组)，不能添加成员变量到分类中。但可以通过关联对象来间接实现。</li>
+<li>分类中直接写成员变量会报错</li>
+<li>分类中添加属性，系统默认只会生成setter和getter的声明，不会生成对应的实现和成员变量。</li>
+<li>关联对象并不是存储在被关联对象本身内存中</li>
+<li>关联对象存储在全局的统一的一个AssociationsManager中</li>
+<li>设置关联对象为nil，就相当于是移除关联对象</li>
+</ul>
+<h4 id="setter实现"><a href="#setter实现" class="headerlink" title="setter实现"></a>setter实现</h4><ul>
+<li>添加关联对象</li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs csharp"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">objc_setAssociatedObject</span>(<span class="hljs-params">id <span class="hljs-built_in">object</span>, <span class="hljs-keyword">const</span> <span class="hljs-keyword">void</span> * key,id <span class="hljs-keyword">value</span>, objc_AssociationPolicy policy</span>)</span><br></code></pre></td></tr></table></figure>
+<img src="/2024/04/01/ios/05-category/39.png" srcset="/img/loading.gif" lazyload class="" width="39">
+<h5 id="objc-AssociationPolicy-策略"><a href="#objc-AssociationPolicy-策略" class="headerlink" title="objc_AssociationPolicy 策略"></a>objc_AssociationPolicy 策略</h5><img src="/2024/04/01/ios/05-category/41.png" srcset="/img/loading.gif" lazyload class="" width="41">
+<h5 id="key的常见用法"><a href="#key的常见用法" class="headerlink" title="key的常见用法"></a>key的常见用法</h5><ul>
+<li>static void *MyKey &#x3D; &MyKey;</li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-function"><span class="hljs-title">objc_setAssociatedObject</span><span class="hljs-params">(obj, MyKey, value, OBJC_ASSOCIATION_RETAIN_NONATOMIC)</span></span><br><span class="hljs-function"><span class="hljs-title">objc_getAssociatedObject</span><span class="hljs-params">(obj, MyKey)</span></span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>static char MyKey;</li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-function"><span class="hljs-title">objc_setAssociatedObject</span><span class="hljs-params">(obj, &amp;MyKey, value, OBJC_ASSOCIATION_RETAIN_NONATOMIC)</span></span><br><span class="hljs-function"><span class="hljs-title">objc_getAssociatedObject</span><span class="hljs-params">(obj, &amp;MyKey)</span></span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>使用属性名作为key</li>
+</ul>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lisp">objc_setAssociatedObject(<span class="hljs-name">obj</span>, @<span class="hljs-string">&quot;property&quot;</span>, value, OBJC_ASSOCIATION_RETAIN_NONATOMIC)<span class="hljs-comment">;</span><br>objc_getAssociatedObject(<span class="hljs-name">obj</span>, @<span class="hljs-string">&quot;property&quot;</span>)<span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>使用get方法的@selecor作为key</li>
+</ul>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs less"><span class="hljs-selector-tag">objc_setAssociatedObject</span>(obj, <span class="hljs-variable">@selector</span>(getter), value, OBJC_ASSOCIATION_RETAIN_NONATOMIC)<br><span class="hljs-selector-tag">objc_getAssociatedObject</span>(obj, <span class="hljs-variable">@selector</span>(getter))<br></code></pre></td></tr></table></figure>
+
+<p><strong>备注</strong></p>
+<ul>
+<li>前两个用法有瑕疵，因为是全局变量当多个实例都调用分类中的属性时数据就会错乱。</li>
+<li>后面两种是常用的，但最后一种更便利。</li>
+</ul>
+<h4 id="getter实现"><a href="#getter实现" class="headerlink" title="getter实现"></a>getter实现</h4><ul>
+<li>获取关联对象</li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs csharp"><span class="hljs-function">id <span class="hljs-title">objc_getAssociatedObject</span>(<span class="hljs-params">id <span class="hljs-built_in">object</span>, <span class="hljs-keyword">const</span> <span class="hljs-keyword">void</span> * key</span>)</span><br></code></pre></td></tr></table></figure>
+<img src="/2024/04/01/ios/05-category/40.png" srcset="/img/loading.gif" lazyload class="" width="40">
+<h4 id="关联对象的原理"><a href="#关联对象的原理" class="headerlink" title="关联对象的原理"></a>关联对象的原理</h4><ul>
+<li><p>实现关联对象技术的核心对象有</p>
+<ul>
+<li>AssociationsManager</li>
+<li>AssociationsHashMap</li>
+<li>ObjectAssociationMap</li>
+<li>ObjcAssociation</li>
+</ul>
+</li>
+<li><p>objc4源码解读：objc-references.mm</p>
+</li>
+</ul>
+<img src="/2024/04/01/ios/05-category/42.png" srcset="/img/loading.gif" lazyload class="" width="42">
+<img src="/2024/04/01/ios/05-category/43.png" srcset="/img/loading.gif" lazyload class="" width="43">
+<img src="/2024/04/01/ios/05-category/44.png" srcset="/img/loading.gif" lazyload class="" width="44">
+<img src="/2024/04/01/ios/05-category/45.png" srcset="/img/loading.gif" lazyload class="" width="45">
+<img src="/2024/04/01/ios/05-category/46.png" srcset="/img/loading.gif" lazyload class="" width="46">
+<img src="/2024/04/01/ios/05-category/47.png" srcset="/img/loading.gif" lazyload class="" width="47">
+
+<p><strong>备注</strong></p>
+<ul>
+<li>移除所有的关联对象</li>
+</ul>
+<figure class="highlight isbl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs isbl"><span class="hljs-variable">void</span> <span class="hljs-function"><span class="hljs-title">objc_removeAssociatedObjects</span>(<span class="hljs-variable">id</span> <span class="hljs-variable"><span class="hljs-class">object</span></span>)</span><br></code></pre></td></tr></table></figure>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/iOS/" class="category-chain-item">iOS</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/iOS/" class="print-no-link">#iOS</a>
+      
+        <a href="/tags/Objective-C/" class="print-no-link">#Objective-C</a>
+      
+        <a href="/tags/Category/" class="print-no-link">#Category</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Category 底层原理</div>
+      <div>https://alberthello.github.io/2024/04/01/ios/05-category/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年4月1日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年5月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/04/01/ios/04-kvc/" title="KVC 原理">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">KVC 原理</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/04/01/ios/07-nsrunloop/" title="NSRunLoop 原理">
+                        <span class="hidden-mobile">NSRunLoop 原理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
