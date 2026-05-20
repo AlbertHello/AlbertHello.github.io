@@ -286,6 +286,71 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
+        <a href="/2026/05/20/webrtc/jitterbuffer/" target="_self">
+          WebRTC Video JitterBuffer 原理剖析
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2026/05/20/webrtc/jitterbuffer/" target="_self">
+        <div>
+          WebRTC 的视频 JitterBuffer 不是简单地缓存几帧再播放，而是在持续估计网络抖动、帧大小变化、解码耗时和渲染延迟之后，动态决定每一帧应该什么时候送去解码。它的核心目标是在延迟和卡顿之间做折中：延迟太小容易卡顿，延迟太大实时性变差。 这篇文章从抖动的定义开始，先回顾 EWMA、方差、协方差和卡尔曼滤波，再拆解 WebRTC Video JitterBuffer 中 FindNextF
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2026-05-20 23:39" pubdate>
+              2026-05-20
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+              <a href="/tags/JitterBuffer/">#JitterBuffer</a>
+            
+              <a href="/tags/Video/">#Video</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
         <a href="/2026/05/20/webrtc/mediasoup_cc_pacer_svc/" target="_self">
           深入 mediasoup 服务端下行拥塞控制
         </a>
@@ -818,72 +883,11 @@
     </article>
   </div>
 
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/03/19/webrtc/webrtc-notes/" target="_self">
-          webrtc 细碎知识
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/03/19/webrtc/webrtc-notes/" target="_self">
-        <div>
-          XR在WebRTC中，XR是指RTCP的扩展报告（Extended Reports）。RTCP XR提供了比标准RTCP更详细的统计信息，这些信息可以用于更深入地分析和诊断网络性能问题。 RTCP XR包括多种报告类型，例如：  VoIP Metrics Report：这种报告提供了关于语音质量的详细信息，包括丢包率、抖动、回声等。 Discard Metrics Report：这种报告提供了被接
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-03-19 23:28" pubdate>
-              2025-03-19
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/WebRTC/">#WebRTC</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
 
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="page-number" href="/page/3/#board">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/#board">11</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="page-number" href="/page/3/#board">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/12/#board">12</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
     </span>
   </nav>
 
