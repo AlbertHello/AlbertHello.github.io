@@ -31,7 +31,7 @@
 <meta property="og:image" content="https://alberthello.github.io/2026/05/20/webrtc/jitterbuffer/jitterbuffer-flow.png">
 <meta property="og:image" content="https://alberthello.github.io/2026/05/20/webrtc/jitterbuffer/normal-distribution.png">
 <meta property="article:published_time" content="2026-05-20T15:39:26.000Z">
-<meta property="article:modified_time" content="2026-05-20T16:13:42.321Z">
+<meta property="article:modified_time" content="2026-05-21T01:00:40.996Z">
 <meta property="article:author" content="fengcheng">
 <meta property="article:tag" content="JitterBuffer">
 <meta property="article:tag" content="Video">
@@ -283,7 +283,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6k 字
+          5.8k 字
         
       </span>
     
@@ -338,7 +338,7 @@
               <p id="updated-time" class="note note-info" style="display: none">
                 
                   
-                    本文最后更新于 2026-05-21T00:13:42+08:00
+                    本文最后更新于 2026-05-21T09:00:40+08:00
                   
                   
 
@@ -443,7 +443,7 @@
 </ul>
 <p><code>jitter_delay</code> 会参与目标延迟 <code>target_delay</code> 的计算。<code>target_delay</code> 又会影响 <code>current_delay</code>。而 <code>current_delay</code> 会影响下一轮 <code>FindNextFrame</code> 算出来的 <code>wait_ms</code>。所以 JitterBuffer 不是直接控制渲染器，而是通过控制帧送去解码的时间，间接控制播放节奏。</p>
 <h2 id="FindNextFrame：计算取帧等待时间"><a href="#FindNextFrame：计算取帧等待时间" class="headerlink" title="FindNextFrame：计算取帧等待时间"></a>FindNextFrame：计算取帧等待时间</h2><p>解码线程循环取帧时，一个关键函数是 <code>FindNextFrame</code>。它会从 <code>FrameBuffer</code> 里找到候选帧，并给这帧计算一个期望渲染时间：</p>
-<p>$$<br>\operatorname{render_time} &#x3D; \operatorname{ExtrapolateLocalTime}(\operatorname{frame_timestamp}) + \operatorname{actual_delay}<br>$$</p>
+<p>$$<br>T_{\mathrm{render}} &#x3D; \operatorname{ExtrapolateLocalTime}(T_{\mathrm{frame}}) + D_{\mathrm{actual}}<br>$$</p>
 <p>也可以理解为：</p>
 <p>$$<br>帧的期望渲染时间 &#x3D; 帧的平滑到达时间 + 实际播放延迟<br>$$</p>
 <p>这里有几个关键点：</p>
@@ -456,7 +456,7 @@
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp">actual_delay = std::<span class="hljs-built_in">max</span>(current_delay_ms_, min_playout_delay_ms_);<br>actual_delay = std::<span class="hljs-built_in">min</span>(actual_delay, max_playout_delay_ms_);<br></code></pre></td></tr></table></figure>
 
 <p>随后计算取帧等待时间：</p>
-<p>$$<br>\operatorname{wait_ms} &#x3D; \operatorname{render_time_ms} - \operatorname{now_ms} - \operatorname{RequiredDecodeTimeMs}() - \operatorname{render_delay_ms}<br>$$</p>
+<p>$$<br>W &#x3D; T_{\mathrm{render}} - T_{\mathrm{now}} - T_{\mathrm{decode}} - T_{\mathrm{renderDelay}}<br>$$</p>
 <p>含义是：</p>
 <p>$$<br>等待时间 &#x3D; 期望渲染时间 - 当前时间 - 解码耗时 - 渲染耗时<br>$$</p>
 <p>如果 <code>wait_ms &lt; 0</code>，说明这帧已经晚到了，就不再等待，直接令 <code>wait_ms = 0</code>，尽快取出送去解码。</p>
@@ -468,22 +468,22 @@
 <li><code>current_delay</code></li>
 </ul>
 <p><code>GetNextFrame</code> 内部会计算帧间延迟 <code>frame_delay</code>，它描述相邻帧实际接收间隔和 RTP timestamp 间隔之间的偏差：</p>
-<p>$$<br>\operatorname{frame_delay} &#x3D;<br>(R_n - R_{n-1}) - (T_n - T_{n-1})<br>$$</p>
+<p>$$<br>D_{\mathrm{frame}} &#x3D;<br>(R_n - R_{n-1}) - (T_n - T_{n-1})<br>$$</p>
 <p>这个值会传给 jitter 估计模块，用来更新 <code>jitter_delay</code>。</p>
 <p>更新 <code>jitter_delay</code> 之后，会先计算目标延迟：</p>
-<p>$$<br>\operatorname{target_delay} &#x3D; \max(\operatorname{min_playout_delay}, \operatorname{jitter_delay} + \operatorname{RequiredDecodeTimeMs}() + \operatorname{render_delay})<br>$$</p>
+<p>$$<br>D_{\mathrm{target}} &#x3D; \max(D_{\mathrm{minPlayout}}, D_{\mathrm{jitter}} + T_{\mathrm{decode}} + D_{\mathrm{render}})<br>$$</p>
 <p>如果实际解码时间早于期望解码时间，说明当前网络状态还能支撑现有延迟，<code>current_delay</code> 通常不会立即增大。如果实际解码时间晚于期望解码时间，说明当前延迟不够，就会把迟到时间补到 <code>current_delay</code> 上：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp">current_delay += delayed_ms;<br></code></pre></td></tr></table></figure>
 
 <p>但它不会无条件直接跳到目标延迟。只有当 <code>current_delay + delayed_ms</code> 超过 <code>target_delay</code> 时，才会被钳制到 <code>target_delay</code>。</p>
 <h2 id="WebRTC-抖动计算"><a href="#WebRTC-抖动计算" class="headerlink" title="WebRTC 抖动计算"></a>WebRTC 抖动计算</h2><p>WebRTC 的 <code>jitter_delay</code> 可以粗略理解为两部分：</p>
-<p>$$<br>\operatorname{jitter_delay} &#x3D; \operatorname{large_frame_delay} + \operatorname{noise_delay}<br>$$</p>
+<p>$$<br>D_{\mathrm{jitter}} &#x3D; D_{\mathrm{largeFrame}} + D_{\mathrm{noise}}<br>$$</p>
 <p>对应代码里的简化形式：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-type">double</span> ret = _theta[<span class="hljs-number">0</span>] * (_maxFrameSize - _avgFrameSize) + <span class="hljs-built_in">NoiseThreshold</span>();<br></code></pre></td></tr></table></figure>
 
 <p>这和 RFC 3550 的简单 EWMA 抖动计算不一样。WebRTC 针对视频做了更贴近实际传输的建模：视频帧大小不是恒定的，静态画面可能很小，运动画面或关键帧可能很大。如果只看相邻包或相邻帧的瞬时延迟，JitterBuffer 很容易在静态画面时把缓存压得太低，等画面突然变复杂时出现卡顿。</p>
 <h3 id="大帧传输延迟"><a href="#大帧传输延迟" class="headerlink" title="大帧传输延迟"></a>大帧传输延迟</h3><p>大帧传输延迟的核心公式是：</p>
-<p>$$<br>\operatorname{large_frame_delay}<br>&#x3D; \theta_0(\operatorname{maxFrameSize} - \operatorname{avgFrameSize})<br>$$</p>
+<p>$$<br>D_{\mathrm{largeFrame}} &#x3D; \theta_0(F_{\mathrm{max}} - F_{\mathrm{avg}})<br>$$</p>
 <p>其中：</p>
 <ul>
 <li>$\theta_0$：传输速率的倒数，可以理解为每字节需要的传输时间。</li>
@@ -533,7 +533,7 @@
 <li>随机性因素：网络排队、路径变化、突发流量带来的噪声延迟。</li>
 </ul>
 <p>可以把它简化理解为：</p>
-<p>$$<br>\operatorname{WebRTC_Jitter} &#x3D; f(\operatorname{frameSize}, \operatorname{channelRate}, \operatorname{noiseVariance}) + \operatorname{systemConstant}<br>$$</p>
+<p>$$<br>J_{\mathrm{WebRTC}} &#x3D; f(F_{\mathrm{size}}, R_{\mathrm{channel}}, \sigma^2_{\mathrm{noise}}) + C_{\mathrm{system}}<br>$$</p>
 <p>通过这种模型，WebRTC 能更准确地预测网络波动，并动态调整 JitterBuffer 大小，在实时性和播放平滑性之间取得平衡。</p>
 <p>参考资料：</p>
 <ul>
