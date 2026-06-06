@@ -1,0 +1,1008 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="NMRTC 弱网对抗实践：从 SVC 自适应切档到播放端缓冲实时音视频系统里，弱网最麻烦的地方不是“带宽变小”本身，而是带宽变小时系统会触发一连串连锁反应： 1234567发送码率过高  -&gt; 下行丢包  -&gt; 接收端 NACK 增多  -&gt; 服务端 RTX 重传增多  -&gt; 重传继续挤占弱网带宽  -&gt; 基础层也被挤丢  -&gt; 卡顿、花屏、绿屏、解码失败  N">
+<meta property="og:type" content="article">
+<meta property="og:title" content="nmrtc 弱网对抗自适应切档实战">
+<meta property="og:url" content="https://alberthello.github.io/2026/06/06/webrtc/nmrtc_weaknet_adaptive/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="NMRTC 弱网对抗实践：从 SVC 自适应切档到播放端缓冲实时音视频系统里，弱网最麻烦的地方不是“带宽变小”本身，而是带宽变小时系统会触发一连串连锁反应： 1234567发送码率过高  -&gt; 下行丢包  -&gt; 接收端 NACK 增多  -&gt; 服务端 RTX 重传增多  -&gt; 重传继续挤占弱网带宽  -&gt; 基础层也被挤丢  -&gt; 卡顿、花屏、绿屏、解码失败  N">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-06-06T15:05:47.000Z">
+<meta property="article:modified_time" content="2026-06-06T15:07:43.913Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="博客，技术，生活，分享">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>nmrtc 弱网对抗自适应切档实战 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="nmrtc 弱网对抗自适应切档实战"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-06-06 23:05" pubdate>
+          2026年6月6日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.3k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">nmrtc 弱网对抗自适应切档实战</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-06-06T23:07:43+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="NMRTC-弱网对抗实践：从-SVC-自适应切档到播放端缓冲"><a href="#NMRTC-弱网对抗实践：从-SVC-自适应切档到播放端缓冲" class="headerlink" title="NMRTC 弱网对抗实践：从 SVC 自适应切档到播放端缓冲"></a>NMRTC 弱网对抗实践：从 SVC 自适应切档到播放端缓冲</h2><p>实时音视频系统里，弱网最麻烦的地方不是“带宽变小”本身，而是带宽变小时系统会触发一连串连锁反应：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">发送码率过高<br>  -&gt; 下行丢包<br>  -&gt; 接收端 NACK 增多<br>  -&gt; 服务端 RTX 重传增多<br>  -&gt; 重传继续挤占弱网带宽<br>  -&gt; 基础层也被挤丢<br>  -&gt; 卡顿、花屏、绿屏、解码失败<br></code></pre></td></tr></table></figure>
+
+<p>NMRTC 的弱网优化不是一个单点功能，而是一条完整链路：推流端输出可裁剪的 SVC 分层码流，服务端按每个观众的下行网络独立选择转发层级，客户端、服务端再通过 NACK 限制、关键帧恢复和播放端缓冲吸收短时抖动。</p>
+<p>这篇文章总结 NMRTC 服务端和客户端两侧做的自适应切档与弱网对抗策略。</p>
+<h2 id="1-整体数据流"><a href="#1-整体数据流" class="headerlink" title="1. 整体数据流"></a>1. 整体数据流</h2><p>NMRTC 的媒体链路可以拆成三层：</p>
+<ul>
+<li>推流侧：采集、编码、发送 SVC 分层 RTP。</li>
+<li>服务端：按每路下行网络状态独立做 SVC 层级选择和 RTP 转发。</li>
+<li>拉流侧：接收、NACK、解码，并在解码后做播放缓冲。</li>
+</ul>
+<pre><code class=" mermaid">flowchart TB
+  subgraph Push[&quot;1. 推流端&quot;]
+    direction TB
+    Capture[&quot;采集\nCamera / Screen&quot;]
+    Encoder[&quot;OpenH264 SVC Encoder\nL0/L1 x T0/T1&quot;]
+    UpRtp[&quot;上行 RTP / RTCP / TWCC&quot;]
+    Capture --&gt; Encoder --&gt; UpRtp
+  end
+
+  subgraph Server[&quot;2. 服务端：每个 DownlinkStream 独立下行闭环&quot;]
+    direction TB
+    UplinkStream[&quot;UplinkStream\nRTP cache\nlayer bitrate&quot;]
+    Manager[&quot;RtcStreamManager\nfanout&quot;]
+    DownlinkStream[&quot;DownlinkStream\nper receiver&quot;]
+    CC[&quot;PeerConnection\nTWCC / GCC / Pacer stats&quot;]
+    Allocator[&quot;DownlinkLayerAllocator\nraw/safe budget\n选择目标 SVC 层&quot;]
+    Filter[&quot;SvcLayerFilter\n按帧边界过滤&quot;]
+    Seq[&quot;SeqManager\nseq rewrite\nreverse map&quot;]
+    Nack[&quot;NACK/RTX Policy\nlayer / age / budget&quot;]
+
+    UplinkStream --&gt; Manager --&gt; DownlinkStream
+    DownlinkStream --&gt; CC --&gt; Allocator --&gt; Filter --&gt; Seq --&gt; Nack
+  end
+
+  subgraph Client[&quot;3. zzpusher 拉流端&quot;]
+    direction TB
+    Receiver[&quot;接收下行 RTP&quot;]
+    FrameBuffer[&quot;PacketBuffer\nFrameBuffer&quot;]
+    Decoder[&quot;Decoder&quot;]
+    PlayBuffer[&quot;PlayerPlayoutBuffer\n解码后帧缓冲&quot;]
+    Render[&quot;Renderer&quot;]
+
+    Receiver --&gt; FrameBuffer --&gt; Decoder --&gt; PlayBuffer --&gt; Render
+  end
+
+  UpRtp --&gt; UplinkStream
+  Nack --&gt; Receiver
+</code></pre>
+
+<p>当然我的核心目标也不是弱网下“零丢包零卡顿”，我做不到，也不符合物理现实。我的想法是把弱网切入时不可避免的丢包，从多秒级卡死和 RTX 风暴，压缩成短暂降质、短暂 underrun，然后尽快恢复。</p>
+<h2 id="2-为什么要用-SVC，而不是只靠-BWE"><a href="#2-为什么要用-SVC，而不是只靠-BWE" class="headerlink" title="2. 为什么要用 SVC，而不是只靠 BWE"></a>2. 为什么要用 SVC，而不是只靠 BWE</h2><p>在 SFU 架构下，服务端通常不解码、不重新编码，只转发 RTP。如果某一个观众网络变差，服务端不能简单地降低上游编码器码率，否则其他网络正常的观众也会被一起降质。</p>
+<p>SVC 的价值在这里非常直接：同一条上行码流里同时包含基础层和增强层。服务端可以对不同下行用户转发不同层级。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs text">同一路上行 SVC 码流<br>        |<br>        +-&gt; 用户 A 网络好：转发完整层 1:1<br>        |<br>        +-&gt; 用户 B 网络一般：转发基础空间层高时间层 0:1<br>        |<br>        +-&gt; 用户 C 网络较差：只转发基础层 0:0<br></code></pre></td></tr></table></figure>
+
+<p>NMRTC 当前使用的是 H.264 SVC 的两层空间层和两层时间层组合：</p>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>含义</th>
+<th>典型体验</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0:0</code></td>
+<td>基础空间层 + 基础时间层</td>
+<td>低清、低帧率，弱网保底</td>
+</tr>
+<tr>
+<td><code>0:1</code></td>
+<td>基础空间层 + 高时间层</td>
+<td>低清、较流畅，常见弱网档</td>
+</tr>
+<tr>
+<td><code>1:0</code></td>
+<td>高空间层 + 基础时间层</td>
+<td>清晰度更高，但帧率较低</td>
+</tr>
+<tr>
+<td><code>1:1</code></td>
+<td>高空间层 + 高时间层</td>
+<td>正常网络完整档</td>
+</tr>
+</tbody></table>
+<p>实际系统里，NMRTC 不使用固定配置值估算层码率，而是由服务端从真实 RTP 流中解析 SVC DID&#x2F;TID，并持续统计每个层级的实际码率。这样可以适应内容复杂度变化、编码器瞬时波动和不同推流端配置。这点参考了 mediasoup 的设计思想。</p>
+<h2 id="3-服务端自适应转发架构"><a href="#3-服务端自适应转发架构" class="headerlink" title="3. 服务端自适应转发架构"></a>3. 服务端自适应转发架构</h2><p>NMRTC 服务端的自适应转发核心在每个 <code>DownlinkStream</code> 里。每一路下行都有自己的网络估计、目标层级、NACK&#x2F;RTX 预算和序列号映射。</p>
+<pre><code class=" mermaid">flowchart TB
+  LayerRate[&quot;LayerRateCalculator\n统计每个 SVC 层真实码率&quot;] --&gt; Allocator
+  CcStats[&quot;PeerConnection::DownlinkCcStats\nacked / delay / loss / rtt / queue / probe&quot;] --&gt; Allocator
+  Allocator[&quot;DownlinkLayerAllocator\n选择 target spatial/temporal&quot;] --&gt; DownlinkStream[&quot;DownlinkStream&quot;]
+  DownlinkStream --&gt; Filter[&quot;SvcLayerFilter\n按帧边界过滤 RTP&quot;]
+  Filter --&gt; Seq[&quot;SeqManager\n下行 seq 连续重写&quot;]
+  DownlinkStream --&gt; RTX[&quot;DownlinkNackRetransmitPolicy\n控制 NACK/RTX&quot;]
+  DownlinkStream --&gt; PLI[&quot;PLI / keyframe request\n非阻塞刷新&quot;]
+</code></pre>
+
+<p>选层逻辑可以概括为四句话：</p>
+<ol>
+<li>用真实层码率算出每个目标层需要多少带宽。</li>
+<li>用下行 GCC&#x2F;TWCC&#x2F;Pacer 结果估计当前链路预算。</li>
+<li>降级要快，升级要慢。</li>
+<li>短时间 probe 不能直接触发高风险空间层升级。</li>
+</ol>
+<p>NMRTC 在实现上区分了两类预算：</p>
+<table>
+<thead>
+<tr>
+<th>预算</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>raw budget</code></td>
+<td>判断当前层是否还能维持，避免轻微波动导致误降档</td>
+</tr>
+<tr>
+<td><code>safe budget</code></td>
+<td>判断是否允许升级，尤其是空间层升级</td>
+</tr>
+</tbody></table>
+<p>这能避免一个常见问题：BWE 瞬时下降时，如果选层逻辑太激进，会把 <code>0:1</code> 误打到 <code>0:0</code>；BWE 瞬时 probe 变高时，如果升级太快，又会刚升高清就重新拥塞。</p>
+<h2 id="4-切档策略：降级快，升级慢"><a href="#4-切档策略：降级快，升级慢" class="headerlink" title="4. 切档策略：降级快，升级慢"></a>4. 切档策略：降级快，升级慢</h2><p>NMRTC 的弱网切档不是简单的 <code>required &lt;= available</code>。实际策略更接近一个带 hysteresis 的状态机：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">正常网络<br>  -&gt; 可用带宽持续下降<br>  -&gt; 快速去掉高空间层<br>  -&gt; 保住基础空间层和可播放帧率<br>  -&gt; 弱网稳定后维持低档<br>  -&gt; 网络恢复并持续稳定<br>  -&gt; 先恢复时间层<br>  -&gt; 再等待关键帧恢复空间层<br></code></pre></td></tr></table></figure>
+
+<p>典型目标层如下：</p>
+<table>
+<thead>
+<tr>
+<th>网络状态</th>
+<th>目标层</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>4Mbps 稳定</td>
+<td><code>1:1</code></td>
+</tr>
+<tr>
+<td>2Mbps 弱网</td>
+<td>多数保持 <code>0:1</code></td>
+</tr>
+<tr>
+<td>1.8Mbps + 5% 丢包 + 100ms 延迟</td>
+<td>尽量保持 <code>0:1</code>，避免误退 <code>0:0</code></td>
+</tr>
+<tr>
+<td>1Mbps 严重弱网</td>
+<td>降到 <code>0:0</code></td>
+</tr>
+<tr>
+<td>网络恢复</td>
+<td>先稳定，再逐步升回 <code>1:1</code></td>
+</tr>
+</tbody></table>
+<p>时间层切换通常不需要等待关键帧，所以可以更灵活。空间层升级更敏感，需要等关键帧或同步点，否则接收端可能缺少参考关系，出现花屏或等待。</p>
+<p>因此 NMRTC 的规则是：</p>
+<ul>
+<li>temporal downgrade &#x2F; upgrade 可以相对快速。</li>
+<li>spatial downgrade 可以非阻塞执行，但会建议请求关键帧。</li>
+<li>spatial upgrade 必须更保守，等待关键帧或同步窗口。</li>
+</ul>
+<h2 id="5-丢层不能只丢-RTP-包"><a href="#5-丢层不能只丢-RTP-包" class="headerlink" title="5. 丢层不能只丢 RTP 包"></a>5. 丢层不能只丢 RTP 包</h2><p>很多 SVC 适配的早期实现会犯一个错误：识别到增强层之后直接丢包。</p>
+<p>这会制造下行 RTP 序列号空洞：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">上游 seq:  1000 1001 1002 1003 1004<br>策略:      保留 丢弃 保留 丢弃 保留<br>下行看到: 1000      1002      1004<br></code></pre></td></tr></table></figure>
+
+<p>接收端不知道这些洞是服务端主动丢层，会把它们当成网络丢包，于是开始 NACK。结果可能是 jitter buffer 等待、NACK 暴涨、RTX 把弱网链路再次打满。</p>
+<p>NMRTC 的处理方式是：按帧边界过滤，过滤后重写下行 sequence number，让接收端看到连续 RTP。</p>
+<p>裁剪后的核心逻辑：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">if</span> (target_changed &amp;&amp; frame_active) &#123;<br>    <span class="hljs-built_in">DropActiveFrame</span>();<br>    seq_manager.<span class="hljs-built_in">Rebase</span>(next_original_seq);<br>&#125;<br><br><span class="hljs-keyword">if</span> (spatial_upgrade) &#123;<br>    sync_required = <span class="hljs-literal">true</span>;  <span class="hljs-comment">// 等关键帧或同步点</span><br>&#125;<br><br><span class="hljs-keyword">if</span> (packet.layer &gt; target_layer) &#123;<br>    <span class="hljs-built_in">MarkDropped</span>(original_seq);<br>    <span class="hljs-keyword">return</span>;<br>&#125;<br><br><span class="hljs-type">uint16_t</span> downlink_seq = seq_manager.<span class="hljs-built_in">Input</span>(original_seq);<br><span class="hljs-built_in">RewriteRtpSeq</span>(packet, downlink_seq);<br><span class="hljs-built_in">Forward</span>(packet);<br></code></pre></td></tr></table></figure>
+
+<p>同时，服务端保留下行 seq 到原始 seq 的反向映射。后续客户端如果真的 NACK 某个下行包，服务端可以判断：</p>
+<ul>
+<li>这是网络真实丢包，应该尝试 RTX。</li>
+<li>这是服务端策略主动过滤的高层包，不应该补。</li>
+</ul>
+<p>这一步是 SVC 丢层从“能跑”变成“可上线”的关键。</p>
+<h2 id="6-NACK-RTX：不是所有包都值得补"><a href="#6-NACK-RTX：不是所有包都值得补" class="headerlink" title="6. NACK&#x2F;RTX：不是所有包都值得补"></a>6. NACK&#x2F;RTX：不是所有包都值得补</h2><p>弱网切入时，最危险的不是少量丢包，而是 NACK burst 引发 RTX 风暴。</p>
+<p>比如链路刚从正常网络切到 1Mbps，已经在路上的高层 RTP 包可能大量丢失。接收端会集中 NACK。服务端如果 cache 命中就全部重传，RTX 流量可能远超弱网带宽，导致未来的基础层包也被挤丢。</p>
+<p>NMRTC 对下行 RTX 做了准入控制。裁剪后的伪代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">ShouldRetransmit</span><span class="hljs-params">(<span class="hljs-type">const</span> PacketInfo&amp; packet,</span></span><br><span class="hljs-params"><span class="hljs-function">                      <span class="hljs-type">const</span> DownlinkState&amp; cc,</span></span><br><span class="hljs-params"><span class="hljs-function">                      <span class="hljs-type">const</span> TargetLayer&amp; target,</span></span><br><span class="hljs-params"><span class="hljs-function">                      <span class="hljs-type">const</span> RtxBudget&amp; budget)</span> </span>&#123;<br>    <span class="hljs-keyword">if</span> (cc.<span class="hljs-built_in">IsCongested</span>()) &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (packet.<span class="hljs-built_in">LayerHigherThan</span>(target)) &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (packet.<span class="hljs-built_in">TooOldForPlayout</span>()) &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (!budget.<span class="hljs-built_in">CanSpend</span>(packet.size)) &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里的策略重点有四个：</p>
+<ul>
+<li><strong>层级保护</strong>：当前已经降到 <code>0:1</code> 或 <code>0:0</code> 后，不再补旧的 <code>1:*</code> 高层债务包。</li>
+<li><strong>时效保护</strong>：过了播放 deadline 的旧包，即使补回来也没意义。</li>
+<li><strong>拥塞保护</strong>：queue、RTT、loss、delay trend 已经异常时，减少重传。</li>
+<li><strong>预算保护</strong>：RTX 只能占用有限比例带宽，不能抢占基础层实时包。</li>
+</ul>
+<p>此外，NMRTC 会识别 NACK burst。突发 NACK 出现时，服务端会进入短时间保护窗口，优先快速去掉高空间层，抑制高层旧包重传，并尽快请求关键帧帮助接收端跳出等待。</p>
+<h2 id="7-NMRTC-客户端策略"><a href="#7-NMRTC-客户端策略" class="headerlink" title="7. NMRTC 客户端策略"></a>7. NMRTC 客户端策略</h2><p><code>ZZRTC</code> 是 NMRTC 的 Mac 客户端推拉流实现。它在弱网链路里承担两类角色。</p>
+<p>第一类是推流端编码自适应。OpenH264 编码器输出 2 个空间层和 2 个时间层，并支持根据上行目标码率调整：</p>
+<ul>
+<li>encoder bitrate。</li>
+<li>target fps。</li>
+<li>active spatial layers。</li>
+<li>keyframe request。</li>
+</ul>
+<p>这保证服务端拿到的是可裁剪的 SVC RTP，而不是一条只能整体转发或整体丢弃的单层码流。</p>
+<p>第二类是拉流端播放缓冲。NMRTC 在 decoder 和 renderer 之间增加了解码后帧缓冲：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">RTP packet<br>  -&gt; PacketBuffer / FrameBuffer<br>  -&gt; Decoder<br>  -&gt; PlayerPlayoutBuffer<br>  -&gt; Renderer<br></code></pre></td></tr></table></figure>
+
+<p>这个缓冲持有的是已经解码的 VideoFrame，不是单纯增加 WebRTC jitter buffer。弱网事件发生时，客户端会临时提高目标缓冲，用几百毫秒库存吸收服务端降层、RTX 控制和关键帧刷新的过渡时间。网络恢复后，再缓慢降低缓冲目标，避免画面节奏突然抖动。</p>
+<p>换句话说，服务端负责“别把链路打爆”，客户端负责“把不可避免的短时波动变得不明显”。</p>
+<h2 id="8-实际效果和边界"><a href="#8-实际效果和边界" class="headerlink" title="8. 实际效果和边界"></a>8. 实际效果和边界</h2><p>NMRTC 当前弱网策略更准确的目标是可控退化：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs text">正常网络：高清、满帧率<br>轻度弱网：降空间层或时间层，保持可播放<br>严重弱网：保基础层，限制 RTX，避免系统自激<br>网络恢复：慢慢升档，避免振荡<br></code></pre></td></tr></table></figure>
+
+<p>在类似 <code>1.8Mbps + 5% 丢包 + 100ms 延迟</code> 的场景下，系统可以尽量维持 <code>0:1</code>，也就是基础清晰度但较流畅的播放状态；在更差的 1Mbps 场景下，则快速退到 <code>0:0</code> 保证基础可看。</p>
+<p>需要承认的是，实时 UDP 媒体不可能承诺弱网下零卡顿。网络瞬间切换时，已经在路上的高码率包无法撤回，BWE&#x2F;TWCC 反馈也存在天然延迟。NMRTC 做的是把不可避免的弱网瞬态控制住，避免它演变成长时间卡死、RTX 风暴或解码失败。</p>
+<h2 id="9-总结"><a href="#9-总结" class="headerlink" title="9. 总结"></a>9. 总结</h2><p>NMRTC 的弱网对抗可以概括为一条分层防线：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs text">真实层码率统计<br>  -&gt; 下行 BWE/GCC/Pacer<br>  -&gt; SVC raw/safe budget 选层<br>  -&gt; 降层快、升层慢、probe 受控<br>  -&gt; 帧边界切层 + seq 连续重写<br>  -&gt; layer-aware NACK/RTX admission control<br>  -&gt; 非阻塞 PLI/keyframe 刷新<br>  -&gt; 播放端 decoded-frame playout buffer<br></code></pre></td></tr></table></figure>
+<p>这套设计的核心思想是：服务端转发层提前选择合适的 SVC 目标层；进行 NACK 抑制，不能响应所有 NACK 包，而是只补当前层级内、仍然赶得上播放、且不会进一步压垮链路的包；不要指望单点策略解决弱网，而是让编码、转发、重传和播放端缓冲共同形成闭环。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>nmrtc 弱网对抗自适应切档实战</div>
+      <div>https://alberthello.github.io/2026/06/06/webrtc/nmrtc_weaknet_adaptive/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年6月6日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年6月6日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/05/20/webrtc/jitterbuffer/" title="WebRTC Video JitterBuffer 原理剖析">
+                        <span class="hidden-mobile">WebRTC Video JitterBuffer 原理剖析</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
