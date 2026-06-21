@@ -1,0 +1,1056 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="在 SFU 会议里做 VP8 Simulcast 智能选档：从三路 RTP 到每人一档      同一路上行 q&#x2F;h&#x2F;f，多路下行按 GoogCC BWE 独立选择   在会议系统里，SFU 最重要的价值是低延迟和低成本。服务端不解码、不合流、不重新编码，只负责把每个参会人的 RTP 包转发给其他人。 但会议和直播有一个明显差异: 每个参会人既是推流端，也是拉流端。一个人的上行网络波动，会影响所有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NMRTC 会议 Simulcast 智能选档实战">
+<meta property="og:url" content="https://alberthello.github.io/2026/06/21/webrtc/nmrtc_meeting_simulcast/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="在 SFU 会议里做 VP8 Simulcast 智能选档：从三路 RTP 到每人一档      同一路上行 q&#x2F;h&#x2F;f，多路下行按 GoogCC BWE 独立选择   在会议系统里，SFU 最重要的价值是低延迟和低成本。服务端不解码、不合流、不重新编码，只负责把每个参会人的 RTP 包转发给其他人。 但会议和直播有一个明显差异: 每个参会人既是推流端，也是拉流端。一个人的上行网络波动，会影响所有">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://alberthello.github.io/2026/06/21/webrtc/nmrtc_meeting_simulcast/nmrtc_meeting_simulcast_cover.png">
+<meta property="article:published_time" content="2026-06-21T06:45:21.000Z">
+<meta property="article:modified_time" content="2026-06-21T06:45:33.812Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="博客，技术，生活，分享">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://alberthello.github.io/2026/06/21/webrtc/nmrtc_meeting_simulcast/nmrtc_meeting_simulcast_cover.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>NMRTC 会议 Simulcast 智能选档实战 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="NMRTC 会议 Simulcast 智能选档实战"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-06-21 14:45" pubdate>
+          2026年6月21日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.7k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">NMRTC 会议 Simulcast 智能选档实战</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-06-21T14:45:33+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="在-SFU-会议里做-VP8-Simulcast-智能选档：从三路-RTP-到每人一档"><a href="#在-SFU-会议里做-VP8-Simulcast-智能选档：从三路-RTP-到每人一档" class="headerlink" title="在 SFU 会议里做 VP8 Simulcast 智能选档：从三路 RTP 到每人一档"></a>在 SFU 会议里做 VP8 Simulcast 智能选档：从三路 RTP 到每人一档</h2><figure style="margin: 1.5rem auto; text-align: center;">
+  <img src="/2026/06/21/webrtc/nmrtc_meeting_simulcast/nmrtc_meeting_simulcast_cover.png" srcset="/img/loading.gif" lazyload class="" title="NMRTC 会议 Simulcast 智能选档简介图">
+  <figcaption style="margin-top: .75rem; color: var(--sec-text-color); font-size: .92rem;">同一路上行 q/h/f，多路下行按 GoogCC BWE 独立选择</figcaption>
+</figure>
+
+<p>在会议系统里，SFU 最重要的价值是低延迟和低成本。服务端不解码、不合流、不重新编码，只负责把每个参会人的 RTP 包转发给其他人。</p>
+<p>但会议和直播有一个明显差异: 每个参会人既是推流端，也是拉流端。一个人的上行网络波动，会影响所有正在观看他的人；一个人的下行网络变差，又不应该拖累其他观看者。</p>
+<p>NMRTC 这次会议链路改造采用的是 VP8 Simulcast。浏览器为同一个摄像头同时编码三路独立 RTP stream:</p>
+<table>
+<thead>
+<tr>
+<th>RID</th>
+<th>档位</th>
+<th>分辨率</th>
+<th>帧率</th>
+<th>目标码率</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>q</code></td>
+<td>low</td>
+<td>320x180</td>
+<td>15fps</td>
+<td>150kbps</td>
+</tr>
+<tr>
+<td><code>h</code></td>
+<td>medium</td>
+<td>480x270</td>
+<td>15fps</td>
+<td>200kbps</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td>high</td>
+<td>960x540</td>
+<td>15fps</td>
+<td>500kbps</td>
+</tr>
+</tbody></table>
+<p>服务端接收三路，但对每个订阅者只转发其中一路。网络好的订阅者可以看 <code>f</code>，网络一般的看 <code>h</code>，弱网订阅者看 <code>q</code>。同一个上行发布者，可以同时服务不同下行质量的观看者。</p>
+<pre><code class=" mermaid">flowchart LR
+    A[&quot;浏览器A&lt;br/&gt;VP8 Simulcast&lt;br/&gt;q/h/f 三路上行&quot;] --&gt; SFU[&quot;NMRTC SFU&lt;br/&gt;只转发 RTP，不解码&quot;]
+    SFU --&gt; B[&quot;浏览器B&lt;br/&gt;网络好: f&quot;]
+    SFU --&gt; C[&quot;浏览器C&lt;br/&gt;网络一般: h&quot;]
+    SFU --&gt; D[&quot;浏览器D&lt;br/&gt;弱网: q&quot;]
+</code></pre>
+
+<p>这篇文章不展开所有实现细节，只讨论服务端做会议 Simulcast 选档时最关键的几个工程问题。</p>
+<h2 id="为什么不能直接转发最高档"><a href="#为什么不能直接转发最高档" class="headerlink" title="为什么不能直接转发最高档"></a>为什么不能直接转发最高档</h2><p>如果服务端始终转发 <code>f</code> 档，弱网订阅者会收到超过自身下行承载能力的视频包。结果通常不是“画质差一点”，而是更糟:</p>
+<ul>
+<li>pacer 队列变长。</li>
+<li>RTP 真实丢包增多。</li>
+<li>浏览器持续 NACK。</li>
+<li>RTX 重传继续挤占带宽。</li>
+<li>解码器拿不到连续参考帧，画面卡死或花屏。</li>
+</ul>
+<p>服务端也不能简单把 <code>f</code> 档包丢掉。RTP 接收端依赖 sequence number 判断丢包。如果中间包被服务端主动丢掉，下游看到的是 seq 空洞，会把策略丢包误判成网络丢包。</p>
+<p>所以正确做法不是“转发高档然后丢包”，而是从源头选择合适的空间层，只把当前订阅者能承载的一路 RTP 转发出去。</p>
+<h2 id="服务端如何识别-q-h-f"><a href="#服务端如何识别-q-h-f" class="headerlink" title="服务端如何识别 q&#x2F;h&#x2F;f"></a>服务端如何识别 q&#x2F;h&#x2F;f</h2><p>Simulcast 的三路 RTP 是三条独立 SSRC。服务端识别空间层主要靠 RID，也就是 RTP header extension 里的 <code>RtpStreamId</code>。</p>
+<p>上行 SDP 会协商类似这样的信息:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs text">a=extmap:3 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id<br>a=rid:q recv<br>a=rid:h recv<br>a=rid:f recv<br>a=simulcast:recv q;h;f<br></code></pre></td></tr></table></figure>
+
+<p>浏览器 answer 后，真正发包时每个 RTP 包都会带上对应 RID。服务端在上行入口统计每个 RID 的实测码率，在下行转发前再读取 RID 决定这个包属于哪一档。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">auto</span> rid = packet.<span class="hljs-built_in">GetExtension</span>&lt;webrtc::RtpStreamId&gt;();<br>std::string rid_str = (rid &amp;&amp; !rid-&gt;<span class="hljs-built_in">empty</span>()) ? *rid : <span class="hljs-string">&quot;&quot;</span>;<br><br><span class="hljs-keyword">if</span> (!rid_str.<span class="hljs-built_in">empty</span>()) &#123;<br>    <span class="hljs-keyword">auto</span>&amp; stats = rid_rate_stats_[rid_str];<br>    stats.bytes += packet.<span class="hljs-built_in">size</span>();<br>    <span class="hljs-comment">// 每秒刷新 q/h/f 各档实测码率</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这一步解决的是第一个问题: 服务端如何从三路独立 RTP 中识别 <code>q/h/f</code>。在 NMRTC 里，RID 不只是日志字段，它还会参与上行实测码率统计、producer score 判活和下行选档。</p>
+<h2 id="每个订阅者独立选档"><a href="#每个订阅者独立选档" class="headerlink" title="每个订阅者独立选档"></a>每个订阅者独立选档</h2><p>会议下行使用统一 PeerConnection。一个接收端只维护一条下行 PC，但里面可能有多个 <code>MeetingDownlinkConsumer</code>:</p>
+<p>实现分工上可以类比 mediasoup 的 Transport &#x2F; Consumer 模型: PeerConnection 承担总带宽估计和分配，每个 Consumer 只负责自己这一路远端视频的选档与转发。</p>
+<pre><code class=" mermaid">flowchart TD
+    PC[&quot;B 的下行 PeerConnection&lt;br/&gt;统一 GoogCC / TWCC / Pacer&quot;] --&gt; BW[&quot;总可用带宽 available_kbps&quot;]
+    BW --&gt; C1[&quot;Consumer: B 看 A&quot;]
+    BW --&gt; C2[&quot;Consumer: B 看 C&quot;]
+    BW --&gt; C3[&quot;Consumer: B 看 D&quot;]
+    C1 --&gt; L1[&quot;选择 q/h/f&quot;]
+    C2 --&gt; L2[&quot;选择 q/h/f&quot;]
+    C3 --&gt; L3[&quot;选择 q/h/f&quot;]
+</code></pre>
+
+<p>GoogCC 根据 TWCC 反馈估算这条下行 PC 的总可用带宽。服务端拿到 <code>available_kbps</code> 后，再分配给这个 PC 上的多个 consumer。每个 consumer 根据自己的预算选择最高可用档。</p>
+<p>核心逻辑可以简化成:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">Gear <span class="hljs-title">PickHighestAllowedGear</span><span class="hljs-params">(<span class="hljs-type">int64_t</span> budget_kbps)</span> </span>&#123;<br>    <span class="hljs-keyword">for</span> (Gear gear : &#123;kHigh, kMid, kLow&#125;) &#123;<br>        <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">CanSwitchToGear</span>(gear)) <span class="hljs-keyword">continue</span>;<br>        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">RequiredKbps</span>(gear) &lt;= budget_kbps) <span class="hljs-keyword">return</span> gear;<br>    &#125;<br><br>    <span class="hljs-comment">// 预算连最低档都不够时，也回退到仍在产出的最低档，</span><br>    <span class="hljs-comment">// 不能错误锁死在 high。</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">LowestActiveGear</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里有两个关键点。</p>
+<p>第一，<code>CanSwitchToGear()</code> 不只看 preferred layer，还要看该层是否真的还在产包。NMRTC 用 producer score 表示层活跃状态:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp">has_recent_packet = now_ms - last_layer_packet_ms[gear] &lt; <span class="hljs-number">2000</span>;<br>measured_active = measured_layer_bitrate[gear] &gt; <span class="hljs-number">0</span>;<br>producer_score = has_recent_packet &amp;&amp; measured_active ? <span class="hljs-number">10</span> : <span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
+
+<p>只有“最近确实收到该层包”和“上行实测码率仍然大于 0”同时成立，才认为该层可选。这样可以避免 high 档已经停产，但 EMA 码率还没衰减到 0，导致下行卡在死层上。</p>
+<p>第二，<code>RequiredKbps()</code> 必须统一口径。升档、维持、降档都优先使用上行实测码率，而不是一会儿用标称码率、一会儿用实测码率。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">RequiredKbps</span><span class="hljs-params">(Gear gear)</span> </span>&#123;<br>    <span class="hljs-type">int</span> measured = <span class="hljs-built_in">GetMeasuredLayerKbps</span>(gear);<br>    <span class="hljs-keyword">if</span> (measured &gt; <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> measured;<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">GetMaxBitrateKbps</span>(gear);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这个细节很重要。如果升档按标称 500kbps 判断，而维持按实测 1100kbps 判断，就会出现“升得上去但待不住”的周期震荡。</p>
+<h2 id="切档为什么必须等关键帧"><a href="#切档为什么必须等关键帧" class="headerlink" title="切档为什么必须等关键帧"></a>切档为什么必须等关键帧</h2><p>Simulcast 和 SVC 最大的区别是: Simulcast 的三档是三条独立编码流。<code>q/h/f</code> 各自有独立的 seq、timestamp、VP8 picture_id 和参考帧链。</p>
+<p>这意味着从 <code>f</code> 切到 <code>q</code> 时，不能随便拿一个 <code>q</code> 层 P 帧开始转发。浏览器没有这条 <code>q</code> 层编码链的参考帧，直接解码很容易花屏。</p>
+<pre><code class=" mermaid">sequenceDiagram
+    participant F as f层
+    participant Q as q层
+    participant SFU as SFU
+    participant B as 浏览器B
+
+    F-&gt;&gt;SFU: f层 P 帧
+    SFU-&gt;&gt;B: 正常转发 f
+    Note over SFU: BWE 决定降到 q
+    Q--&gt;&gt;SFU: q层 P 帧
+    SFU--xB: 丢弃，等待 q 层关键帧
+    F-&gt;&gt;SFU: f层后续帧
+    SFU-&gt;&gt;B: 短暂续播旧 f，避免画面立刻冻结
+    Q-&gt;&gt;SFU: q层关键帧
+    SFU-&gt;&gt;SFU: Sync seq / timestamp / VP8 picture_id
+    SFU-&gt;&gt;B: 从 q 关键帧开始转发
+</code></pre>
+
+<p>服务端内部用 <code>waiting_for_keyframe</code> 做闸门:</p>
+<ul>
+<li>启动期没有 current layer 时，必须等第一帧关键帧。</li>
+<li>切层期已经有 current layer 时，继续短暂转发旧层。</li>
+<li>目标层关键帧到达后，才真正把 current 切过去。</li>
+</ul>
+<p>这一点解决的是“切档时不花屏”的第一层问题。下一层问题是 RTP 和 VP8 元数据也必须连续。</p>
+<h2 id="三路-RTP-如何重写成一路下行"><a href="#三路-RTP-如何重写成一路下行" class="headerlink" title="三路 RTP 如何重写成一路下行"></a>三路 RTP 如何重写成一路下行</h2><p>下行 SDP 只声明一组视频 SSRC 和一组 RTX SSRC。浏览器看到的应该是一条连续的视频流，而不是三条来回跳的上行流。</p>
+<p>因此，服务端每次转发当前档包时，需要同时做五件事:</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>为什么要处理</th>
+<th>服务端做法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>关键帧</td>
+<td>新层 P 帧没有参考帧</td>
+<td>等目标层关键帧</td>
+</tr>
+<tr>
+<td>seq</td>
+<td>避免下游误判丢包</td>
+<td><code>SeqManager</code> 重写连续 seq</td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td>避免时间戳回退或跳变</td>
+<td>切层时计算 offset</td>
+</tr>
+<tr>
+<td>SSRC</td>
+<td>下行 SDP 只声明一组</td>
+<td>改写为 output SSRC</td>
+</tr>
+<tr>
+<td>VP8 picture_id &#x2F; tl0</td>
+<td>解码器参考链需要连续</td>
+<td>重写 VP8 payload descriptor</td>
+</tr>
+</tbody></table>
+<p>简化后的发送路径如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">if</span> (target_changed &amp;&amp; !packet_is_keyframe) &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">DropAndWaitKeyFrame</span>();<br>&#125;<br><br><span class="hljs-keyword">if</span> (target_keyframe_arrived) &#123;<br>    seq_manager.<span class="hljs-built_in">Sync</span>(packet.<span class="hljs-built_in">SequenceNumber</span>() - <span class="hljs-number">1</span>);<br>    <span class="hljs-built_in">SyncTimestampOnTargetLayerSwitch</span>(packet);<br>    vp8_sync_required = <span class="hljs-literal">true</span>;<br>&#125;<br><br><span class="hljs-built_in">RewriteVp8Payload</span>(packet, vp8_sync_required);<br>seq_manager.<span class="hljs-built_in">Input</span>(packet.<span class="hljs-built_in">SequenceNumber</span>(), rewritten_seq);<br><br>packet.<span class="hljs-built_in">SetSequenceNumber</span>(rewritten_seq);<br>packet.<span class="hljs-built_in">SetSsrc</span>(output_ssrc_);<br>packet.<span class="hljs-built_in">SetTimestamp</span>(packet.<span class="hljs-built_in">Timestamp</span>() - timestamp_offset_);<br></code></pre></td></tr></table></figure>
+
+<p>timestamp 的处理也不能简单归零。服务端会用新层第一包的输入 timestamp 和旧层最后一个输出 timestamp 计算 offset。如果新算出来的输出 timestamp 仍然倒退，就强制垫一个小步进，保证下游时间线向前走。</p>
+<p>VP8 的 picture_id 和 tl0picidx 更容易被忽略。即使 RTP seq 和 timestamp 连续，VP8 descriptor 不连续也可能让浏览器的解码参考关系断裂。NMRTC 在切层关键帧到达时重算 base，让新层的 VP8 序号接在旧输出流后面。</p>
+<h2 id="弱网降档-快，但不能抖"><a href="#弱网降档-快，但不能抖" class="headerlink" title="弱网降档: 快，但不能抖"></a>弱网降档: 快，但不能抖</h2><p>弱网下降档要快，因为继续发高档会让队列越来越深。但也不能看到 GoogCC 一次瞬时毛刺就立刻切档。真实日志里会出现类似 <code>2484 -&gt; 30 -&gt; 2484 kbps</code> 的单拍坑，如果每次都响应，就会不断请求关键帧、切层、再升回去，体验反而更差。</p>
+<p>NMRTC 的降档策略分三层。</p>
+<p>第一层是普通去抖。只有低预算意图持续 1.5s，才真的降档:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">constexpr</span> <span class="hljs-type">int64_t</span> kBweDowngradeDebounceMs = <span class="hljs-number">1500</span>;<br><br><span class="hljs-keyword">if</span> (want_downgrade) &#123;<br>    <span class="hljs-keyword">if</span> (downgrade_intent_start_ms &lt; <span class="hljs-number">0</span>) &#123;<br>        downgrade_intent_start_ms = now_ms;<br>    &#125;<br>    <span class="hljs-keyword">if</span> (now_ms - downgrade_intent_start_ms &gt;= <span class="hljs-number">1500</span>) &#123;<br>        <span class="hljs-built_in">ApplyDowngrade</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>第二层是 emergency 降档。当前层已经明显撑不住时，不能再等完整 1.5s。当前实现会对严重预算下降做一个很短的快速确认窗口，例如预算低于当前层需求的 75%，或更严重时低于 50%，确认后直接推进 target。</p>
+<p>第三层是旧层限时续播。降档开始后，目标低层关键帧还没到。此时如果立刻停发旧层，画面会冻结；如果无限续播旧高层，又会继续压垮弱网。所以 NMRTC 只允许旧层续播一个很短窗口: 300ms 或 10 个包。</p>
+<p>NACK&#x2F;RTX 抑制也放在这个链路里处理。当前实现不是一个单独的“关掉 NACK”开关，而是三种约束叠加:</p>
+<ul>
+<li><code>FilterPacket</code> 没有通过的包不会进入下行重传缓存，后续 NACK 自然 miss。</li>
+<li>同一个 seq 在 100ms 内重复 NACK 不会重复 RTX。</li>
+<li>重传缓存 2s 过期，旧层包不会长期占用重传通道。</li>
+</ul>
+<p>后续还可以继续增强，比如记录层切换边界 seq，在等待新层关键帧期间直接抑制旧层边界之前的 NACK，避免旧高层 RTX 挤占新低层关键帧带宽。</p>
+<h2 id="升档-慢一点，稳一点"><a href="#升档-慢一点，稳一点" class="headerlink" title="升档: 慢一点，稳一点"></a>升档: 慢一点，稳一点</h2><p>降档可以快，升档必须保守。原因很简单: 降档失败的代价通常是画质低一点；升档失败的代价是高码率真实视频立刻把链路打满，触发丢包、NACK 和再次降档。</p>
+<p>NMRTC 的升档策略是“探测确认型”:</p>
+<table>
+<thead>
+<tr>
+<th>升档路径</th>
+<th>确认时间</th>
+<th>设计原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>q -&gt; h</code></td>
+<td>500ms</td>
+<td>第一跳风险较低，希望弱网恢复后尽快可见</td>
+</tr>
+<tr>
+<td><code>h -&gt; f</code></td>
+<td>2000ms</td>
+<td>high 码率更高，需要更多 BWE 周期确认</td>
+</tr>
+<tr>
+<td>probe 后</td>
+<td>隔离 1500ms</td>
+<td>probe ack 不等于真实业务流可长期承载</td>
+</tr>
+<tr>
+<td>降档后</td>
+<td>hold 10000ms</td>
+<td>避免刚降档又马上升回去</td>
+</tr>
+</tbody></table>
+<p>可以把它理解成一个非对称策略:</p>
+<pre><code class=" mermaid">flowchart LR
+    Low[&quot;带宽下降&quot;] --&gt; D[&quot;较快降档&lt;br/&gt;去抖或 emergency&quot;]
+    D --&gt; Stable[&quot;稳定播放低档&quot;]
+    Stable --&gt; Recover[&quot;带宽恢复&quot;]
+    Recover --&gt; Probe[&quot;等待确认&lt;br/&gt;probe隔离 / loss-aware预算 / hold&quot;]
+    Probe --&gt; U[&quot;逐级升档&lt;br/&gt;q-&gt;h-&gt;f&quot;]
+</code></pre>
+
+<p>这里还用了 loss-aware 虚拟预算。有丢包时，服务端不会直接相信瞬时 <code>available_kbps</code>，而是把可用于升档判断的预算压低。这样可以减少“看起来够带宽，实际一升就丢包”的赌博式升档。</p>
+<h2 id="一条下行-PC-里多路视频怎么分总预算"><a href="#一条下行-PC-里多路视频怎么分总预算" class="headerlink" title="一条下行 PC 里多路视频怎么分总预算"></a>一条下行 PC 里多路视频怎么分总预算</h2><p>统一下行 PeerConnection 的好处是协议层简单: 一个接收者只有一条 ICE&#x2F;DTLS&#x2F;SRTP&#x2F;TWCC 链路。代价是多个远端视频共享同一个 GoogCC 总预算。</p>
+<p>当前 NMRTC 没有开启焦点用户功能，所以采用严格平均分配:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs cpp">base_allocation = available_kbps / consumer_count;<br><br><span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span>* consumer : consumers) &#123;<br>    used = consumer-&gt;<span class="hljs-built_in">IncreaseLayer</span>(base_allocation);<br>&#125;<br><br><span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span>* consumer : consumers) &#123;<br>    consumer-&gt;<span class="hljs-built_in">ApplyLayers</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这套策略对四宫格会议比较稳: 每个远端拿到相近预算，不会出现某一路把剩余预算全部吃掉，导致其它路反复降档。</p>
+<p>如果未来开启焦点用户，可以在平均分配上增加一层 priority:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs text">第一轮: 每个 active consumer 先拿基础预算，保证至少可看。<br>第二轮: 剩余预算按 priority 分配，焦点用户权重大于背景用户。<br>第三轮: 统一 ApplyLayers，避免同一轮内 target 被反复覆盖。<br></code></pre></td></tr></table></figure>
+
+<p>比如焦点用户 priority&#x3D;10，背景用户 priority&#x3D;1。大屏用户优先升到 <code>f</code>，背景用户维持 <code>q</code> 或 <code>h</code>。但这里要注意一个工程细节: 同一个 consumer 不应该在同一轮里被多次“反向决策”。如果 base 阶段算出 <code>h</code>，excess 阶段又用很小剩余预算重新算回 <code>q</code>，就会制造额外切层和关键帧等待。因此 priority 分配必须和两阶段提交配套设计。</p>
+<h2 id="下行-SDP-不再声明-simulcast"><a href="#下行-SDP-不再声明-simulcast" class="headerlink" title="下行 SDP 不再声明 simulcast"></a>下行 SDP 不再声明 simulcast</h2><p>上行浏览器确实在发送 Simulcast，但下行浏览器不应该看到 <code>a=simulcast:send</code> 或 <code>a=rid:* send</code>。服务端已经在内部把 q&#x2F;h&#x2F;f 三路重写成一条出口视频流，下行 SDP 只需要声明:</p>
+<ul>
+<li>一个视频 media SSRC。</li>
+<li>一个 RTX SSRC。</li>
+<li>一个 FID group。</li>
+</ul>
+<p>这样浏览器侧把它当作普通单路视频接收。Simulcast 的复杂性被收敛在 SFU 内部，对下游解码器来说，切档后的流仍然像一条连续 VP8 流。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>会议 Simulcast 给 SFU 带来的能力，是让同一个上行发布者同时服务不同网络质量的订阅者。服务端仍然不解码、不重编码，只在 RTP 层做选择和重写。</p>
+<p>但这个能力要真正稳定可用，关键不只是“能读出 RID”:</p>
+<ol>
+<li>服务端要通过 RTP header extension 识别 q&#x2F;h&#x2F;f，并统计每档真实码率。</li>
+<li>GoogCC 给出的是下行 PC 总预算，服务端还要把预算分给多个 consumer。</li>
+<li>三路流的 seq、timestamp、VP8 picture_id 都独立，切档必须等关键帧并重写为连续出口流。</li>
+<li>弱网降档要有去抖、emergency、旧层限时续播和 NACK&#x2F;RTX 压制。</li>
+<li>升档要经过确认窗口、probe 隔离和 loss-aware 判断，避免赌博式反复震荡。</li>
+<li>多路视频共享一条 PC 时，默认平均分配最稳；未来焦点功能需要基于 priority 做剩余预算分配。</li>
+</ol>
+<p>从 NMRTC 的实践看，Simulcast 不是单个模块能解决的问题。它横跨前端编码参数、SDP 协商、上行 RID 统计、下行 BWE、RTP&#x2F;VP8 重写、NACK&#x2F;RTX 和重协商管理。只有这些环节的口径一致，会议弱网下的画面才会从“能连上”走向“能稳定看”。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>NMRTC 会议 Simulcast 智能选档实战</div>
+      <div>https://alberthello.github.io/2026/06/21/webrtc/nmrtc_meeting_simulcast/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年6月21日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年6月21日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/06/06/webrtc/nmrtc_weaknet_adaptive/" title="nmrtc 推拉流弱网自适应切档实战">
+                        <span class="hidden-mobile">nmrtc 推拉流弱网自适应切档实战</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
