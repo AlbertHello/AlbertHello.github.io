@@ -286,15 +286,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/02/25/webrtc/course-11-8-stun/" target="_self">
-          11.8 Stun
+        <a href="/2024/03/08/webrtc/cpp-variadic-templates/" target="_self">
+          可变参数模板
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/02/25/webrtc/course-11-8-stun/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/08/webrtc/cpp-variadic-templates/" target="_self">
         <div>
-          stun常用协议是rfc5389    stun body：0个或多个attribute     stun header：20个字节 msg type：两个字节 length：两个字节。不包括消息头的长度 cookie：四个字节 transaction ID：12个字节         M0M1：代表type C0C1：代表分类 0b00：c0&#x3D;0，c1&#x3D;0代表一个请求 0b0
+          可变参数模板C++11 引入了可变参数模板（Variadic templates），它允许你创建接受可变数量参数的模板函数和模板类。可变参数模板在编写泛型库、元编程等场景中非常有用。 可变参数模板的基本语法是在模板参数列表中使用省略号（…），表示可以接受任意数量的模板参数。在函数参数列表中也可以使用省略号，表示函数可以接受任意数量的参数。 下面是一个简单的可变参数模板函数示例，用于计算参数之和：
         </div>
       </a>
 
@@ -302,8 +302,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-02-25 19:27" pubdate>
-              2024-02-25
+            <time datetime="2024-03-08 09:16" pubdate>
+              2024-03-08
             </time>
           </div>
         
@@ -335,7 +335,7 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/STUN/">#STUN</a>
+              <a href="/tags/C/">#C++</a>
             
           </div>
         
@@ -349,15 +349,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/02/25/webrtc/course-11-7-ice-jseptransportcontroller/" target="_self">
-          11.7 ICE-JsepTransportController
+        <a href="/2024/03/08/webrtc/course-6-3/" target="_self">
+          6.3 编解码器信息收集
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/02/25/webrtc/course-11-7-ice-jseptransportcontroller/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/08/webrtc/course-6-3/" target="_self">
         <div>
-          JsepTransportController       jsep_transport 是一个各种transport的集合，webrtc中所有的transport都保存在jsep_transport中，比如rtp_transport&#x2F;rtp_dtls_transport等。 当然呃如果音视频复用一个通道，rtp和rtcp再复用一个通道，那么jsep_transport_by_name这
+          编解码器的信息收集               代码调用
         </div>
       </a>
 
@@ -365,8 +365,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-02-25 15:34" pubdate>
-              2024-02-25
+            <time datetime="2024-03-08 09:16" pubdate>
+              2024-03-08
             </time>
           </div>
         
@@ -398,7 +398,7 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/ICE/">#ICE</a>
+              <a href="/tags/SDP/">#SDP</a>
             
           </div>
         
@@ -412,15 +412,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/02/25/webrtc/course-11-6-ice-portallocatorsession/" target="_self">
-          11.6 ICE-PortAllocatorSession
+        <a href="/2024/03/08/webrtc/course-6-1-sdp/" target="_self">
+          6.1 sdp 类关系
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/02/25/webrtc/course-11-6-ice-portallocatorsession/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/08/webrtc/course-6-1-sdp/" target="_self">
         <div>
-          ICE candidate收集调用堆栈：  每个媒体数据就是p2pTransportChannel，但是音视频数据可以复用通道，则最终就创建一个p2pTransportChannel。 p2pTransportChannel类关系图：    创建AllocatorSession。P2PTransportChannel有个成员变量allocator_，它是在构造P2PTransportChannel
+          SDP 类关系      SDP 类关系如上所示：  SessionDescription 是 SDP的综合描述，包含三大成员变量，也就是三个基类。 三个基类：ContentGroup、TransportInfo、ContentInfo，他们都有一个content_name或者name成员变量，并且他们都是相同的，都是audio或者video媒体的名字：0 或者 1。这样在构造sdp或者在解析sd
         </div>
       </a>
 
@@ -428,8 +428,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-02-25 12:00" pubdate>
-              2024-02-25
+            <time datetime="2024-03-08 00:03" pubdate>
+              2024-03-08
             </time>
           </div>
         
@@ -461,7 +461,7 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/ICE/">#ICE</a>
+              <a href="/tags/SDP/">#SDP</a>
             
           </div>
         
@@ -475,15 +475,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/02/24/sth/linux_terminal/" target="_self">
-          Linux 终端常用命令
+        <a href="/2024/03/07/webrtc/course-11-18/" target="_self">
+          11.18 网络传输类关系
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/02/24/sth/linux_terminal/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/07/webrtc/course-11-18/" target="_self">
         <div>
-          Linux 终端常用命令  将光标移动到行首：Ctrl + a 将光标移动到行尾：Ctrl + e 删除&#x2F;剪切当前行：Ctrl + u 剪切&#x2F;删除光标处到行尾的字符：Ctrl + k 剪切（删除）光标前的一个单词：Ctrl + w 粘贴 Ctrl+u，Ctrl+k，Ctrl+w 删除的文本：Ctrl+y 复制命令行内容: Ctrl+Insert 粘贴命令行内容: Shift+I
+          网络传输类关系
         </div>
       </a>
 
@@ -491,132 +491,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-02-24 10:20" pubdate>
-              2024-02-24
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/sth/" class="category-chain-item">sth</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Linux/">#Linux</a>
-            
-              <a href="/tags/Terminal/">#Terminal</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/02/24/sth/linux_file/" target="_self">
-          Linux 文件权限
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/02/24/sth/linux_file/" target="_self">
-        <div>
-          Linux 文件权限概念文件权限是如何针对使用者与群组来设定的呢？这个部分相当重要，如果不懂这部分， 那么你将老是听不懂别人在说什么。尤其是当你屏幕上出现了「Permission deny」的时候  Linux 文件属性 切换到 root 账户[mrcode@study root]$ su -Password:Last login: Mon Oct  7 22:18:11 CST 2019 on
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-02-24 10:20" pubdate>
-              2024-02-24
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/sth/" class="category-chain-item">sth</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Linux/">#Linux</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/02/24/webrtc/course-11-1/" target="_self">
-          11.1 网络设备管理
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/02/24/webrtc/course-11-1/" target="_self">
-        <div>
-          继承关系  BasicNetworkingManager     MaybeStartGathering函数收集本地candidate，就会触发networks的创建。    StartUpdating函数中回发送kUpdateNetworksMessage消息，BasicNetworkingManager中的onMessage函数收到该消息开始创建netwotks   StartUpdating
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-02-24 10:20" pubdate>
-              2024-02-24
+            <time datetime="2024-03-07 08:47" pubdate>
+              2024-03-07
             </time>
           </div>
         
@@ -660,15 +536,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/02/24/webrtc/av-sync/" target="_self">
-          01音视频同步原理
+        <a href="/2024/03/06/webrtc/course-11-16-ice-full-and-ice-lite/" target="_self">
+          11.16 ICE-FULL &amp; ICE-LITE
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/02/24/webrtc/av-sync/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/06/webrtc/course-11-16-ice-full-and-ice-lite/" target="_self">
         <div>
-          RTC音视频同步原理一、音视频同步简介在实时音视频通信中，视频和音频的数据会经历从采集、编码、发送到接收、解码、渲染这些基本过程。在发送端，音频和视频数据有对应的采集时间，在接收端渲染音视频数据时，希望尽可能的保持音频和视频渲染的同步性，即同一时刻采集的音视频数据，在渲染时也同时刻播放(也称“唇音同步”)。在实时音视频通信的系统中，音频和视频的传输过程的任何一个环节(编码、网络传输、解码等)都可能
+          ICE-FULL &amp; ICE-LITE
         </div>
       </a>
 
@@ -676,130 +552,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-02-24 10:20" pubdate>
-              2024-02-24
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/WebRTC/">#WebRTC</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/02/24/webrtc/course-11-4-ip/" target="_self">
-          11.4 获取本地默认IP和端口
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/02/24/webrtc/course-11-4-ip/" target="_self">
-        <div>
-          源码分析：
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-02-24 10:20" pubdate>
-              2024-02-24
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/WebRTC/">#WebRTC</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/02/24/webrtc/course-11-5-ice/" target="_self">
-          11.5 ICE
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/02/24/webrtc/course-11-5-ice/" target="_self">
-        <div>
-          RFC 规范    新规范8445, 8838是补充协议，讲的是Trickle ICE              用于端口分配的类：PortAllocator，实际使用的是它的子类：BasicPortAllocator. PortAllocator中的createSession用于创建PortAllocatorSession，它同样是一个基类，用的是其子类BasicPortAllocatorSes
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-02-24 10:20" pubdate>
-              2024-02-24
+            <time datetime="2024-03-06 23:58" pubdate>
+              2024-03-06
             </time>
           </div>
         
@@ -845,15 +599,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/02/24/webrtc/course-12-1-rtp/" target="_self">
-          12.1 RTP协议
+        <a href="/2024/03/06/webrtc/course-11-15-ice/" target="_self">
+          11.15 ICE 提名
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/02/24/webrtc/course-12-1-rtp/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/06/webrtc/course-11-15-ice/" target="_self">
         <div>
-          组帧：    扩展头：  X位等于1时存在扩展头。
+          ICE 提名
         </div>
       </a>
 
@@ -861,8 +615,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-02-24 10:20" pubdate>
-              2024-02-24
+            <time datetime="2024-03-06 23:53" pubdate>
+              2024-03-06
             </time>
           </div>
         
@@ -894,9 +648,253 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/QOS/">#QOS</a>
+              <a href="/tags/ICE/">#ICE</a>
             
-              <a href="/tags/RTP/">#RTP</a>
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/03/06/webrtc/course-11-13-webrtc/" target="_self">
+          11.13 webrtc 网络建立
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/06/webrtc/course-11-13-webrtc/" target="_self">
+        <div>
+          webrtc 网络建立 其中Port是指webrtc中的Port对象，它包含本地ip、端口和 传输协议。远端candidate同样包含该三要素。
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-03-06 08:40" pubdate>
+              2024-03-06
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/03/06/webrtc/course-11-12-candidate/" target="_self">
+          11.12 candidate 上抛
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/06/webrtc/course-11-12-candidate/" target="_self">
+        <div>
+          candidate 上报给应用层
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-03-06 08:33" pubdate>
+              2024-03-06
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/03/06/webrtc/course-11-11-tcp-candidate/" target="_self">
+          11.11 tcp candidate
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/06/webrtc/course-11-11-tcp-candidate/" target="_self">
+        <div>
+          tcp candidate 收集
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-03-06 08:28" pubdate>
+              2024-03-06
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/03/06/webrtc/course-11-10-turn-candidate/" target="_self">
+          11.10 turn candidate
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/06/webrtc/course-11-10-turn-candidate/" target="_self">
+        <div>
+          turn 的request和response 发送turn请求          再次走到PrepareAddress()，开始发送请求    接收turn的response
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-03-06 08:27" pubdate>
+              2024-03-06
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+              <a href="/tags/TURN/">#TURN</a>
             
           </div>
         
@@ -908,7 +906,7 @@
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <a class="extend prev" rel="prev" href="/page/9/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/#board">8</a><a class="page-number" href="/page/9/#board">9</a><span class="page-number current">10</span><a class="page-number" href="/page/11/#board">11</a><a class="page-number" href="/page/12/#board">12</a><a class="extend next" rel="next" href="/page/11/#board"><i class="iconfont icon-arrowright"></i></a>
+      <a class="extend prev" rel="prev" href="/page/9/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/#board">8</a><a class="page-number" href="/page/9/#board">9</a><span class="page-number current">10</span><a class="page-number" href="/page/11/#board">11</a><a class="page-number" href="/page/12/#board">12</a><a class="page-number" href="/page/13/#board">13</a><a class="extend next" rel="next" href="/page/11/#board"><i class="iconfont icon-arrowright"></i></a>
     </span>
   </nav>
 

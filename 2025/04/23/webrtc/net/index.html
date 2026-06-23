@@ -1,0 +1,1072 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="认识 webrtc 网络关键类  BasicNetworkManager：全局对象。  在 CreatePeerConnectionFactory() 函数中创建，具体点儿是 CreatePeerConnectionFactory()&#x20;&#x51FD;数创建 ConnectionContext 对象（context_）时在它的构造函数里创建的，也就是创建PeerConnectionFac">
+<meta property="og:type" content="article">
+<meta property="og:title" content="webrtc 网络关键类了解">
+<meta property="og:url" content="https://alberthello.github.io/2025/04/23/webrtc/net/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="认识 webrtc 网络关键类  BasicNetworkManager：全局对象。  在 CreatePeerConnectionFactory() 函数中创建，具体点儿是 CreatePeerConnectionFactory()&#x20;&#x51FD;数创建 ConnectionContext 对象（context_）时在它的构造函数里创建的，也就是创建PeerConnectionFac">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-04-23T09:09:50.000Z">
+<meta property="article:modified_time" content="2026-06-23T09:17:19.954Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="博客，技术，生活，分享">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>webrtc 网络关键类了解 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="webrtc 网络关键类了解"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-04-23 17:09" pubdate>
+          2025年4月23日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          8.4k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">webrtc 网络关键类了解</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-06-23T17:17:19+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <p>认识 webrtc 网络关键类</p>
+<ul>
+<li><p><strong>BasicNetworkManager</strong>：<strong>全局对象。</strong></p>
+<ul>
+<li><p>在 <strong>CreatePeerConnectionFactory()</strong> 函数中创建，具体点儿是 <strong>CreatePeerConnectionFactory()&#x20;</strong>&#x51FD;数创建 <strong>ConnectionContext</strong> 对象（context_）时在它的构造函数里创建的，也就是创建PeerConnectionFactory的前一步创建的。参考 peer_connection_factory的创建</p>
+</li>
+<li><p>将来创建 BasicPortAllocator 时 BasicNetworkManager会被当做入参使用。</p>
+</li>
+<li><p>被 ConnectionContext 持有，PeerConnectionFactory 又持有着context_</p>
+</li>
+<li><p>在 BasicPortAllocatorSession 构造时触发 <strong>BasicNetworkManager::StartUpdating()</strong>。M146 中这里投递 <code>UpdateNetworksContinually()</code> task，遍历网卡并创建对应的 Network 对象。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>BasicPacketSocketFactory：全局对象</strong></p>
+<ul>
+<li><p>和 BasicNetworkManager 一起被创建，全局对象，被 ConnectionContext 持有。</p>
+</li>
+<li><p>将来创建 BasicPortAllocator 时 BasicPacketSocketFactory 会被当做入参使用。BasicPortAllocator 持有它，BasicPortAllocatorSession 通过 allocator 拿到 socket_factory_，最后在 AllocationSequence::Init 中调用 <code>CreateUdpSocket()</code> 创建底层物理 socket。参考：webrtc物理socket的创建</p>
+</li>
+</ul>
+</li>
+<li><p><strong>BasicPortAllocator</strong>：&#x20;</p>
+<ul>
+<li><p>BasicPortAllocator 是一个子类，它继承自 PortAllocator</p>
+</li>
+<li><p>BasicPortAllocator 对象是在 <strong>PeerConnectionFactory::CreatePeerConnectionOrError</strong> 中创建的，也就是创建 peerconnection 的前一步创建的。参考peer_connection的创建</p>
+</li>
+<li><p>同样在 peerconnection 初始化的时候 BasicPortAllocator 也初始化。</p>
+</li>
+<li><p>BasicPortAllocator 的构造函数核心入参是 <code>Environment</code>、<strong>BasicNetworkManager</strong>、<strong>BasicPacketSocketFactory</strong>、<code>TurnCustomizer</code>，其中网络管理和 socket 工厂最关键。</p>
+</li>
+<li><p>创建 <strong>JsepTransportController&#x20;</strong>&#x65F6;，BasicPortAllocator 被当做入参传入，JsepTransportController 在创建P2PTransportChannel 时，再把 BasicPortAllocator 传给 p2p。</p>
+</li>
+<li><p>p2p 在 <strong>MaybeStartGathering()</strong> 函数中通过 BasicPortAllocator 调用 <strong>PortAllocator::CreateSession</strong>，函数内部再调用 <strong>BasicPortAllocator::CreateSessionInternal&#x20;</strong>&#x51FD;数，在该函数内创建 BasicPortAllocatorSession，BasicPortAllocatorSession 也持有了 BasicPortAllocator</p>
+</li>
+</ul>
+</li>
+<li><p><strong>BasicPortAllocatorSession</strong>： 网络活动相关类，通过 network thread 上的 task 串起配置、分配、候选者收集流程。</p>
+<ul>
+<li><p>它也是一个子类，继承自 PortAllocatorSession</p>
+</li>
+<li><p>它是在 <strong>BasicPortAllocator::CreateSessionInternal()</strong> 函数创建的，是 p2p 的 MaybeStartGathering 函数通过持有的 BasicPortAllocator 触发创建的。</p>
+</li>
+<li><p>BasicPortAllocatorSession 的构造函数中通过持有的 BasicPortAllocator 拿到了 BasicNetworkManager，调用 <strong>BasicNetworkManager::StartUpdating()</strong> 开始触发创建 Network 对象。M146 中第一次更新是 <code>PostTask(UpdateNetworksContinually)</code>，后续每 2 秒 <code>PostDelayedTask</code> 重新遍历一次网卡。</p>
+</li>
+<li><p>p2p 在创建 BasicPortAllocatorSession 后，再调用 BasicPortAllocatorSession::StartGettingPorts() 函数，在该函数内 <code>PostTask(GetPortConfigurations)</code>，开始触发 port allocate 机制，参考 BasicPortAllocatorSession 文档中的任务机制。</p>
+</li>
+<li><p>它在 <strong>OnAllocate()</strong> 中调用 <strong>DoAllocate()</strong>，遍历 Networks，为其创建对应的 <strong>AllocationSequence</strong> 对象，AllocationSequence 要参考 AllocationSequence 详解。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Network</strong>： <strong>在 BasicNetworkManager::CreateNetworks 中被创建，其实就是一个网卡上携带的网络接口信息</strong></p>
+<ul>
+<li><p>好理解的解释是一个网卡就是一个 Network 类，说准确点儿：因为一个网卡可能会还有多个 IP 地址也就是会有多个网络接口信息，所以最准确的就是一个 Network 类就是一个网络接口信息。通过各平台系统 API 获取网卡信息，包含ip 地址，网络类型、等很多信息。</p>
+</li>
+<li><p>该函数会周期性调用，创建完 Network 后通过 <code>NotifyNetworksChanged()</code> 通知 <strong>BasicPortAllocatorSession::OnNetworksChanged()</strong>。BasicPortAllocatorSession 拿到 network 后并不是全用，会根据 allocator flags 和上层 config 过滤 network，比如 link-local、high cost、loopback、IPv6 数量限制等。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>AllocationSequence：官方解释即按照顺序（定时）的方式为给定的网络和 IP 地址执行端口分配。</strong></p>
+<ul>
+<li><p>BasicPortAllocatorSession::DoAllocate 函数触发创建，每个 Network 对象对应一个 sequence，每个 sequence 对象又持有一个 <strong>UDPPort</strong> 对象。AllocationSequence 参考 AllocationSequence 详解。</p>
+</li>
+<li><p>AllocationSequence 能创建 UDPPort、StunPort、RelayPort 和 TCPPort，而 candidate 又是在这些 port 中创建的。port 创建完成后会通过 <code>SubscribeCandidateReadyCallback</code>、<code>SubscribePortComplete</code>、<code>SubscribePortError</code> 等回调通知 session，所以总体来说 AllocationSequence 就是封装了这几类 Port 对象的创建过程，便于 session 调用。</p>
+</li>
+<li><p>AllocationSequence 的 <code>Init()</code> 很关键：共享 UDP socket 就是在这里创建的，socket 的收包回调会先进 <code>AllocationSequence::OnReadPacket</code>，再由 sequence 分发给对应 Port 对象的 <code>OnReadPacket</code>。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>UDPPort：UDP 类型的 ICE Port，负责创建 host candidate，并在共享 UDP socket 模式下配合 STUN server 创建 srflx candidate。</strong></p>
+<ul>
+<li><p>BasicPortAllocatorSession 创建 <strong>AllocationSequence</strong> 时，依次调用 AllocationSequence 的 Init 函数、Start 函数。M146 中 Start 会在 network thread 上投递 <code>Process(epoch)</code> task，开始触发创建 port 对象。</p>
+</li>
+<li><p>UDPPort、StunPort、RelayPort 和 TCPPort 都有一个类方法：<code>Create()</code>。创建相应的 port 对象时，都是先调用该类方法创建实例，之后再调用实例的 init 函数。</p>
+</li>
+<li><p>port 会关联一个 socket 实例，这是创建 Port 时由 sequence 传递给 port 的。port 初始化时会注册 socket 的收发、可写、本地地址等回调，后续 candidate、STUN、媒体包都会从这个 socket 进入 port。</p>
+</li>
+<li><p>创建完 port 对象后，session 会用 <code>PortData</code> 持有该 port，并注册 candidate ready、candidate error、port complete、port destroyed、port error 等回调，最后触发 port 开始创建 candidate。</p>
+</li>
+<li><p>在UDPPort::PrepareAddress()函数里面通过 socket 获取到该 socket 的本地 IP 和 端口后，开始创建 candidate 对象。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Candidate：信令协商候选者。有收集、排序和连通性检测三大过程。</strong></p>
+<ul>
+<li><p>在 UDPPort::OnLocalAddressReady中拿到了本地 socket 的 ip 和 port 开始触发创建 candidate</p>
+</li>
+<li><p>最后一步把创建完本地类型的 candidate 回调给 BasicPortAllocatorSession::OnCandidateReady</p>
+</li>
+</ul>
+</li>
+<li><p><strong>Connection:  代指本端端口和远端端口之间的一个连接。stun 消息、RTCP 消息和媒体数据就是从这里传递的。</strong></p>
+<ul>
+<li><p>顾名思义就是本地端口和远端端口之间的一个连接。connection 对象是在 SetRemoteDescription 时，p2p 拿到了远端的 candidate 创建的，connection 的读写状态、建联状态都会回调给 p2p。</p>
+</li>
+<li><p>紧接着 p2p 就会对 connection 进行排序、选择、裁剪和连通性检测，具体过程参见：ICE 建联</p>
+</li>
+<li><p>connection 在收到stun binding response 后就表示ice 建联成功了，媒体数据也就开始从远端下发了。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>P2PTransportChannel：这是一个极其重要的类，该类管理着候选者和通道建联的过程。</strong></p>
+<ul>
+<li><p>port 创建、candidate 收集、ice 建联、媒体数据等这些状态&#x2F;数据的回调都会汇集到p2p</p>
+</li>
+<li><p>offer 创建完后 SetLocalDescription 时参考SetLocalDescription，是在 JsepTransportController::CreateIceTransport 函数中被创建出来。如果 rtp 和 rtcp 是复用的，就只会创建一个 p2p。</p>
+</li>
+<li><p>p2p 被创建时 BasicPortAllocator 也被作为入参传给了 p2p。p2p 持有它是为了在 offer setLocal 成功后创建 BasicPortAllocatorSession。创建完 session 后，p2p 订阅 session 的 Port ready、candidate ready、candidate removed、candidate allocation done 等回调，然后通过 session 的 StartGettingPorts 函数开始触发 port allocate 机制。session 遍历 Networks 创建 AllocationSequence，AllocationSequence::Init 创建 socket，Start&#x2F;Process 创建 port，port 再开始收集 candidate。</p>
+</li>
+<li><p>port 创建完成、candidate 收集完成回调给 session，session 再回调给 p2p</p>
+</li>
+<li><p>开始 SetRemoteDescription 后，在 answer 里拿到了 remote candidate，p2p 准备创建 connection，并且把创建的 connection 加入到 connections_ 数组。然后设置 connection 的读写、状态、提名、错误等回调给 p2p。</p>
+</li>
+<li><p>之后便进行 connection 排序、对选中的 connection 发起 ping，也就是通过上面创建的 socket 向远端目标地址发起 stun binding request。port 对象 OnReadPacket 函数收到远端数据，便完成了 ice 建联，有了数据通道。再区分 stun 包还是媒体包逐级往上层回调。具体过程参见SetRemoteDescription 和 ICE 建联相关文档</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="BasicNetworkManager-类图"><a href="#BasicNetworkManager-类图" class="headerlink" title="BasicNetworkManager 类图"></a>BasicNetworkManager 类图</h4><p>按 WebRTC M146 更新代码，更新于 2026-06-20</p>
+<pre><code class=" mermaid">classDiagram
+    direction LR
+
+    class DefaultLocalAddressProvider &#123;
+        &lt;&lt;interface&gt;&gt;
+        +GetDefaultLocalAddress()
+    &#125;
+
+    class MdnsResponderProvider &#123;
+        &lt;&lt;interface&gt;&gt;
+        +GetMdnsResponder()
+    &#125;
+
+    class NetworkManager &#123;
+        &lt;&lt;interface&gt;&gt;
+        +StartUpdating()
+        +StopUpdating()
+        +GetNetworks()
+        +GetAnyAddressNetworks()
+        +NotifyNetworksChanged()
+    &#125;
+
+    class NetworkManagerBase &#123;
+        -networks_
+        -networks_map_
+        -default_local_ipv4_address_
+        -default_local_ipv6_address_
+        -next_available_network_id_
+        +GetNetworks()
+        +GetAnyAddressNetworks()
+        +GetDefaultLocalAddress()
+        #MergeNetworkList()
+        #CreateNetwork()
+    &#125;
+
+    class NetworkBinderInterface &#123;
+        &lt;&lt;interface&gt;&gt;
+        +BindSocketToNetwork()
+    &#125;
+
+    class BasicNetworkManager &#123;
+        -env_
+        -thread_
+        -start_count_
+        -sent_first_update_
+        -socket_factory_
+        -network_monitor_factory_
+        -network_monitor_
+        -task_safety_flag_
+        +StartUpdating()
+        +StopUpdating()
+        #CreateNetworks()
+        #QueryDefaultLocalAddress()
+        -StartNetworkMonitor()
+        -StopNetworkMonitor()
+        -OnNetworksChanged()
+        -UpdateNetworksOnce()
+        -UpdateNetworksContinually()
+    &#125;
+
+    class Network &#123;
+        -name_
+        -description_
+        -prefix_
+        -prefix_length_
+        -ips_
+        -type_
+        -ignored_
+        -active_
+        +AddIP()
+        +SetIPs()
+        +GetBestIP()
+        +GetCost()
+    &#125;
+
+    class NetworkMonitorFactory &#123;
+        &lt;&lt;interface&gt;&gt;
+        +CreateNetworkMonitor()
+    &#125;
+
+    class NetworkMonitorInterface &#123;
+        &lt;&lt;interface&gt;&gt;
+        +Start()
+        +Stop()
+        +GetInterfaceInfo()
+        +BindSocketToNetwork()
+    &#125;
+
+    class SocketFactory &#123;
+        &lt;&lt;interface&gt;&gt;
+        +CreateSocket()
+    &#125;
+
+    class Thread &#123;
+        +PostTask(task)
+        +PostDelayedTask(task, delay)
+    &#125;
+
+    DefaultLocalAddressProvider &lt;|-- NetworkManager : 继承
+    MdnsResponderProvider &lt;|-- NetworkManager : 继承
+    NetworkManager &lt;|-- NetworkManagerBase : 继承
+    NetworkManagerBase &lt;|-- BasicNetworkManager : 继承
+    NetworkBinderInterface &lt;|-- BasicNetworkManager : 实现
+
+    NetworkManagerBase *-- Network : 持有复用Network
+    Network --&gt; DefaultLocalAddressProvider : 使用
+    Network --&gt; MdnsResponderProvider : 使用
+    BasicNetworkManager --&gt; Network : CreateNetworks创建
+    BasicNetworkManager o-- NetworkMonitorFactory : 持有指针
+    BasicNetworkManager *-- NetworkMonitorInterface : 持有调用
+    NetworkMonitorFactory --&gt; NetworkMonitorInterface : 创建
+    BasicNetworkManager o-- SocketFactory : 持有使用
+    BasicNetworkManager --&gt; Thread : 投递任务
+</code></pre>
+
+<h4 id="关系说明"><a href="#关系说明" class="headerlink" title="关系说明"></a>关系说明</h4><ul>
+<li><p><code>BasicNetworkManager</code> 不是直接从零保存所有网卡对象，它继承 <code>NetworkManagerBase</code>，真正复用和持有 <code>Network</code> 对象的是基类里的 <code>networks_map_</code> 和 <code>networks_</code>。</p>
+</li>
+<li><p><code>StartUpdating()</code> 第一次启动时记录当前 <code>Thread</code>，创建 <code>PendingTaskSafetyFlag</code>，投递 <code>UpdateNetworksContinually()</code>，并尝试启动 <code>NetworkMonitorInterface</code>。M146 中网络更新由 <code>PostTask/PostDelayedTask + NotifyNetworksChanged()</code> 驱动。</p>
+</li>
+<li><p><code>CreateNetworks()</code> 负责调用平台 API 枚举网卡：POSIX 走 <code>getifaddrs + ConvertIfAddrs()</code>，Windows 走 <code>GetAdaptersAddresses()</code>；每个网络前缀最终会被转换成一个 <code>Network</code> 对象。</p>
+</li>
+<li><p><code>MergeNetworkList()</code> 在 <code>NetworkManagerBase</code> 中做增量合并：已有 <code>Network</code> 会复用，新 <code>Network</code> 分配 <code>id</code>，消失的网络不会马上删除，而是标记为 inactive。</p>
+</li>
+<li><p><code>NetworkMonitorFactory</code> 如果存在，会创建 <code>NetworkMonitorInterface</code>。它可以提供更准确的网卡类型、VPN 底层类型、网络偏好，也可以在 Android 等平台支持把 socket 绑定到指定网络。</p>
+</li>
+<li><p><code>SocketFactory</code> 主要在 <code>QueryDefaultLocalAddress()</code> 中创建 UDP socket，连接到公共 DNS 地址来反查当前默认出口 IP，用于多网卡场景下的默认本地地址判断。</p>
+</li>
+</ul>
+<h4 id="源码依据"><a href="#源码依据" class="headerlink" title="源码依据"></a>源码依据</h4><ul>
+<li><code>webrtc_m146/src/rtc_base/network.h</code>：<code>NetworkManager</code>、<code>NetworkManagerBase</code>、<code>BasicNetworkManager</code>、<code>Network</code> 的声明。</li>
+<li><code>webrtc_m146/src/rtc_base/network.cc</code>：<code>StartUpdating()</code>、<code>UpdateNetworksOnce()</code>、<code>UpdateNetworksContinually()</code>、<code>CreateNetworks()</code>、<code>MergeNetworkList()</code> 等实现。</li>
+<li><code>webrtc_m146/src/rtc_base/network_monitor.h</code> 和 <code>webrtc_m146/src/rtc_base/network_monitor_factory.h</code>：<code>NetworkMonitorInterface</code> 与 <code>NetworkMonitorFactory</code> 的声明。</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>webrtc 网络关键类了解</div>
+      <div>https://alberthello.github.io/2025/04/23/webrtc/net/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年4月23日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年6月23日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/06/13/webrtc/AllocationSequence%E8%AF%A6%E8%A7%A3/" title="webrtc之AllocationSequence详解">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">webrtc之AllocationSequence详解</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/03/19/webrtc/rtp-h264-stap-a-fu-a/" title="rtp 传输视频数据的封装格式stap-a、fu-a">
+                        <span class="hidden-mobile">rtp 传输视频数据的封装格式stap-a、fu-a</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

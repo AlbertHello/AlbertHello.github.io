@@ -1,0 +1,1120 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="阅读本文之前建议先读： webrtc 之创建 peer_connection、 WebRTC 之 SetLocalDescription    阅读本文之后你将了解：  RtpTransceiver 是什么？  RtpTransceiver 和 RtpSender、RtpReceiver、VoiceChannel、VideoChannel 是什么关系？  SetLocalDescription">
+<meta property="og:type" content="article">
+<meta property="og:title" content="webrtc之RtpTransceiver详解">
+<meta property="og:url" content="https://alberthello.github.io/2025/09/10/webrtc/RtpTransceiver/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="阅读本文之前建议先读： webrtc 之创建 peer_connection、 WebRTC 之 SetLocalDescription    阅读本文之后你将了解：  RtpTransceiver 是什么？  RtpTransceiver 和 RtpSender、RtpReceiver、VoiceChannel、VideoChannel 是什么关系？  SetLocalDescription">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-10T02:22:23.000Z">
+<meta property="article:modified_time" content="2026-06-23T09:28:57.497Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="博客，技术，生活，分享">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>webrtc之RtpTransceiver详解 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="webrtc之RtpTransceiver详解"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-09-10 10:22" pubdate>
+          2025年9月10日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          15k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">webrtc之RtpTransceiver详解</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-06-23T17:28:57+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>阅读本文之前建议先读：<a href=""> webrtc 之创建 peer_connection</a>、<a href=""> WebRTC 之 SetLocalDescription</a></p>
+</blockquote>
+<hr>
+<blockquote>
+<p>阅读本文之后你将了解：</p>
+<ol>
+<li><p>RtpTransceiver 是什么？</p>
+</li>
+<li><p>RtpTransceiver 和 RtpSender、RtpReceiver、VoiceChannel、VideoChannel 是什么关系？</p>
+</li>
+<li><p>SetLocalDescription 时为什么会创建 VoiceChannel &#x2F; VideoChannel？</p>
+</li>
+<li><p>media engine 创建的 send&#x2F;receive channel 和 WebRTC pc 层的 Channel 是什么关系？</p>
+</li>
+</ol>
+</blockquote>
+<hr>
+<h3 id="RtpTransceiver-是什么？"><a href="#RtpTransceiver-是什么？" class="headerlink" title="RtpTransceiver 是什么？"></a>RtpTransceiver 是什么？</h3><p><code>RtpTransceiver</code> 是 Unified Plan 中非常关键的对象。它不是网络收发类，也不是 SDP 文本对象，而是把一个 m 行对应的 RTP 发送、接收、媒体通道和底层传输通道串起来的对象。</p>
+<p>官方源码注释说得很直接：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-comment">// Audio RtpTransceivers will have AudioRtpSenders, AudioRtpReceivers,</span><br><span class="hljs-comment">// and a VoiceChannel. Video RtpTransceivers will have VideoRtpSenders,</span><br><span class="hljs-comment">// VideoRtpReceivers, and a VideoChannel.</span><br></code></pre></td></tr></table></figure>
+
+<p>也就是说：</p>
+<ul>
+<li><p>audio 类型的 RtpTransceiver 持有 audio sender、audio receiver，最终绑定一个 <code>VoiceChannel</code>。</p>
+</li>
+<li><p>video 类型的 RtpTransceiver 持有 video sender、video receiver，最终绑定一个 <code>VideoChannel</code>。</p>
+</li>
+<li><p>一个 transceiver 通常对应 SDP 中的一个 m 行，<code>mid_</code> 就是该 m 行的 mid。</p>
+</li>
+</ul>
+<hr>
+<h3 id="类关系图（M146）"><a href="#类关系图（M146）" class="headerlink" title="类关系图（M146）"></a>类关系图（M146）</h3><pre><code class=" mermaid">classDiagram
+    direction LR
+
+    class SdpOfferAnswerHandler &#123;
+        +UpdateTransceiversAndDataChannels()
+        +UpdateTransceiverChannel()
+    &#125;
+
+    class RtpTransceiver &#123;
+        -mid_
+        -media_type_
+        -senders_
+        -receivers_
+        -channel_
+        -transport_name_
+        -owned_send_channel_
+        -owned_receive_channel_
+        -media_engine_ref_
+        +CreateChannel()
+        +SetChannel()
+        +ClearChannel()
+        +PushNewMediaChannel()
+        +SetChannelLocalContent()
+        +SetChannelRemoteContent()
+    &#125;
+
+    class RtpSender &#123;
+        +SetMediaChannel()
+        +SetCachedParameters()
+    &#125;
+
+    class RtpReceiver &#123;
+        +SetMediaChannel()
+    &#125;
+
+    class ChannelInterface &#123;
+        &lt;&lt;interface&gt;&gt;
+        +SetRtpTransport()
+        +media_send_channel()
+        +media_receive_channel()
+    &#125;
+
+    class VoiceChannel &#123;
+        +SetLocalContent()
+        +SetRemoteContent()
+    &#125;
+
+    class VideoChannel &#123;
+        +SetLocalContent()
+        +SetRemoteContent()
+    &#125;
+
+    class MediaEngineInterface &#123;
+        +voice()
+        +video()
+    &#125;
+
+    class MediaSendChannelInterface &#123;
+        &lt;&lt;interface&gt;&gt;
+        +GetRtpSendParameters()
+    &#125;
+
+    class MediaReceiveChannelInterface &#123;
+        &lt;&lt;interface&gt;&gt;
+        +ChooseReceiverReportSsrc()
+    &#125;
+
+    class RtpTransportInternal &#123;
+        +transport_name()
+    &#125;
+
+    class ConnectionContext &#123;
+        +signaling_thread()
+        +worker_thread()
+        +network_thread()
+        +media_engine()
+    &#125;
+
+    SdpOfferAnswerHandler --&gt; RtpTransceiver : 调用更新通道
+    RtpTransceiver o-- RtpSender : 持有发送器
+    RtpTransceiver o-- RtpReceiver : 持有接收器
+    RtpTransceiver *-- ChannelInterface : 持有媒体通道
+    ChannelInterface &lt;|-- VoiceChannel : 音频实现
+    ChannelInterface &lt;|-- VideoChannel : 视频实现
+    RtpTransceiver --&gt; MediaEngineInterface : 使用创建media通道
+    VoiceChannel *-- MediaSendChannelInterface : 持有发送通道
+    VoiceChannel *-- MediaReceiveChannelInterface : 持有接收通道
+    VideoChannel *-- MediaSendChannelInterface : 持有发送通道
+    VideoChannel *-- MediaReceiveChannelInterface : 持有接收通道
+    RtpTransceiver --&gt; RtpTransportInternal : 绑定RTP传输
+    RtpTransceiver o-- ConnectionContext : 使用三大线程
+</code></pre>
+
+<hr>
+<h3 id="重要成员变量"><a href="#重要成员变量" class="headerlink" title="重要成员变量"></a>重要成员变量</h3><ul>
+<li><p><code>media_type_</code>：区分 audio &#x2F; video。它决定后面创建 <code>VoiceChannel</code> 还是 <code>VideoChannel</code>。</p>
+</li>
+<li><p><code>mid_</code>：和 SDP m 行绑定的 mid。<code>UpdateTransceiverChannel</code> 传入的 <code>content.mid()</code> 最终会保存到这里。</p>
+</li>
+<li><p><code>senders_</code>：当前 transceiver 管理的 <code>RtpSender</code> 列表。Unified Plan 下通常是一个 sender。</p>
+</li>
+<li><p><code>receivers_</code>：当前 transceiver 管理的 <code>RtpReceiver</code> 列表。Unified Plan 下通常是一个 receiver。</p>
+</li>
+<li><p><code>channel_</code>：真正和 RTP media channel、RTP transport 关联的 pc 层通道对象。audio 是 <code>VoiceChannel</code>，video 是 <code>VideoChannel</code>。</p>
+</li>
+<li><p><code>transport_name_</code>：<code>SetChannel</code> 绑定 <code>RtpTransportInternal</code> 后保存的 transport name，一般就是 mid。</p>
+</li>
+<li><p><code>owned_send_channel_ / owned_receive_channel_</code>：有些构造路径会提前创建 media engine 的 send&#x2F;receive channel，等 <code>CreateChannel</code> 时再包装成 <code>VoiceChannel</code> 或 <code>VideoChannel</code>。</p>
+</li>
+<li><p><code>media_engine_ref_</code>：用于在 worker thread 上安全访问 <code>ConnectionContext</code> 里的 media engine。</p>
+</li>
+<li><p><code>context_</code>：拿三大线程、media engine、ssrc generator 等公共资源。</p>
+</li>
+</ul>
+<hr>
+<h3 id="RtpTransceiver-的创建时机"><a href="#RtpTransceiver-的创建时机" class="headerlink" title="RtpTransceiver 的创建时机"></a>RtpTransceiver 的创建时机</h3><p>RtpTransceiver 的创建来源主要有两类：</p>
+<ul>
+<li><p>应用层主动添加媒体：<code>AddTrack</code> 或 <code>AddTransceiver</code> 会创建 sender、receiver 和 transceiver。</p>
+</li>
+<li><p>SDP 协商过程中根据 m 行补齐：<code>SdpOfferAnswerHandler::UpdateTransceiversAndDataChannels</code> 会把 m 行和已有或新建的 transceiver 关联起来。</p>
+</li>
+</ul>
+<p>在 <code>PeerConnection</code> 构造函数里还会针对 Plan B 创建默认 audio&#x2F;video transceiver，但 M146 主线推荐 Unified Plan，后面重点按 Unified Plan 理解即可。</p>
+<hr>
+<h3 id="SetLocalDescription-中如何走到-RtpTransceiver？"><a href="#SetLocalDescription-中如何走到-RtpTransceiver？" class="headerlink" title="SetLocalDescription 中如何走到 RtpTransceiver？"></a>SetLocalDescription 中如何走到 RtpTransceiver？</h3><p>关键调用链：</p>
+<ul>
+<li><p>PeerConnection::SetLocalDescription</p>
+<ul>
+<li><p>SdpOfferAnswerHandler::SetLocalDescription</p>
+<ul>
+<li><p>SdpOfferAnswerHandler::ApplyLocalDescription</p>
+<ul>
+<li><p>SdpOfferAnswerHandler::UpdateTransceiversAndDataChannels</p>
+<ul>
+<li><p>SdpOfferAnswerHandler::AssociateTransceiver</p>
+</li>
+<li><p>SdpOfferAnswerHandler::UpdateTransceiverChannel</p>
+<ul>
+<li>RtpTransceiver::CreateChannel</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><code>UpdateTransceiverChannel</code> 本身不直接创建 <code>VoiceChannel/VideoChannel</code>，它只是判断当前 content 是否 rejected，以及这个 transceiver 是否已经有 channel。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">RTCError <span class="hljs-title">SdpOfferAnswerHandler::UpdateTransceiverChannel</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;RtpTransceiverProxyWithInternal&lt;RtpTransceiver&gt;&gt; transceiver,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> ContentInfo&amp; content,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> ContentGroup* bundle_group)</span> </span>&#123;<br>  <span class="hljs-keyword">if</span> (content.rejected) &#123;<br>    <span class="hljs-keyword">if</span> (transceiver-&gt;<span class="hljs-built_in">internal</span>()-&gt;<span class="hljs-built_in">HasChannel</span>()) &#123;<br>      transceiver-&gt;<span class="hljs-built_in">internal</span>()-&gt;<span class="hljs-built_in">ClearChannel</span>();<br>    &#125;<br>  &#125; <span class="hljs-keyword">else</span> &#123;<br>    <span class="hljs-keyword">if</span> (!transceiver-&gt;<span class="hljs-built_in">internal</span>()-&gt;<span class="hljs-built_in">HasChannel</span>()) &#123;<br>      <span class="hljs-keyword">auto</span> error = transceiver-&gt;<span class="hljs-built_in">internal</span>()-&gt;<span class="hljs-built_in">CreateChannel</span>(<br>          content.<span class="hljs-built_in">mid</span>(), pc_-&gt;<span class="hljs-built_in">call_ptr</span>(), pc_-&gt;<span class="hljs-built_in">configuration</span>()-&gt;media_config,<br>          pc_-&gt;<span class="hljs-built_in">SrtpRequired</span>(), pc_-&gt;<span class="hljs-built_in">GetCryptoOptions</span>(), <span class="hljs-built_in">audio_options</span>(),<br>          <span class="hljs-built_in">video_options</span>(), video_bitrate_allocator_factory_.<span class="hljs-built_in">get</span>(),<br>          [&amp;](absl::string_view mid) &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-built_in">transport_controller_n</span>()-&gt;<span class="hljs-built_in">GetRtpTransport</span>(mid);<br>          &#125;);<br>      <span class="hljs-keyword">if</span> (!error.<span class="hljs-built_in">ok</span>()) &#123;<br>        <span class="hljs-keyword">return</span> error;<br>      &#125;<br>    &#125;<br>  &#125;<br>  <span class="hljs-keyword">return</span> RTCError::<span class="hljs-built_in">OK</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>所以这一步准确地说是：<strong>SetLocalDescription 应用 SDP 时，为每个未拒绝的 audio&#x2F;video m 行确保 RtpTransceiver 拥有一个对应的 VoiceChannel 或 VideoChannel。</strong></p>
+<hr>
+<h3 id="CreateChannel-具体做了什么？"><a href="#CreateChannel-具体做了什么？" class="headerlink" title="CreateChannel 具体做了什么？"></a>CreateChannel 具体做了什么？</h3><p><code>RtpTransceiver::CreateChannel</code> 分两段：</p>
+<ul>
+<li><p>第一段切到 worker thread。如果构造 transceiver 时已经提前创建了 <code>owned_send_channel_ / owned_receive_channel_</code>，这里会优先复用；否则通过 media engine 创建新的 send&#x2F;receive channel，并包装成 <code>VoiceChannel</code> 或 <code>VideoChannel</code>。</p>
+</li>
+<li><p>第二段调用 <code>SetChannel</code>，切到 network thread，把 channel 绑定到前面 <code>JsepTransportController</code> 创建好的 <code>RtpTransportInternal</code>。</p>
+</li>
+</ul>
+<pre><code class=" mermaid">sequenceDiagram
+    participant SOA as SdpOfferAnswerHandler
+    participant RT as RtpTransceiver
+    participant W as worker_thread
+    participant ME as MediaEngine
+    participant Ch as VoiceChannel/VideoChannel
+    participant N as network_thread
+    participant RTP as RtpTransportInternal
+
+    SOA-&gt;&gt;RT: CreateChannel(mid, transport_lookup)
+    RT-&gt;&gt;W: BlockingCall
+    W-&gt;&gt;ME: CreateMediaContentChannels()
+    ME--&gt;&gt;W: MediaSendChannel + MediaReceiveChannel
+    W-&gt;&gt;Ch: CreateMediaChannel()
+    RT-&gt;&gt;N: BlockingCall(SetChannel)
+    N-&gt;&gt;RTP: transport_lookup(mid)
+    N-&gt;&gt;Ch: SetRtpTransport(transport)
+</code></pre>
+
+<p>核心代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">RTCError <span class="hljs-title">RtpTransceiver::CreateChannel</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    absl::string_view mid,</span></span><br><span class="hljs-params"><span class="hljs-function">    Call* call_ptr,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> MediaConfig&amp; media_config,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">bool</span> srtp_required,</span></span><br><span class="hljs-params"><span class="hljs-function">    CryptoOptions crypto_options,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> AudioOptions&amp; audio_options,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> VideoOptions&amp; video_options,</span></span><br><span class="hljs-params"><span class="hljs-function">    VideoBitrateAllocatorFactory* video_bitrate_allocator_factory,</span></span><br><span class="hljs-params"><span class="hljs-function">    absl::AnyInvocable&lt;RtpTransportInternal*(absl::string_view) &amp;&amp;&gt;</span></span><br><span class="hljs-params"><span class="hljs-function">        transport_lookup)</span> </span>&#123;<br>  mid_ = mid;<br><br>  std::unique_ptr&lt;ChannelInterface&gt; new_channel;<br>  <span class="hljs-built_in">context</span>()-&gt;<span class="hljs-built_in">worker_thread</span>()-&gt;<span class="hljs-built_in">BlockingCall</span>([&amp;] &#123;<br>    std::unique_ptr&lt;MediaSendChannelInterface&gt; media_send_channel;<br>    std::unique_ptr&lt;MediaReceiveChannelInterface&gt; media_receive_channel;<br><br>    <span class="hljs-keyword">if</span> (owned_send_channel_) &#123;<br>      media_send_channel = std::<span class="hljs-built_in">move</span>(owned_send_channel_);<br>      media_receive_channel = std::<span class="hljs-built_in">move</span>(owned_receive_channel_);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>      <span class="hljs-keyword">auto</span> channels = <span class="hljs-built_in">CreateMediaContentChannels</span>(<br>          <span class="hljs-built_in">media_type</span>(), env_, <span class="hljs-built_in">media_engine</span>(), call_ptr, media_config,<br>          audio_options, video_options, crypto_options,<br>          video_bitrate_allocator_factory);<br>      media_send_channel = std::<span class="hljs-built_in">move</span>(channels.first);<br>      media_receive_channel = std::<span class="hljs-built_in">move</span>(channels.second);<br>      <span class="hljs-built_in">SetMediaChannels</span>(media_send_channel.<span class="hljs-built_in">get</span>(), media_receive_channel.<span class="hljs-built_in">get</span>());<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">media_type</span>() == MediaType::AUDIO) &#123;<br>      new_channel =<br>          <span class="hljs-built_in">CreateMediaChannel</span>&lt;VoiceChannel, VoiceMediaSendChannelInterface,<br>                             VoiceMediaReceiveChannelInterface&gt;(...);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>      new_channel =<br>          <span class="hljs-built_in">CreateMediaChannel</span>&lt;VideoChannel, VideoMediaSendChannelInterface,<br>                             VideoMediaReceiveChannelInterface&gt;(...);<br>    &#125;<br>  &#125;);<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">SetChannel</span>(std::<span class="hljs-built_in">move</span>(new_channel), std::<span class="hljs-built_in">move</span>(transport_lookup),<br>                    <span class="hljs-comment">/*set_media_channels=*/</span><span class="hljs-literal">false</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="CreateMediaContentChannels"><a href="#CreateMediaContentChannels" class="headerlink" title="CreateMediaContentChannels"></a>CreateMediaContentChannels</h3><p><code>CreateMediaContentChannels</code> 创建的是 media engine 层的收发通道，不是 pc 层的 <code>VoiceChannel/VideoChannel</code>。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c++">std::pair&lt;std::unique_ptr&lt;MediaSendChannelInterface&gt;,<br>          std::unique_ptr&lt;MediaReceiveChannelInterface&gt;&gt;<br><span class="hljs-built_in">CreateMediaContentChannels</span>(<br>    MediaType media_type,<br>    <span class="hljs-type">const</span> Environment&amp; env,<br>    MediaEngineInterface* media_engine,<br>    Call* call,<br>    <span class="hljs-type">const</span> MediaConfig&amp; media_config,<br>    <span class="hljs-type">const</span> AudioOptions&amp; audio_options,<br>    <span class="hljs-type">const</span> VideoOptions&amp; video_options,<br>    <span class="hljs-type">const</span> CryptoOptions&amp; crypto_options,<br>    VideoBitrateAllocatorFactory* video_bitrate_allocator_factory) &#123;<br>  <span class="hljs-keyword">if</span> (media_type == MediaType::AUDIO) &#123;<br>    <span class="hljs-keyword">return</span> &#123;media_engine-&gt;<span class="hljs-built_in">voice</span>().<span class="hljs-built_in">CreateSendChannel</span>(<br>                env, call, media_config, audio_options, crypto_options),<br>            media_engine-&gt;<span class="hljs-built_in">voice</span>().<span class="hljs-built_in">CreateReceiveChannel</span>(<br>                env, call, media_config, audio_options, crypto_options)&#125;;<br>  &#125;<br>  <span class="hljs-keyword">return</span> &#123;media_engine-&gt;<span class="hljs-built_in">video</span>().<span class="hljs-built_in">CreateSendChannel</span>(<br>              env, call, media_config, video_options, crypto_options,<br>              video_bitrate_allocator_factory),<br>          media_engine-&gt;<span class="hljs-built_in">video</span>().<span class="hljs-built_in">CreateReceiveChannel</span>(<br>              env, call, media_config, video_options, crypto_options)&#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里可以这样理解：</p>
+<ul>
+<li><p>media engine 的 send channel 负责更靠近编码、发送 RTP 参数、发送流控制的逻辑。</p>
+</li>
+<li><p>media engine 的 receive channel 负责更靠近解码、接收 RTP、接收流控制的逻辑。</p>
+</li>
+<li><p><code>VoiceChannel/VideoChannel</code> 是 pc 层的包装对象，负责把 media channel 和 <code>RtpTransportInternal</code> 连接起来。</p>
+</li>
+</ul>
+<hr>
+<h3 id="CreateMediaChannel"><a href="#CreateMediaChannel" class="headerlink" title="CreateMediaChannel"></a>CreateMediaChannel</h3><p><code>CreateMediaChannel</code> 是一个模板函数，用来把 media engine 层的 send&#x2F;receive channel 包装成 pc 层 channel。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> Channel, <span class="hljs-keyword">typename</span> Send, <span class="hljs-keyword">typename</span> Receive&gt;<br><span class="hljs-function">std::unique_ptr&lt;ChannelInterface&gt; <span class="hljs-title">CreateMediaChannel</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    ConnectionContext* context,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;MediaSendChannelInterface&gt;&amp; send,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;MediaReceiveChannelInterface&gt;&amp; receive,</span></span><br><span class="hljs-params"><span class="hljs-function">    absl::string_view mid,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">bool</span> srtp_required,</span></span><br><span class="hljs-params"><span class="hljs-function">    CryptoOptions crypto_options)</span> </span>&#123;<br>  <span class="hljs-keyword">return</span> std::<span class="hljs-built_in">make_unique</span>&lt;Channel&gt;(<br>      context-&gt;<span class="hljs-built_in">worker_thread</span>(), context-&gt;<span class="hljs-built_in">network_thread</span>(),<br>      context-&gt;<span class="hljs-built_in">signaling_thread</span>(),<br>      std::<span class="hljs-built_in">unique_ptr</span>&lt;Send&gt;(<span class="hljs-built_in">static_cast</span>&lt;Send*&gt;(send.<span class="hljs-built_in">release</span>())),<br>      std::<span class="hljs-built_in">unique_ptr</span>&lt;Receive&gt;(<span class="hljs-built_in">static_cast</span>&lt;Receive*&gt;(receive.<span class="hljs-built_in">release</span>())), mid,<br>      srtp_required, crypto_options, context-&gt;<span class="hljs-built_in">ssrc_generator</span>());<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>对应关系：</p>
+<ul>
+<li><p>audio：<code>CreateMediaChannel&lt;VoiceChannel, VoiceMediaSendChannelInterface, VoiceMediaReceiveChannelInterface&gt;</code></p>
+</li>
+<li><p>video：<code>CreateMediaChannel&lt;VideoChannel, VideoMediaSendChannelInterface, VideoMediaReceiveChannelInterface&gt;</code></p>
+</li>
+</ul>
+<p>所以，不能把 media engine 创建的 send&#x2F;receive channel 和 pc 层的 <code>VoiceChannel/VideoChannel</code> 混为一个对象。它们是上下两层。</p>
+<hr>
+<h3 id="SetChannel-绑定-RTP-transport"><a href="#SetChannel-绑定-RTP-transport" class="headerlink" title="SetChannel 绑定 RTP transport"></a>SetChannel 绑定 RTP transport</h3><p><code>CreateChannel</code> 创建出 <code>VoiceChannel/VideoChannel</code> 之后，还不能直接收发 RTP。它必须绑定到 <code>RtpTransportInternal</code>。</p>
+<p>这个 transport 是前面 <code>SetLocalDescription</code> 的 <code>PushdownTransportDescription</code> 阶段通过 <code>JsepTransportController::MaybeCreateJsepTransport</code> 创建出来的。</p>
+<p><code>SetChannel</code> 的关键逻辑：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">RTCError <span class="hljs-title">RtpTransceiver::SetChannel</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;ChannelInterface&gt; channel,</span></span><br><span class="hljs-params"><span class="hljs-function">    absl::AnyInvocable&lt;RtpTransportInternal*(<span class="hljs-type">const</span> std::string&amp;) &amp;&amp;&gt;</span></span><br><span class="hljs-params"><span class="hljs-function">        transport_lookup,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">bool</span> set_media_channels)</span> </span>&#123;<br>  channel_ = std::<span class="hljs-built_in">move</span>(channel);<br>  transport_name_ = std::<span class="hljs-literal">nullopt</span>;<br><br>  std::optional&lt;std::string&gt; transport_name;<br>  RTCError err = <span class="hljs-built_in">context</span>()-&gt;<span class="hljs-built_in">network_thread</span>()-&gt;<span class="hljs-built_in">BlockingCall</span>(<br>      [&amp;, flag = signaling_thread_safety_, channel = channel_.<span class="hljs-built_in">get</span>()]() &#123;<br>        RtpTransportInternal* transport =<br>            std::<span class="hljs-built_in">move</span>(transport_lookup)(channel-&gt;<span class="hljs-built_in">mid</span>());<br>        <span class="hljs-keyword">if</span> (!channel-&gt;<span class="hljs-built_in">SetRtpTransport</span>(transport)) &#123;<br>          <span class="hljs-keyword">return</span> RTCError::<span class="hljs-built_in">InvalidParameter</span>()<br>                 &lt;&lt; <span class="hljs-string">&quot;Invalid transport for mid=&quot;</span> &lt;&lt; channel-&gt;<span class="hljs-built_in">mid</span>();<br>        &#125;<br>        <span class="hljs-keyword">if</span> (transport) &#123;<br>          transport_name = transport-&gt;<span class="hljs-built_in">transport_name</span>();<br>        &#125;<br>        channel-&gt;<span class="hljs-built_in">SetPacketReceivedCallback_n</span>([<span class="hljs-keyword">this</span>, flag = flag]() &#123;<br>          <span class="hljs-built_in">OnPacketReceived</span>(flag);<br>        &#125;);<br>        <span class="hljs-keyword">return</span> RTCError::<span class="hljs-built_in">OK</span>();<br>      &#125;);<br><br>  <span class="hljs-keyword">if</span> (err.<span class="hljs-built_in">ok</span>()) &#123;<br>    transport_name_ = std::<span class="hljs-built_in">move</span>(transport_name);<br>    <span class="hljs-keyword">if</span> (set_media_channels) &#123;<br>      <span class="hljs-built_in">PushNewMediaChannel</span>();<br>    &#125;<br>  &#125;<br>  <span class="hljs-keyword">return</span> err;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>重点：</p>
+<ul>
+<li><p><code>SetChannel</code> 在 signaling thread 发起。</p>
+</li>
+<li><p><code>transport_lookup</code> 在 network thread 上执行。</p>
+</li>
+<li><p><code>channel-&gt;SetRtpTransport(transport)</code> 之后，RTP&#x2F;RTCP 包才有传输通道。</p>
+</li>
+<li><p>设置 first packet received&#x2F;sent、packet received callback 也是在这里完成的。</p>
+</li>
+</ul>
+<hr>
+<h3 id="PushNewMediaChannel"><a href="#PushNewMediaChannel" class="headerlink" title="PushNewMediaChannel"></a>PushNewMediaChannel</h3><p><code>RtpTransceiver</code> 持有 sender&#x2F;receiver，但 sender&#x2F;receiver 真正工作时需要知道 media channel。</p>
+<p><code>PushNewMediaChannel</code> 的作用就是把 channel 里的 send&#x2F;receive media channel 推给所有 sender&#x2F;receiver。注意：M146 的 <code>CreateChannel()</code> 调用 <code>SetChannel(..., /*set_media_channels=*/false)</code>，主线创建 channel 时通常不会再走 <code>PushNewMediaChannel()</code>；因为 media channel 要么在 transceiver 构造阶段已经传给 sender&#x2F;receiver，要么在 <code>CreateChannel()</code> 的 worker thread 段已经通过 <code>SetMediaChannels()</code> 设置过。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">RtpTransceiver::PushNewMediaChannel</span><span class="hljs-params">()</span> </span>&#123;<br>  <span class="hljs-keyword">if</span> (senders_.<span class="hljs-built_in">empty</span>() &amp;&amp; receivers_.<span class="hljs-built_in">empty</span>()) &#123;<br>    <span class="hljs-keyword">return</span>;<br>  &#125;<br>  <span class="hljs-built_in">context</span>()-&gt;<span class="hljs-built_in">worker_thread</span>()-&gt;<span class="hljs-built_in">BlockingCall</span>([&amp;, channel = channel_.<span class="hljs-built_in">get</span>()]() &#123;<br>    <span class="hljs-built_in">SetMediaChannels</span>(channel-&gt;<span class="hljs-built_in">media_send_channel</span>(),<br>                     channel-&gt;<span class="hljs-built_in">media_receive_channel</span>());<br>  &#125;);<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">RtpTransceiver::SetMediaChannels</span><span class="hljs-params">(MediaSendChannelInterface* send,</span></span><br><span class="hljs-params"><span class="hljs-function">                                      MediaReceiveChannelInterface* receive)</span> </span>&#123;<br>  <span class="hljs-keyword">for</span> (<span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>&amp; sender : senders_) &#123;<br>    sender-&gt;<span class="hljs-built_in">internal</span>()-&gt;<span class="hljs-built_in">SetMediaChannel</span>(send);<br>  &#125;<br>  <span class="hljs-keyword">for</span> (<span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>&amp; receiver : receivers_) &#123;<br>    receiver-&gt;<span class="hljs-built_in">internal</span>()-&gt;<span class="hljs-built_in">SetMediaChannel</span>(receive);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这也是为什么 RtpTransceiver 是一个“装配层”：</p>
+<ul>
+<li><p>它不自己编码音视频。</p>
+</li>
+<li><p>它不自己收发 UDP 包。</p>
+</li>
+<li><p>它把 sender&#x2F;receiver、media engine channel、VoiceChannel&#x2F;VideoChannel、RtpTransport 这些对象按 SDP 协商结果连接起来。</p>
+</li>
+</ul>
+<hr>
+<h3 id="SetLocalContent-SetRemoteContent"><a href="#SetLocalContent-SetRemoteContent" class="headerlink" title="SetLocalContent &#x2F; SetRemoteContent"></a>SetLocalContent &#x2F; SetRemoteContent</h3><p>创建 channel 只是第一步，后面还要把 SDP 中的媒体参数真正 push 到 channel。</p>
+<p>相关函数：</p>
+<ul>
+<li><p><code>RtpTransceiver::SetChannelLocalContent</code></p>
+</li>
+<li><p><code>RtpTransceiver::SetChannelRemoteContent</code></p>
+</li>
+</ul>
+<p>它们都会进入 <code>SetChannelContent</code>，然后切到 worker thread 调用 channel 的 <code>SetLocalContent</code> 或 <code>SetRemoteContent</code>。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">RtpTransceiver::SetChannelLocalContent</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> MediaContentDescription* content,</span></span><br><span class="hljs-params"><span class="hljs-function">    SdpType type,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::string&amp; error_desc)</span> </span>&#123;<br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">SetChannelContent</span>([&amp;]() &#123;<br>    <span class="hljs-keyword">return</span> channel_-&gt;<span class="hljs-built_in">SetLocalContent</span>(content, type, error_desc);<br>  &#125;);<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">RtpTransceiver::SetChannelRemoteContent</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> MediaContentDescription* content,</span></span><br><span class="hljs-params"><span class="hljs-function">    SdpType type,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::string&amp; error_desc)</span> </span>&#123;<br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">SetChannelContent</span>([&amp;]() &#123;<br>    <span class="hljs-keyword">return</span> channel_-&gt;<span class="hljs-built_in">SetRemoteContent</span>(content, type, error_desc);<br>  &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>SetChannelContent</code> 做了一个很关键的事情：它在调用 channel 的 SetLocal&#x2F;SetRemoteContent 后，会重新读取 sender 的 RTP 参数并缓存回 sender。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">RtpTransceiver::SetChannelContent</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    absl::AnyInvocable&lt;<span class="hljs-type">bool</span>() &amp;&amp;&gt; set_content)</span> </span>&#123;<br>  std::vector&lt;SenderParameters&gt; sender_parameters;<br>  <span class="hljs-keyword">for</span> (<span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>&amp; sender : senders_) &#123;<br>    sender_parameters.<span class="hljs-built_in">push_back</span>(<br>        &#123;.ssrc = sender-&gt;<span class="hljs-built_in">ssrc</span>(), .sender = sender-&gt;<span class="hljs-built_in">internal</span>()&#125;);<br>  &#125;<br><br>  <span class="hljs-type">bool</span> result = <span class="hljs-built_in">context</span>()-&gt;<span class="hljs-built_in">worker_thread</span>()-&gt;<span class="hljs-built_in">BlockingCall</span>([&amp;]() &#123;<br>    <span class="hljs-keyword">if</span> (!std::<span class="hljs-built_in">move</span>(set_content)()) &#123;<br>      <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>    &#125;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span>&amp; entry : sender_parameters) &#123;<br>      <span class="hljs-keyword">if</span> (entry.ssrc != <span class="hljs-number">0</span>) &#123;<br>        entry.parameters =<br>            channel_-&gt;<span class="hljs-built_in">media_send_channel</span>()-&gt;<span class="hljs-built_in">GetRtpSendParameters</span>(entry.ssrc);<br>      &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>  &#125;);<br><br>  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span>&amp; entry : sender_parameters) &#123;<br>    <span class="hljs-keyword">if</span> (entry.parameters) &#123;<br>      entry.sender-&gt;<span class="hljs-built_in">SetCachedParameters</span>(std::<span class="hljs-built_in">move</span>(*entry.parameters));<br>    &#125;<br>  &#125;<br>  <span class="hljs-keyword">return</span> result;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ol>
+<li><p><code>RtpTransceiver</code> 对应一个 audio&#x2F;video m 行，管理 sender、receiver 和 channel。</p>
+</li>
+<li><p><code>UpdateTransceiverChannel</code> 是 SDP 应用阶段创建媒体 channel 的入口。</p>
+</li>
+<li><p><code>RtpTransceiver::CreateChannel</code> 先在 worker thread 上复用或创建 media engine 的 send&#x2F;receive channel，再包装成 <code>VoiceChannel</code> 或 <code>VideoChannel</code>。</p>
+</li>
+<li><p><code>RtpTransceiver::SetChannel</code> 在 network thread 上把 <code>VoiceChannel/VideoChannel</code> 绑定到 <code>RtpTransportInternal</code>。</p>
+</li>
+<li><p><code>CreateChannel</code> 会确保 sender&#x2F;receiver 持有 media channel；<code>PushNewMediaChannel</code> 是 <code>SetChannel(..., set_media_channels=true)</code> 时使用的辅助路径。</p>
+</li>
+<li><p><code>SetChannelLocalContent / SetChannelRemoteContent</code> 把 SDP 中的 codec、header extension、方向、SSRC 等媒体参数应用到 channel。</p>
+</li>
+</ol>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>webrtc之RtpTransceiver详解</div>
+      <div>https://alberthello.github.io/2025/09/10/webrtc/RtpTransceiver/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年9月10日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年6月23日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/10/10/webrtc/SetLocalDescription/" title="webrtc之SetLocalDescription详解">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">webrtc之SetLocalDescription详解</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/09/02/webrtc/webrtc-third-party-libs/" title="webrtc的一些依赖库的制作">
+                        <span class="hidden-mobile">webrtc的一些依赖库的制作</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

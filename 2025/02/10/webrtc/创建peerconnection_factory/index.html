@@ -1,0 +1,919 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="关于 rtc 第一步就是创建 PeerConnectionFactory，然后再由这个工厂对象去创建实际的 PeerConnection。今天只讲 PeerConnectionFactory 的创建。  1、创建 PeerConnectionFactory 的接口接口文件是create_peerconnection_factory.h 1234567891011121314RTC_EXPORT">
+<meta property="og:type" content="article">
+<meta property="og:title" content="webrtc之PeerConnectionFactory创建">
+<meta property="og:url" content="https://alberthello.github.io/2025/02/10/webrtc/%E5%88%9B%E5%BB%BApeerconnection_factory/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="关于 rtc 第一步就是创建 PeerConnectionFactory，然后再由这个工厂对象去创建实际的 PeerConnection。今天只讲 PeerConnectionFactory 的创建。  1、创建 PeerConnectionFactory 的接口接口文件是create_peerconnection_factory.h 1234567891011121314RTC_EXPORT">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-02-10T02:17:53.000Z">
+<meta property="article:modified_time" content="2026-06-23T09:29:40.174Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="博客，技术，生活，分享">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>webrtc之PeerConnectionFactory创建 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="webrtc之PeerConnectionFactory创建"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-02-10 10:17" pubdate>
+          2025年2月10日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.5k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">webrtc之PeerConnectionFactory创建</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-06-23T17:29:40+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>关于 rtc 第一步就是创建 <strong>PeerConnectionFactory</strong>，然后再由这个工厂对象去创建实际的 <strong>PeerConnection</strong>。今天只讲 <strong>PeerConnectionFactory</strong> 的创建。</p>
+</blockquote>
+<h2 id="1、创建-PeerConnectionFactory-的接口"><a href="#1、创建-PeerConnectionFactory-的接口" class="headerlink" title="1、创建 PeerConnectionFactory 的接口"></a>1、创建 PeerConnectionFactory 的接口</h2><p>接口文件是<code>create_peerconnection_factory.h</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">RTC_EXPORT scoped_refptr&lt;PeerConnectionFactoryInterface&gt;</span><br><span class="hljs-function"><span class="hljs-title">CreatePeerConnectionFactory</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    Thread* network_thread,</span></span><br><span class="hljs-params"><span class="hljs-function">    Thread* worker_thread,</span></span><br><span class="hljs-params"><span class="hljs-function">    Thread* signaling_thread,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;AudioDeviceModule&gt; default_adm,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;AudioEncoderFactory&gt; audio_encoder_factory,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;AudioDecoderFactory&gt; audio_decoder_factory,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;VideoEncoderFactory&gt; video_encoder_factory,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;VideoDecoderFactory&gt; video_decoder_factory,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;AudioMixer&gt; audio_mixer,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;AudioProcessing&gt; audio_processing,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;AudioFrameProcessor&gt; audio_frame_processor = <span class="hljs-literal">nullptr</span>,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;FieldTrialsView&gt; field_trials = <span class="hljs-literal">nullptr</span>)</span></span>;<br></code></pre></td></tr></table></figure>
+
+<p>M146 主线这里对外就是这一个核心接口，可选参数集中到默认参数和 <code>PeerConnectionFactoryDependencies</code> 中。</p>
+<ul>
+<li><p>network_thread：网络线程。webrtc 三大线程之一，处理网络数据报的收发相关工作。一般传入 null，由内部在<strong>peer_connection_factory.cc&#x20;</strong>&#x4E2D;创建，webrtc 线程是另外一个知识点，请移步<a href=""> webrtc 之线程模型</a>。</p>
+</li>
+<li><p>worker_thread：工作线程。webrtc 三大线程之一。一般传入 null，由内部在<strong>peer_connection_factory.cc&#x20;</strong>&#x4E2D;创建，大部分的工作都是在该线程运行。</p>
+</li>
+<li><p>signaling_thread：信令线程。webrtc 三大线程之一。主要用来与应用层交互。移动端常见做法是把当前业务线程包装成 webrtc 的 <code>Thread</code>，让应用层 API 和 signaling thread 对齐。</p>
+</li>
+<li><p><code>field_trials</code>：用于创建 <code>Environment</code>，后面 PeerConnection、网络、媒体模块都会通过 <code>env</code> 读取 field trial。</p>
+</li>
+<li><p>rtc::scoped_refptr：这是webrtc 的引用计数系统，又是另外的知识点，移步到<a href=""> webrtc 之引用计数系统</a></p>
+</li>
+</ul>
+<h2 id="2、创建-PeerConnectionFactory-的调用堆栈"><a href="#2、创建-PeerConnectionFactory-的调用堆栈" class="headerlink" title="2、创建 PeerConnectionFactory 的调用堆栈"></a>2、创建 <strong>PeerConnectionFactory 的调用堆栈</strong></h2><ul>
+<li><p>应用层调用 <code>webrtc::CreatePeerConnectionFactory()</code></p>
+<ul>
+<li><p><code>CreatePeerConnectionFactory()</code>  <code>api/create_peerconnection_factory.cc</code></p>
+<ul>
+<li><p><code>CreateModularPeerConnectionFactory()</code>  <code>api/create_modular_peer_connection_factory.cc</code></p>
+<ul>
+<li><p><code>PeerConnectionFactory::Create()</code>  <code>pc/peer_connection_factory.cc</code></p>
+<ul>
+<li><p><code>ConnectionContext::Create()</code></p>
+</li>
+<li><p><code>new PeerConnectionFactory</code></p>
+</li>
+</ul>
+</li>
+<li><p><code>PeerConnectionFactoryProxy::Create(...)</code></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-1、CreatePeerConnectionFactory"><a href="#2-1、CreatePeerConnectionFactory" class="headerlink" title="2.1、CreatePeerConnectionFactory()"></a>2.1、<strong>CreatePeerConnectionFactory()</strong></h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">scoped_refptr&lt;PeerConnectionFactoryInterface&gt; <span class="hljs-title">CreatePeerConnectionFactory</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    Thread* network_thread,</span></span><br><span class="hljs-params"><span class="hljs-function">    Thread* worker_thread,</span></span><br><span class="hljs-params"><span class="hljs-function">    Thread* signaling_thread,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;AudioDeviceModule&gt; default_adm,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;AudioEncoderFactory&gt; audio_encoder_factory,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;AudioDecoderFactory&gt; audio_decoder_factory,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;VideoEncoderFactory&gt; video_encoder_factory,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;VideoDecoderFactory&gt; video_decoder_factory,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;AudioMixer&gt; audio_mixer,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;AudioProcessing&gt; audio_processing,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;AudioFrameProcessor&gt; audio_frame_processor,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;FieldTrialsView&gt; field_trials)</span> </span>&#123;<br>  PeerConnectionFactoryDependencies dependencies;<br>  dependencies.network_thread = network_thread;<br>  dependencies.worker_thread = worker_thread;<br>  dependencies.signaling_thread = signaling_thread;<br>  dependencies.event_log_factory = std::<span class="hljs-built_in">make_unique</span>&lt;RtcEventLogFactory&gt;();<br>  dependencies.env = <span class="hljs-built_in">CreateEnvironment</span>(std::<span class="hljs-built_in">move</span>(field_trials));<br><br>  <span class="hljs-keyword">if</span> (network_thread) &#123;<br>    dependencies.socket_factory = network_thread-&gt;<span class="hljs-built_in">socketserver</span>();<br>  &#125;<br><br>  dependencies.adm = std::<span class="hljs-built_in">move</span>(default_adm);<br>  dependencies.audio_encoder_factory = std::<span class="hljs-built_in">move</span>(audio_encoder_factory);<br>  dependencies.audio_decoder_factory = std::<span class="hljs-built_in">move</span>(audio_decoder_factory);<br>  dependencies.audio_frame_processor = std::<span class="hljs-built_in">move</span>(audio_frame_processor);<br>  dependencies.audio_mixer = std::<span class="hljs-built_in">move</span>(audio_mixer);<br>  dependencies.video_encoder_factory = std::<span class="hljs-built_in">move</span>(video_encoder_factory);<br>  dependencies.video_decoder_factory = std::<span class="hljs-built_in">move</span>(video_decoder_factory);<br><br>  <span class="hljs-built_in">EnableMedia</span>(dependencies);<br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">CreateModularPeerConnectionFactory</span>(std::<span class="hljs-built_in">move</span>(dependencies));<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>该函数主要是把外部传入的线程、音频设备、编解码器工厂等对象整理进 <code>PeerConnectionFactoryDependencies</code>。</p>
+</li>
+<li><p>如果调用方传入了 <code>network_thread</code>，M146 会把 <code>network_thread-&gt;socketserver()</code> 放进 dependencies，后面默认 socket factory 会用到。</p>
+</li>
+<li><p><code>EnableMedia(dependencies)</code> 会把音视频相关依赖组合成 media factory。</p>
+</li>
+<li><p>真正创建工厂对象的动作在 <code>CreateModularPeerConnectionFactory()</code> 里。</p>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">scoped_refptr&lt;PeerConnectionFactoryInterface&gt;</span><br><span class="hljs-function"><span class="hljs-title">CreateModularPeerConnectionFactory</span><span class="hljs-params">(PeerConnectionFactoryDependencies dependencies)</span> </span>&#123;<br>  <span class="hljs-keyword">if</span> (dependencies.signaling_thread &amp;&amp;<br>      !dependencies.signaling_thread-&gt;<span class="hljs-built_in">IsCurrent</span>()) &#123;<br>    <span class="hljs-keyword">return</span> dependencies.signaling_thread-&gt;<span class="hljs-built_in">BlockingCall</span>([&amp;dependencies] &#123;<br>      <span class="hljs-keyword">return</span> <span class="hljs-built_in">CreateModularPeerConnectionFactory</span>(std::<span class="hljs-built_in">move</span>(dependencies));<br>    &#125;);<br>  &#125;<br><br>  <span class="hljs-keyword">auto</span> pc_factory = PeerConnectionFactory::<span class="hljs-built_in">Create</span>(std::<span class="hljs-built_in">move</span>(dependencies));<br>  <span class="hljs-keyword">if</span> (!pc_factory) &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">nullptr</span>;<br>  &#125;<br>  <span class="hljs-keyword">return</span> PeerConnectionFactoryProxy::<span class="hljs-built_in">Create</span>(<br>      pc_factory-&gt;<span class="hljs-built_in">signaling_thread</span>(), pc_factory-&gt;<span class="hljs-built_in">worker_thread</span>(), pc_factory);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>PeerConnectionFactory</code> 必须创建在 signaling thread 上。如果当前线程不对，M146 用 <code>BlockingCall</code> 切到 signaling thread。</p>
+</li>
+<li><p>最终返回的不是裸的 <code>PeerConnectionFactory</code>，而是 <code>PeerConnectionFactoryProxy</code>。</p>
+</li>
+</ul>
+<h3 id="2-2、ConnectionContext-Create"><a href="#2-2、ConnectionContext-Create" class="headerlink" title="2.2、ConnectionContext::Create()"></a>2.2、<strong>ConnectionContext::Create()</strong></h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">scoped_refptr&lt;ConnectionContext&gt; <span class="hljs-title">ConnectionContext::Create</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> Environment&amp; env,</span></span><br><span class="hljs-params"><span class="hljs-function">    PeerConnectionFactoryDependencies* dependencies)</span> </span>&#123;<br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">scoped_refptr</span>&lt;ConnectionContext&gt;(<br>      <span class="hljs-keyword">new</span> <span class="hljs-built_in">ConnectionContext</span>(env, dependencies));<br>&#125;<br><br>ConnectionContext::<span class="hljs-built_in">ConnectionContext</span>(<br>    <span class="hljs-type">const</span> Environment&amp; env,<br>    PeerConnectionFactoryDependencies* dependencies)<br>    : <span class="hljs-built_in">network_thread_</span>(<span class="hljs-built_in">MaybeStartNetworkThread</span>(dependencies-&gt;network_thread,<br>                                              owned_socket_factory_,<br>                                              owned_network_thread_)),<br>      <span class="hljs-built_in">worker_thread_</span>(dependencies-&gt;worker_thread, []() &#123;<br>        <span class="hljs-keyword">auto</span> thread_holder = Thread::<span class="hljs-built_in">Create</span>();<br>        thread_holder-&gt;<span class="hljs-built_in">SetName</span>(<span class="hljs-string">&quot;pc_worker_thread&quot;</span>, <span class="hljs-literal">nullptr</span>);<br>        thread_holder-&gt;<span class="hljs-built_in">Start</span>();<br>        <span class="hljs-keyword">return</span> thread_holder;<br>      &#125;),<br>      <span class="hljs-built_in">signaling_thread_</span>(<span class="hljs-built_in">MaybeWrapThread</span>(dependencies-&gt;signaling_thread,<br>                                        wraps_current_thread_)),<br>      <span class="hljs-built_in">default_network_manager_</span>(std::<span class="hljs-built_in">move</span>(dependencies-&gt;network_manager)),<br>      <span class="hljs-built_in">default_socket_factory_</span>(std::<span class="hljs-built_in">move</span>(dependencies-&gt;packet_socket_factory)) &#123;<br>  SocketFactory* socket_factory = dependencies-&gt;socket_factory;<br>  <span class="hljs-keyword">if</span> (socket_factory == <span class="hljs-literal">nullptr</span>) &#123;<br>    socket_factory = owned_socket_factory_ ? owned_socket_factory_.<span class="hljs-built_in">get</span>()<br>                                           : <span class="hljs-built_in">network_thread</span>()-&gt;<span class="hljs-built_in">socketserver</span>();<br>  &#125;<br>  <span class="hljs-keyword">if</span> (!default_network_manager_) &#123;<br>    default_network_manager_ = std::<span class="hljs-built_in">make_unique</span>&lt;BasicNetworkManager&gt;(<br>        env, socket_factory, network_monitor_factory_.<span class="hljs-built_in">get</span>());<br>  &#125;<br>  <span class="hljs-keyword">if</span> (!default_socket_factory_) &#123;<br>    default_socket_factory_ =<br>        std::<span class="hljs-built_in">make_unique</span>&lt;BasicPacketSocketFactory&gt;(socket_factory);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p><strong>ConnectionContext 是给 peerconnection 提供资源的，什么资源？三大线程、网络管理类、socket 管理类。</strong></p>
+</li>
+<li><p><strong>Create 函数会创建 ConnectionContext 对象，并且在其构造函数中对三大线程做一些处理。</strong></p>
+</li>
+<li><p>通过 <strong>CreateWithSocketServer()</strong> 创建网络线程 network_thread_，说明该线程带有 socket server，可以处理网络 IO 操作，并且 Start，开启线程消息循环。</p>
+</li>
+<li><p>通过 <strong>Thread::Create()</strong> 创建 worker_thread_ 线程。该线程不是 socket server 线程，主要处理媒体、Call、编码相关工作。然后 Start，开启线程的消息循环，等待处理 task。</p>
+</li>
+<li><p>创建了网络管理对象 <code>BasicNetworkManager</code>，创建 socket 工厂类对象 <code>BasicPacketSocketFactory</code>，至于这两个对象有什么作用，这又是另一个知识点，参考<a href=""> webrtc 之网络建立</a></p>
+</li>
+</ul>
+<h3 id="2-3、PeerConnectionFactory-Create"><a href="#2-3、PeerConnectionFactory-Create" class="headerlink" title="2.3、PeerConnectionFactory::Create()"></a><strong>2.3、PeerConnectionFactory::Create()</strong></h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">scoped_refptr&lt;PeerConnectionFactory&gt; <span class="hljs-title">PeerConnectionFactory::Create</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    PeerConnectionFactoryDependencies dependencies)</span> </span>&#123;<br>  Environment env = <span class="hljs-built_in">AssembleEnvironment</span>(dependencies);<br>  <span class="hljs-keyword">auto</span> context = ConnectionContext::<span class="hljs-built_in">Create</span>(env, &amp;dependencies);<br>  <span class="hljs-keyword">if</span> (!context) &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">nullptr</span>;<br>  &#125;<br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">make_ref_counted</span>&lt;PeerConnectionFactory&gt;(env, context, &amp;dependencies);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>M146 中这里没有单独的 <code>Initialize()</code> 主流程。<code>ConnectionContext</code> 创建好后，直接构造 <code>PeerConnectionFactory</code>。</p>
+</li>
+<li><p><code>PeerConnectionFactory</code> 持有 <code>ConnectionContext</code>，因此也间接持有三大线程、<code>BasicNetworkManager</code>、<code>BasicPacketSocketFactory</code>、media engine 等对象。</p>
+</li>
+</ul>
+<h3 id="2-4、return-PeerConnectionFactoryProxy-Create"><a href="#2-4、return-PeerConnectionFactoryProxy-Create" class="headerlink" title="2.4、return PeerConnectionFactoryProxy::Create()"></a>2.4、<strong>return</strong> <strong>PeerConnectionFactoryProxy::Create()</strong></h3><ul>
+<li><p>这是创建 <strong>PeerConnectionFactory 最终返回的结果。</strong></p>
+</li>
+<li><p>返回的是 <strong>PeerConnectionFactory 的代理类 PeerConnectionFactoryProxy</strong>。</p>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">return</span> PeerConnectionFactoryProxy::<span class="hljs-built_in">Create</span>(<br>    pc_factory-&gt;<span class="hljs-built_in">signaling_thread</span>(), pc_factory-&gt;<span class="hljs-built_in">worker_thread</span>(), pc_factory);<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>应用层拿到的是代理对象，代理对象内部持有真正的 <code>pc_factory</code>。</p>
+</li>
+<li><p>应用层调用有关 PeerConnectionFactory 的方法时，先进入代理类，再由代理类切到正确线程，最后调用真正的 <code>PeerConnectionFactory</code>。</p>
+</li>
+<li><p>代理类，也叫接口宏，之所以这么设计是为了解决线程乱入并且达到代码隔离的效果，为的是不让应用层的使用不规范污染到 WebRTC 核心代码。有关接口宏请参考<a href=""> webrtc 之接口宏</a></p>
+</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>webrtc之PeerConnectionFactory创建</div>
+      <div>https://alberthello.github.io/2025/02/10/webrtc/创建peerconnection_factory/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年2月10日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年6月23日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/03/07/webrtc/%E7%BD%91%E5%8D%A1%E5%AF%B9%E8%B1%A1Network/" title="webrtc之网卡对象Network">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">webrtc之网卡对象Network</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/01/20/webrtc/%E5%88%9B%E5%BB%BApeerconnection/" title="webrtc之PeerConnection创建">
+                        <span class="hidden-mobile">webrtc之PeerConnection创建</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

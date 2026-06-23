@@ -286,15 +286,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/09/25/nodejs/mongodb/" target="_self">
-          MongoDB 使用笔记
+        <a href="/2025/03/19/webrtc/rtp-h264-stap-a-fu-a/" target="_self">
+          rtp 传输视频数据的封装格式stap-a、fu-a
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/09/25/nodejs/mongodb/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/03/19/webrtc/rtp-h264-stap-a-fu-a/" target="_self">
         <div>
-          brew tap mongodb&#x2F;brewbrew install mongodb-communitybrew services start mongodb-communitybrew services stop mongodb-communitymongosh：进入mongodb 命令行模式show dbsuse myblog
+          在RTP协议中传输H.264视频数据时，支持的载荷格式包括以下几种，每种格式适用于不同的场景，具体区别如下：  1. 单一NALU包（Single NAL Unit Packet） NALU类型范围：1-23、24-27（保留）、28-31（保留） 结构：直接封装一个完整的NAL单元，不进行分片或聚合。 适用场景：当NAL单元较小（不超过网络MTU）时使用。 特点：结构简单，无额外头部开销。
         </div>
       </a>
 
@@ -302,8 +302,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-09-25 23:00" pubdate>
-              2024-09-25
+            <time datetime="2025-03-19 23:33" pubdate>
+              2025-03-19
             </time>
           </div>
         
@@ -318,7 +318,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
   
   
 
@@ -333,72 +333,9 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/Node-js/">#Node.js</a>
+              <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/MongoDB/">#MongoDB</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/09/24/nodejs/sequelize/" target="_self">
-          Sequelize 使用笔记
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/09/24/nodejs/sequelize/" target="_self">
-        <div>
-          
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-09-24 08:41" pubdate>
-              2024-09-24
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Node-js/">#Node.js</a>
-            
-              <a href="/tags/Sequelize/">#Sequelize</a>
+              <a href="/tags/RTP/">#RTP</a>
             
           </div>
         
@@ -412,15 +349,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/08/26/nodejs/koa2/" target="_self">
-          Koa2 使用笔记
+        <a href="/2025/03/19/webrtc/webrtc-notes/" target="_self">
+          webrtc 细碎知识
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/26/nodejs/koa2/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/03/19/webrtc/webrtc-notes/" target="_self">
         <div>
-          koa2 blog-koa2 cd blog-koa2 npm install npm install –save cross-env  修改package.json，加上cross-env 相关   koa2 默认监听的也是 3000 端口  npm run dev 然后localhost:3000         开始开发  npm install –save koa-gene
+          XR在WebRTC中，XR是指RTCP的扩展报告（Extended Reports）。RTCP XR提供了比标准RTCP更详细的统计信息，这些信息可以用于更深入地分析和诊断网络性能问题。 RTCP XR包括多种报告类型，例如：  VoIP Metrics Report：这种报告提供了关于语音质量的详细信息，包括丢包率、抖动、回声等。 Discard Metrics Report：这种报告提供了被接
         </div>
       </a>
 
@@ -428,384 +365,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-08-26 00:10" pubdate>
-              2024-08-26
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Node-js/">#Node.js</a>
-            
-              <a href="/tags/Koa2/">#Koa2</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/08/17/nodejs/express/" target="_self">
-          Express 使用笔记
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/17/nodejs/express/" target="_self">
-        <div>
-          使用 express 初始化目录 express demo-express 会自动创建demo-express目录，并且生成一些文件或者目录     进入到 demo-express 目录 npm install     npm start。它会启动一个服务，默认监听的是 3000 端口。   打开 localhost:3000
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-08-17 21:54" pubdate>
-              2024-08-17
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Node-js/">#Node.js</a>
-            
-              <a href="/tags/Express/">#Express</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/08/17/nodejs/login-cookie-session/" target="_self">
-          Node.js 登录、Cookie 与 Session
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/17/nodejs/login-cookie-session/" target="_self">
-        <div>
-          比如：res.setHeader(&#39;Set-Cookie&#39;, userid&#x3D;xxx; path&#x3D;&#x2F;; httpOnly; expires&#x3D;${getCookieExpires()})  服务端修改cookie，通过response 中的 header 传递回来 key：Set-Cookie value：就是
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-08-17 17:29" pubdate>
-              2024-08-17
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Node-js/">#Node.js</a>
-            
-              <a href="/tags/Login/">#Login</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/08/17/nodejs/security/" target="_self">
-          Node.js 安全：SQL 注入与 XSS
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/17/nodejs/security/" target="_self">
-        <div>
-          sql 注入      比如登录接口：正常的sql语句：select username from users where username=&#39;lisi&#39; and password=123sql 注入的语句：select username from users where username=&#39;lisi&#39; -- &#39; and password=任意 其中-- 三个
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-08-17 17:28" pubdate>
-              2024-08-17
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Node-js/">#Node.js</a>
-            
-              <a href="/tags/Security/">#Security</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/08/14/ffmpeg/ffmpeg-command/" target="_self">
-          FFmpeg 命令
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/14/ffmpeg/ffmpeg-command/" target="_self">
-        <div>
-          我们按使用目的可以将 FFMPEG 命令分成以下几类：  基本信息查询命令 录制 分解&#x2F;复用 处理原始数据 滤镜 切割与合并 图／视互转 直播相关  除了 FFMPEG 的基本信息查询命令外，其它命令都按下图所示的流程处理音视频。  然后将编码的数据包传送给解码器（除非为数据流选择了流拷贝，请参阅进一步描述）。 解码器产生未压缩的帧（原始视频&#x2F; PCM音频&#x2F; …），可
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-08-14 23:59" pubdate>
-              2024-08-14
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/FFmpeg/" class="category-chain-item">FFmpeg</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/FFmpeg/">#FFmpeg</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/08/14/nodejs/mysql-test/" target="_self">
-          Node.js MySQL 测试
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/14/nodejs/mysql-test/" target="_self">
-        <div>
-          一个简单的测试 mysql 的代码：12345678910111213141516171819202122232425262728 const mysql = require(&#x27;mysql&#x27;); // 创建连接 const con = mysql.createConnection(&#123;    host: &#x27;localhost&#x27;,    user: &
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-08-14 10:20" pubdate>
-              2024-08-14
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Node-js/">#Node.js</a>
-            
-              <a href="/tags/MySQL/">#MySQL</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/08/11/webrtc/course-11-2/" target="_self">
-          11.2 网卡
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/11/webrtc/course-11-2/" target="_self">
-        <div>
-          获取网卡信息的APIwindows 端     IP_ADAPTER_ADDRESSES结构体巨大，这个就是上面的api执行后获取到的网卡信息结构体。        网卡的详细信息         Mac 端   mac端获取网卡信息的api：getifaddrs 这个函数是为每个网卡都创建一个Network对象，所以是一个 NetworkList 数组来接收。  sockaddr  sockad
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-08-11 11:39" pubdate>
-              2024-08-11
+            <time datetime="2025-03-19 23:28" pubdate>
+              2025-03-19
             </time>
           </div>
         
@@ -849,15 +410,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/08/11/webrtc/webrtc-ref-count/" target="_self">
-          webrtc引用计数系统
+        <a href="/2025/03/16/webrtc/wireshark-export-rtp-media/" target="_self">
+          wireshark 导出 rtp 媒体数据
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/11/webrtc/webrtc-ref-count/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/03/16/webrtc/wireshark-export-rtp-media/" target="_self">
         <div>
-          webrtc 中的引用计数系统转载自 https://blog.csdn.net/ice_ly000/article/details/105629297 WebRTC中的引用计数主要由四个类RefCountInterface、RefCounter、RefCountedObject、scoped_refptr一起构建起WebRTC中的引用计数系统。 RefCountInterface —— 引用计数
+          wireshark从4.2版本没有了init.lua文件，只需要在 &#x2F;Applications&#x2F;Wireshark.app&#x2F;Cpntents&#x2F;Pluglns&#x2F;wireshark&#x2F; 目录下添加 lua 文件即可。rtp_h264_export.luartp_h265_export.luartp_aac_export.lua 2 wiresh
         </div>
       </a>
 
@@ -865,8 +426,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-08-11 11:39" pubdate>
-              2024-08-11
+            <time datetime="2025-03-16 19:20" pubdate>
+              2025-03-16
             </time>
           </div>
         
@@ -897,6 +458,415 @@
             <i class="iconfont icon-tags"></i>
             
               <a href="/tags/WebRTC/">#WebRTC</a>
+            
+              <a href="/tags/RTP/">#RTP</a>
+            
+              <a href="/tags/Wireshark/">#Wireshark</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/03/07/webrtc/%E7%BD%91%E5%8D%A1%E5%AF%B9%E8%B1%A1Network/" target="_self">
+          webrtc之网卡对象Network
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/03/07/webrtc/%E7%BD%91%E5%8D%A1%E5%AF%B9%E8%B1%A1Network/" target="_self">
+        <div>
+          阅读本文之前必须先读： webrtc 之网络建立    阅读本文之后你将收获：  网卡对象存在的意义？  什么时候遍历网卡、创建 Network 对象？  Network 对象都包含什么信息？  Network 和 AllocationSequenc&#x65;&#x20;&#x5BF9;象的关系？      网卡是计算机与网络进行物理连接的接口，当计算机需要与网络中的其他设备进行通信时，它会通
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-03-07 10:20" pubdate>
+              2025-03-07
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/02/10/webrtc/%E5%88%9B%E5%BB%BApeerconnection_factory/" target="_self">
+          webrtc之PeerConnectionFactory创建
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/02/10/webrtc/%E5%88%9B%E5%BB%BApeerconnection_factory/" target="_self">
+        <div>
+          关于 rtc 第一步就是创建 PeerConnectionFactory，然后再由这个工厂对象去创建实际的 PeerConnection。今天只讲 PeerConnectionFactory 的创建。  1、创建 PeerConnectionFactory 的接口接口文件是create_peerconnection_factory.h 1234567891011121314RTC_EXPORT
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-02-10 10:17" pubdate>
+              2025-02-10
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/01/20/webrtc/%E5%88%9B%E5%BB%BApeerconnection/" target="_self">
+          webrtc之PeerConnection创建
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/01/20/webrtc/%E5%88%9B%E5%BB%BApeerconnection/" target="_self">
+        <div>
+          在创建 peer_connection 之前需要先创建 peer_connection_factory： webrtc 之创建 peer_connection_factory 1、创建PeerConnection的接口接口文件是 api/peer_connection_interface.h。 M146 推荐使用 CreatePeerConnectionOrError： 1234567class
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-01-20 10:17" pubdate>
+              2025-01-20
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/12/20/webrtc/%E7%89%A9%E7%90%86socket%E5%88%9B%E5%BB%BA/" target="_self">
+          webrtc之物理socket创建
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/20/webrtc/%E7%89%A9%E7%90%86socket%E5%88%9B%E5%BB%BA/" target="_self">
+        <div>
+          阅读本文之后你将收获：  底层 socket 是在什么时机创建的？  socket 核心相关类都有哪些？相互什么关系？  socket 数据相关读写函数怎么回调的？     底层 socket 相关类关系图 classDiagram     direction LR      class PacketSocketFactory &#123;         &lt;&lt;interface&g
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-12-20 10:21" pubdate>
+              2024-12-20
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/12/01/webrtc/course-11-14-connection/" target="_self">
+          11.14 connection的排序、裁剪、连通性检测
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/01/webrtc/course-11-14-connection/" target="_self">
+        <div>
+          connection 的排序                 connection 的选择           connection的裁剪
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-12-01 18:23" pubdate>
+              2024-12-01
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/12/01/webrtc/course-11-17-ice/" target="_self">
+          11.17 ICE 连通性检测
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/01/webrtc/course-11-17-ice/" target="_self">
+        <div>
+          ICE 连通性检测
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-12-01 18:23" pubdate>
+              2024-12-01
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+              <a href="/tags/ICE/">#ICE</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/12/01/webrtc/course-12-3-rtcp/" target="_self">
+          12.3 RTCP 其他报文
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/01/webrtc/course-12-3-rtcp/" target="_self">
+        <div>
+          SDES      SC表示后面item的数量 每个item包括两部分ssrc和具体的sdes item   item采用TLV的格式存储，type length value cname 和ssrc cname是ssrc的唯一绑定的 当有多路源时ssrc有可能是存在冲突的，那么cname不会冲突，webrtc中cname就表示一个源 当有多路源时，如果ssrc冲突了，则就通过rtcp sdes重新
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-12-01 18:23" pubdate>
+              2024-12-01
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+              <a href="/tags/QOS/">#QOS</a>
+            
+              <a href="/tags/RTCP/">#RTCP</a>
             
           </div>
         
@@ -908,7 +878,7 @@
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <a class="extend prev" rel="prev" href="/page/2/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/#board">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/#board">4</a><a class="page-number" href="/page/5/#board">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/12/#board">12</a><a class="extend next" rel="next" href="/page/4/#board"><i class="iconfont icon-arrowright"></i></a>
+      <a class="extend prev" rel="prev" href="/page/2/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/#board">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/#board">4</a><a class="page-number" href="/page/5/#board">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/#board">13</a><a class="extend next" rel="next" href="/page/4/#board"><i class="iconfont icon-arrowright"></i></a>
     </span>
   </nav>
 

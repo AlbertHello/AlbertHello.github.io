@@ -286,15 +286,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/04/01/ios/05-category/" target="_self">
-          Category 底层原理
+        <a href="/2024/08/14/nodejs/mysql-test/" target="_self">
+          Node.js MySQL 测试
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/01/ios/05-category/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/14/nodejs/mysql-test/" target="_self">
         <div>
-          CategoryCategory的底层结构底层结构查看Objc源码，category定义在objc-runtime-new.h中。如下  分类编译后的结构创建如下分类：  每个分类的.h和.m如下：Test分类：    Eat分类：     使用xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc Person+Eat.m命令对该分类文件进行编译，
+          一个简单的测试 mysql 的代码：12345678910111213141516171819202122232425262728 const mysql = require(&#x27;mysql&#x27;); // 创建连接 const con = mysql.createConnection(&#123;    host: &#x27;localhost&#x27;,    user: &
         </div>
       </a>
 
@@ -302,8 +302,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-04-01 22:53" pubdate>
-              2024-04-01
+            <time datetime="2024-08-14 10:20" pubdate>
+              2024-08-14
             </time>
           </div>
         
@@ -318,7 +318,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/iOS/" class="category-chain-item">iOS</a>
+  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
   
   
 
@@ -333,11 +333,9 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/iOS/">#iOS</a>
+              <a href="/tags/Node-js/">#Node.js</a>
             
-              <a href="/tags/Objective-C/">#Objective-C</a>
-            
-              <a href="/tags/Category/">#Category</a>
+              <a href="/tags/MySQL/">#MySQL</a>
             
           </div>
         
@@ -351,15 +349,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/04/01/ios/07-nsrunloop/" target="_self">
-          NSRunLoop 原理
+        <a href="/2024/08/11/webrtc/course-11-2/" target="_self">
+          11.2 网卡
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/01/ios/07-nsrunloop/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/11/webrtc/course-11-2/" target="_self">
         <div>
-          2020年10月5日 北京 稻城书店 天气晴冷  今天总结下runloop runloop什么是runloop？ 顾名思义  运行循环  在程序运行过程中循环做一些事情  应用范畴  定时器（Timer）、PerformSelector GCD Async Main Queue 事件响应、手势识别、界面刷新 网络请求(线程保活) AutoreleasePool   RunLoop的基本作用  保
+          获取网卡信息的APIwindows 端     IP_ADAPTER_ADDRESSES结构体巨大，这个就是上面的api执行后获取到的网卡信息结构体。        网卡的详细信息         Mac 端   mac端获取网卡信息的api：getifaddrs 这个函数是为每个网卡都创建一个Network对象，所以是一个 NetworkList 数组来接收。  sockaddr  sockad
         </div>
       </a>
 
@@ -367,8 +365,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-04-01 22:53" pubdate>
-              2024-04-01
+            <time datetime="2024-08-11 11:39" pubdate>
+              2024-08-11
             </time>
           </div>
         
@@ -383,7 +381,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/iOS/" class="category-chain-item">iOS</a>
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
   
   
 
@@ -398,11 +396,7 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/iOS/">#iOS</a>
-            
-              <a href="/tags/Objective-C/">#Objective-C</a>
-            
-              <a href="/tags/RunLoop/">#RunLoop</a>
+              <a href="/tags/WebRTC/">#WebRTC</a>
             
           </div>
         
@@ -416,15 +410,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/04/01/ios/06-block/" target="_self">
-          Block 底层原理
+        <a href="/2024/08/11/webrtc/webrtc-ref-count/" target="_self">
+          webrtc引用计数系统
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/01/ios/06-block/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/08/11/webrtc/webrtc-ref-count/" target="_self">
         <div>
-          2020年9月25 北京  天气凉爽 来研究下常用的block吧  Block本质 block本质上也是一个OC对象，它内部也有个isa指针 block是封装了函数调用以及函数调用环境的OC对象 block的底层结构如右图所示    把下面的block代码用命令进行clang编译成cpp代码：  编译后的代码如下  其中__main_block_impl_0的结构如下：  这是oc block的本
+          webrtc 中的引用计数系统转载自 https://blog.csdn.net/ice_ly000/article/details/105629297 WebRTC中的引用计数主要由四个类RefCountInterface、RefCounter、RefCountedObject、scoped_refptr一起构建起WebRTC中的引用计数系统。 RefCountInterface —— 引用计数
         </div>
       </a>
 
@@ -432,8 +426,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-04-01 22:53" pubdate>
-              2024-04-01
+            <time datetime="2024-08-11 11:39" pubdate>
+              2024-08-11
             </time>
           </div>
         
@@ -448,7 +442,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/iOS/" class="category-chain-item">iOS</a>
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
   
   
 
@@ -463,11 +457,7 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/iOS/">#iOS</a>
-            
-              <a href="/tags/Objective-C/">#Objective-C</a>
-            
-              <a href="/tags/Block/">#Block</a>
+              <a href="/tags/WebRTC/">#WebRTC</a>
             
           </div>
         
@@ -481,15 +471,389 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/04/01/ios/08-runtime/" target="_self">
-          Runtime 原理
+        <a href="/2024/04/19/webrtc/course-6-2-sdp/" target="_self">
+          6.2 生成SDP
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/01/ios/08-runtime/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/19/webrtc/course-6-2-sdp/" target="_self">
         <div>
-          2020年10月5日  书店 天气不错，晴冷 runtime首先介绍下C语言的有关位运算的知识 按位与 按位或 在arm64架构之前，isa就是一个普通的指针，存储着Class、Meta-Class对象的内存地址 从arm64架构开始，对isa进行了优化，变成了一个共用体（union）结构，还使用位域来存储更多的信息   C语言位运算  与运算&amp;   两个同时为1，结果为1，否则为0 比如
+          生成SDP   AddTrack()    添加videotrack就创建video sender和video receiver，添加audiotrack，就创建audio sender和audio receiver 把创建的sender和receiver作为参数传递给CreateAndAddTransceiver函数去创建transceiver，并添加到transceivers_中  构造SDP
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-04-19 09:23" pubdate>
+              2024-04-19
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+              <a href="/tags/SDP/">#SDP</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/04/11/webrtc/webrtc-dtls/" target="_self">
+          WebRTC-DTLS
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/11/webrtc/webrtc-dtls/" target="_self">
+        <div>
+          参考阿里视频云 DTLS(Datagram Transport Layer Security) 是基于 UDP 场景下数据包可能丢失或重新排序的现实情况下，为 UDP 定制和改进的 TLS 协议。在 WebRTC 中使用 DTLS 的地方包括两部分：协商和管理SRTP 密钥和为DataChannel 提供加密通道。   DTLS 协议简介在分析 DTLS 在 WebRTC 中的应用之前，先介绍下
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-04-11 23:08" pubdate>
+              2024-04-11
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+              <a href="/tags/DTLS/">#DTLS</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/04/10/ffmpeg/ffmpeg-common-commands/" target="_self">
+          FFmpeg 常用命令
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/10/ffmpeg/ffmpeg-common-commands/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-04-10 00:17" pubdate>
+              2024-04-10
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/FFmpeg/" class="category-chain-item">FFmpeg</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/FFmpeg/">#FFmpeg</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/04/07/nodejs/server-log/" target="_self">
+          Node.js 服务日志
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/07/nodejs/server-log/" target="_self">
+        <div>
+          日志拆分    第一个 * 号表示分钟 第二个 * 号表示小时 第三个 * 号表示日期 第四个 * 号表示月份 第五个 * 号表示星期 command 表示要执行的脚本  比如：*12*** sh ./demo.sh：表示每天的 第 12 小时，执行根目录下的 demo.sh 脚本。  crontab -e：编辑文本设置定时任务，比如     crontab -l：查看当
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-04-07 23:19" pubdate>
+              2024-04-07
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Node-js/">#Node.js</a>
+            
+              <a href="/tags/Log/">#Log</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/04/06/nodejs/cors/" target="_self">
+          Node.js CORS 跨域
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/06/nodejs/cors/" target="_self">
+        <div>
+          不添加 header 时     服务端添加 header 后：实现跨域请求  12345678910111213141516171819const http = require(&#x27;http&#x27;)const server = http.createServer((req, res) =&gt; &#123;    console.log(&#x27;req url me
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-04-06 17:15" pubdate>
+              2024-04-06
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Node-js/">#Node.js</a>
+            
+              <a href="/tags/CORS/">#CORS</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/04/05/cmake/cmake-add-subdirectory/" target="_self">
+          CMake add_subdirectory 使用笔记
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/05/cmake/cmake-add-subdirectory/" target="_self">
+        <div>
+          Limiting scope with add_subdirectoryThis recipe discusses how to organize the CMake build system for large codeprojects. We will show how to use add_subdirectory to limit the scope ofvariables, lower
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-04-05 00:13" pubdate>
+              2024-04-05
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CMake/" class="category-chain-item">CMake</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/CMake/">#CMake</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/04/01/ios/02-objc-class/" target="_self">
+          instance、class 与 meta-class
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/01/ios/02-objc-class/" target="_self">
+        <div>
+          instance对象、class对象、meta-class元类对象1、 instance 实例对象 instance对象也就是实例对象，通过alloc创建。 instance对象在内存中存储着信息包括： isa指针 成员变量    2、class 类对象123456789101112131415161718192021//实例对象NSObject *object1 = [[NSObject all
         </div>
       </a>
 
@@ -540,383 +904,11 @@
     </article>
   </div>
 
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/04/01/nodejs/blog-environment/" target="_self">
-          Node.js 博客环境搭建
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/01/nodejs/blog-environment/" target="_self">
-        <div>
-          有 node npm init -y 初始化环境     npm install nodemon cross-env --save-dev 安装插件 修改 package.json     npm run dev 运行起来
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-04-01 22:53" pubdate>
-              2024-04-01
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Node-js/">#Node.js</a>
-            
-              <a href="/tags/Blog/">#Blog</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/04/01/nodejs/blog-router/" target="_self">
-          Node.js 博客路由
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/01/nodejs/blog-router/" target="_self">
-        <div>
-          
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-04-01 22:53" pubdate>
-              2024-04-01
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Node-js/">#Node.js</a>
-            
-              <a href="/tags/Blog/">#Blog</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/04/01/nodejs/blog-technical-plan/" target="_self">
-          Node.js 博客技术方案
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/04/01/nodejs/blog-technical-plan/" target="_self">
-        <div>
-          
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-04-01 22:53" pubdate>
-              2024-04-01
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Node-js/">#Node.js</a>
-            
-              <a href="/tags/Blog/">#Blog</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/03/26/nodejs/nodejs-basic/" target="_self">
-          Node.js 基础
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/26/nodejs/nodejs-basic/" target="_self">
-        <div>
-          commonjs 模块化处理 debugger 调试
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-26 23:46" pubdate>
-              2024-03-26
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Node-js/" class="category-chain-item">Node.js</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Node-js/">#Node.js</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/03/24/webrtc/course-5-5/" target="_self">
-          5.5 线程切换
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/24/webrtc/course-5-5/" target="_self">
-        <div>
-          线程切换    phandler：当目标线程内收到消息时，就会调用phandler 的 OnMessage 函数进行处理 pdata：这个就是phandler 的 OnMessage 函数总具体要处理的消息      msg回到了发送者的 OnMessage 函数，进行处理，但此时已经位于目标线程了。
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-24 16:36" pubdate>
-              2024-03-24
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/WebRTC/">#WebRTC</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/03/24/webrtc/course-5-4/" target="_self">
-          5.4 接口宏
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/24/webrtc/course-5-4/" target="_self">
-        <div>
-          接口宏                    首先有一接口类 XXXInterface 具体的实现类是 XXX 宏创建的代理类的名称是：XXXXProxyWithInternal，别名：XXXProxy 宏展开后会有一个静态函数 Create，这个函数用来创建代理类对象 宏展开后该代理类会有很多 methord，method 内部会创建 MethodCall 对象，用来调用真正的实现类 XXX 里
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-24 16:20" pubdate>
-              2024-03-24
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/WebRTC/">#WebRTC</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
 
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <a class="extend prev" rel="prev" href="/page/4/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/#board">3</a><a class="page-number" href="/page/4/#board">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/#board">6</a><a class="page-number" href="/page/7/#board">7</a><span class="space">&hellip;</span><a class="page-number" href="/page/12/#board">12</a><a class="extend next" rel="next" href="/page/6/#board"><i class="iconfont icon-arrowright"></i></a>
+      <a class="extend prev" rel="prev" href="/page/4/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/#board">3</a><a class="page-number" href="/page/4/#board">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/#board">6</a><a class="page-number" href="/page/7/#board">7</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/#board">13</a><a class="extend next" rel="next" href="/page/6/#board"><i class="iconfont icon-arrowright"></i></a>
     </span>
   </nav>
 

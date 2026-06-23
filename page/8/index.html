@@ -286,15 +286,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/03/12/webrtc/course-13-1/" target="_self">
-          13.1 抖动
+        <a href="/2024/03/23/webrtc/course-12-12-packetbuffer/" target="_self">
+          12.12 packetbuffer
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/12/webrtc/course-13-1/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/23/webrtc/course-12-12-packetbuffer/" target="_self">
         <div>
-          抖动     什么是抖动   假如发送端的发包间隔是30ms，接收端收包间隔也是30ms，这就是最理想的状态 而实际情况是，发送端的发包间隔是30ms，但经过网络的传输收包间隔可能是20ms、50ms甚至10ms等，这就是抖动。 为了消除抖动，使得收包后出帧间隔能基本上等于发包间隔，就需要引入一个缓冲区buffer，来处理到达的包，使其均匀出包。  抖动计算       抖动 &#x3D; 发包间
+          在 RtpVideoStreamReceiver 的构造函数中创建PacketBuffer        和 PacketBuffer 相关的类：Packet 和 InsertResult Packet：这就是一个 rtp 包 InsertResult：每次插入到 packetbuffer 中时都会返回一个结果。 这个 result 就是表示插入这个包是否能够得到一个完整的帧，如果能得到一个完
         </div>
       </a>
 
@@ -302,8 +302,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-12 09:22" pubdate>
-              2024-03-12
+            <time datetime="2024-03-23 16:43" pubdate>
+              2024-03-23
             </time>
           </div>
         
@@ -335,7 +335,7 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/NetEq/">#NetEq</a>
+              <a href="/tags/QOS/">#QOS</a>
             
           </div>
         
@@ -349,15 +349,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/03/10/webrtc/course-6-7-answer/" target="_self">
-          6.7 创建answer
+        <a href="/2024/03/23/webrtc/course-12-11-jitterbuffer/" target="_self">
+          12.11 jitterbuffer 的架构
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/10/webrtc/course-6-7-answer/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/23/webrtc/course-12-11-jitterbuffer/" target="_self">
         <div>
-          创建answer    SetRemoteDescription调用栈   SetRemoteDescription 详细拆分
+          jitterbuffer整体架构    RtpVideoStreamReceiver：这是jitterbuffer的一个manager，协调packetbuffer、RtpFrameReferenceFinder和framebuffer 的工作。 packetbuffer：这是收到网络包猴进行缓存、组帧的地方，组帧后再把帧送回到RtpVideoStreamReceiver RtpFrameRefe
         </div>
       </a>
 
@@ -365,8 +365,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-10 22:57" pubdate>
-              2024-03-10
+            <time datetime="2024-03-23 16:18" pubdate>
+              2024-03-23
             </time>
           </div>
         
@@ -398,7 +398,7 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/SDP/">#SDP</a>
+              <a href="/tags/QOS/">#QOS</a>
             
           </div>
         
@@ -412,15 +412,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/03/09/webrtc/course-6-4-createoffer/" target="_self">
-          6.4 createOffer
+        <a href="/2024/03/23/webrtc/course-12-10-pacer/" target="_self">
+          12.10 向 pacer 中插入数据
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/09/webrtc/course-6-4-createoffer/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/23/webrtc/course-12-10-pacer/" target="_self">
         <div>
-          create offer证书  OperationChain创建offer、setLocalDescription、receiveAnswer、setRemoteDescription这些动作都是严格按照先后顺序执行的，为了保证顺序不错轮，引入了OperationChain队列，把动作加入到队列，再顺序取出去执行。    1、当队列中只有一个元素时直接run 2、当刚才的任务运行结束是，有一个On
+          向 pacer 中插入数据
         </div>
       </a>
 
@@ -428,8 +428,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-09 23:54" pubdate>
-              2024-03-09
+            <time datetime="2024-03-23 16:04" pubdate>
+              2024-03-23
             </time>
           </div>
         
@@ -461,7 +461,7 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/SDP/">#SDP</a>
+              <a href="/tags/QOS/">#QOS</a>
             
           </div>
         
@@ -475,15 +475,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/03/09/webrtc/course-6-6-sdp/" target="_self">
-          6.6 sdp的生成
+        <a href="/2024/03/23/webrtc/course-12-9-intervalbudget/" target="_self">
+          12.9 IntervalBudget
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/09/webrtc/course-6-6-sdp/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/23/webrtc/course-12-9-intervalbudget/" target="_self">
         <div>
-          6.6 sdp的生成   当createOffer成功收到onSuccess之后： 在onSuccess函数中开始setLocalDescription(desc) 然后再调用JsepSessionDescription::ToString函数 desc-&gt;ToString() 具体就是SdpSerialize函数，在这里把sdp各相关类转换成文本。当然由文本生成sdp相关类的函数是SdpD
+          InervalBudget       UpdateControllerWithTimeInterval    RepeatingTaskImpl 继承自 RepeatingTaskBase RepeatingTaskBase 的 run 函数 RunClosure 函数就是打包的任务  OnTransportFeedback  该函数是在收到tcc feedback消息时触发的 最终又调用Pac
         </div>
       </a>
 
@@ -491,8 +491,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-09 23:41" pubdate>
-              2024-03-09
+            <time datetime="2024-03-23 15:59" pubdate>
+              2024-03-23
             </time>
           </div>
         
@@ -524,7 +524,7 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/SDP/">#SDP</a>
+              <a href="/tags/QOS/">#QOS</a>
             
           </div>
         
@@ -538,15 +538,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/03/09/webrtc/course-6-5-setlocaldesrciption/" target="_self">
-          6.5 setLocalDesrciption
+        <a href="/2024/03/23/webrtc/course-12-8-pacer/" target="_self">
+          12.8 Pacer
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/09/webrtc/course-6-5-setlocaldesrciption/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/23/webrtc/course-12-8-pacer/" target="_self">
         <div>
-          setLocalDesrciptionsetLocalDesrciption 调用栈    setLocalDesrciption后三大逻辑 PushDownTransportDescription 创建几个重要的transport createIceTransport：ice建联 createDtlsTransport：用于加密证书握手校验 createDtlsSrtpTransport：用于加
+          NextSendTime  每次执行间隔时间 5 ms  ProcessPackets   判断是否需要发送保活包 设置media budget。这是目标码率，该函数主要就是围绕目标码率进行pacer，进行输出码率控制 带测贷款码率  核心逻辑  padding包是为了发送音视频数据占据带宽的  GetPendingPacket  第一个判断条件： unpaced_audio_pac
         </div>
       </a>
 
@@ -554,8 +554,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-09 22:58" pubdate>
-              2024-03-09
+            <time datetime="2024-03-23 15:38" pubdate>
+              2024-03-23
             </time>
           </div>
         
@@ -587,7 +587,7 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/SDP/">#SDP</a>
+              <a href="/tags/QOS/">#QOS</a>
             
           </div>
         
@@ -601,15 +601,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/03/09/webrtc/sdp/" target="_self">
-          SDP
+        <a href="/2024/03/23/webrtc/course-12-7-rtx/" target="_self">
+          12.7 RTX
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/09/webrtc/sdp/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/23/webrtc/course-12-7-rtx/" target="_self">
         <div>
-          SDP 剖析说到WebRTC，就要提到几个服务器：  Signaling 信令服务器。  也就是交换会话双方的媒体信息，以及会议期间的消息，媒体描述使用的是 SDP 协议，就是按照一定规则写的一个文本，这个文本就叫sdp。 可以通过http发送给对方，也可以通过udp发送给对方，至于用什么方法传给对方无所谓。   ICE(Interactive Connectivity Establishment
+          RTX 包格式      wireshark 抓包   rtx 包的 payload 的前两个字节就是 OSN，也就是丢失包的序列号。   rtc 发送rtx的过程     GetPacketAndMarkAsPending lambda匿名函数  设置 RTX status的调用栈  在构造VideoSendStream时，逐级调用，在RtpVideoSender::ConfigFigureSs
         </div>
       </a>
 
@@ -617,8 +617,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-09 21:59" pubdate>
-              2024-03-09
+            <time datetime="2024-03-23 14:29" pubdate>
+              2024-03-23
             </time>
           </div>
         
@@ -650,7 +650,7 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/SDP/">#SDP</a>
+              <a href="/tags/QOS/">#QOS</a>
             
           </div>
         
@@ -664,15 +664,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/03/09/webrtc/rtp-aac/" target="_self">
-          RTP-AAC格式
+        <a href="/2024/03/21/webrtc/course-12-6-rtc-nack/" target="_self">
+          12.6 rtc中接收nack的过程
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/09/webrtc/rtp-aac/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/21/webrtc/course-12-6-rtc-nack/" target="_self">
         <div>
-          RTP 传输 AAC 音频AAC在RTP传输时有2种格式，分别是mp4a-latm和 mpeg4-generic mp4a-latmmp4a-latm 参考 rfc6416标准 SDP音频部分： 123456// 下面是aac-HE格式的音频a=rtpmap:118 MP4A-LATM/48000/2a=rtcp-fb:118 nacka=rtcp-fb:118 rrtra=rtcp-fb:118
+          rtc中接收nack的过程
         </div>
       </a>
 
@@ -680,8 +680,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-09 10:24" pubdate>
-              2024-03-09
+            <time datetime="2024-03-21 23:00" pubdate>
+              2024-03-21
             </time>
           </div>
         
@@ -712,6 +712,134 @@
             <i class="iconfont icon-tags"></i>
             
               <a href="/tags/WebRTC/">#WebRTC</a>
+            
+              <a href="/tags/QOS/">#QOS</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/03/21/webrtc/course-12-4-nack/" target="_self">
+          12.4 NACK
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/21/webrtc/course-12-4-nack/" target="_self">
+        <div>
+          判断包位置的关键函数 AheadOf   因为seq在rtp header中占两个字节，最大值也就是2的16次方&#x3D;65536后就会重置为0，也就是seq回环，所以aheadof函数并非简单判断seq数值大小。    四种包位置的判断情况两个包seq都没有发生回转，新到包seq大于旧包  两个包seq都没有发生回转，新到包seq小于旧包   新到包seq发生回转，旧包seq没有
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-03-21 22:51" pubdate>
+              2024-03-21
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+              <a href="/tags/QOS/">#QOS</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/03/21/webrtc/course-12-5-vp8-rtp/" target="_self">
+          12.5 VP8 RTP
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/21/webrtc/course-12-5-vp8-rtp/" target="_self">
+        <div>
+          VP8        vp8 payload 有两种header  X 为1表示后面有扩展字节 I 为1，在面又多一个字节的I行 L 位1，在下面又多一个字节的L行 T 或 K 为1，下面又会多一个自己的T活着K   R 预留 N 是否是非参考帧，如果是1，在VP8中可以丢弃 S是否是第一个切片的开始 R 预留 PID 切片的id         payload header
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-03-21 22:39" pubdate>
+              2024-03-21
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/WebRTC/">#WebRTC</a>
+            
+              <a href="/tags/QOS/">#QOS</a>
             
               <a href="/tags/RTP/">#RTP</a>
             
@@ -727,15 +855,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/03/08/webrtc/cpp-variadic-templates/" target="_self">
-          可变参数模板
+        <a href="/2024/03/18/webrtc/course-12-2-rtcp/" target="_self">
+          12.2 RTCP
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/08/webrtc/cpp-variadic-templates/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/18/webrtc/course-12-2-rtcp/" target="_self">
         <div>
-          可变参数模板C++11 引入了可变参数模板（Variadic templates），它允许你创建接受可变数量参数的模板函数和模板类。可变参数模板在编写泛型库、元编程等场景中非常有用。 可变参数模板的基本语法是在模板参数列表中使用省略号（…），表示可以接受任意数量的模板参数。在函数参数列表中也可以使用省略号，表示函数可以接受任意数量的参数。 下面是一个简单的可变参数模板函数示例，用于计算参数之和：
+          header   version：版本。占两位 p：是否有padding。占1位 count：有多少个report block。占5位 type：包类型。占一个字节 length：rtcp包的大小。占两个字节。比如length&#x3D;3，则该rtcp包的长度&#x3D;(3+1)*4 &#x3D; 16个字节。          SR   sender info block    NTP
         </div>
       </a>
 
@@ -743,8 +871,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-08 09:16" pubdate>
-              2024-03-08
+            <time datetime="2024-03-18 23:54" pubdate>
+              2024-03-18
             </time>
           </div>
         
@@ -776,133 +904,9 @@
             
               <a href="/tags/WebRTC/">#WebRTC</a>
             
-              <a href="/tags/C/">#C++</a>
+              <a href="/tags/QOS/">#QOS</a>
             
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/03/08/webrtc/course-6-3/" target="_self">
-          6.3 编解码器信息收集
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/08/webrtc/course-6-3/" target="_self">
-        <div>
-          编解码器的信息收集               代码调用
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-08 09:16" pubdate>
-              2024-03-08
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/WebRTC/">#WebRTC</a>
-            
-              <a href="/tags/SDP/">#SDP</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/03/08/webrtc/course-6-1-sdp/" target="_self">
-          6.1 sdp 类关系
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/03/08/webrtc/course-6-1-sdp/" target="_self">
-        <div>
-          SDP 类关系      SDP 类关系如上所示：  SessionDescription 是 SDP的综合描述，包含三大成员变量，也就是三个基类。 三个基类：ContentGroup、TransportInfo、ContentInfo，他们都有一个content_name或者name成员变量，并且他们都是相同的，都是audio或者video媒体的名字：0 或者 1。这样在构造sdp或者在解析sd
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-03-08 00:03" pubdate>
-              2024-03-08
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/WebRTC/">#WebRTC</a>
-            
-              <a href="/tags/SDP/">#SDP</a>
+              <a href="/tags/RTCP/">#RTCP</a>
             
           </div>
         
@@ -914,7 +918,7 @@
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <a class="extend prev" rel="prev" href="/page/7/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/#board">6</a><a class="page-number" href="/page/7/#board">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/#board">9</a><a class="page-number" href="/page/10/#board">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/12/#board">12</a><a class="extend next" rel="next" href="/page/9/#board"><i class="iconfont icon-arrowright"></i></a>
+      <a class="extend prev" rel="prev" href="/page/7/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/#board">6</a><a class="page-number" href="/page/7/#board">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/#board">9</a><a class="page-number" href="/page/10/#board">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/#board">13</a><a class="extend next" rel="next" href="/page/9/#board"><i class="iconfont icon-arrowright"></i></a>
     </span>
   </nav>
 

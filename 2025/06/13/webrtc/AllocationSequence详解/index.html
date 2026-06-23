@@ -1,0 +1,1144 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="Performs the allocation of ports, in a sequenced (timed) manner, for a given network and IP address. 按照顺序（定时）的方式为给定的网络和 IP 地址执行端口分配   阅读本文之后你将了解到： 1、AllocationSequence的作用是什么？ 2、何时创建 AllocationSequenc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="webrtc之AllocationSequence详解">
+<meta property="og:url" content="https://alberthello.github.io/2025/06/13/webrtc/AllocationSequence%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="Performs the allocation of ports, in a sequenced (timed) manner, for a given network and IP address. 按照顺序（定时）的方式为给定的网络和 IP 地址执行端口分配   阅读本文之后你将了解到： 1、AllocationSequence的作用是什么？ 2、何时创建 AllocationSequenc">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-06-13T09:19:51.000Z">
+<meta property="article:modified_time" content="2026-06-23T09:28:12.022Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="博客，技术，生活，分享">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>webrtc之AllocationSequence详解 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="webrtc之AllocationSequence详解"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-06-13 17:19" pubdate>
+          2025年6月13日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.3k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">webrtc之AllocationSequence详解</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-06-23T17:28:12+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>Performs the allocation of ports, in a sequenced (timed) manner, for a given network and IP address.</p>
+<p>按照顺序（定时）的方式为给定的网络和 IP 地址执行端口分配</p>
+</blockquote>
+<blockquote>
+<p>阅读本文之后你将了解到：</p>
+<p>1、AllocationSequence的作用是什么？</p>
+<p>2、何时创建 AllocationSequence？</p>
+<p>3、AllocationSequence 有哪些相关类？相互关系是什么？</p>
+<p>4、数据流转方向？</p>
+</blockquote>
+<p>类图</p>
+<pre><code class=" mermaid">classDiagram
+    direction LR
+
+    class BasicPortAllocatorSession &#123;
+        -configs_
+        -sequences_
+        -ports_
+        +DoAllocate()
+        +AddAllocatedPort()
+        +OnCandidateReady()
+        +OnPortAllocationComplete()
+    &#125;
+
+    class AllocationSequence &#123;
+        -session_
+        -network_
+        -config_
+        -state_
+        -flags_
+        -udp_socket_
+        -udp_port_
+        -relay_ports_
+        -phase_
+        -epoch_
+        +Init()
+        +Start()
+        +Stop()
+        +Process(epoch)
+        +CreateUDPPorts()
+        +CreateStunPorts()
+        +CreateRelayPorts()
+        +CreateTCPPorts()
+        +OnReadPacket()
+    &#125;
+
+    class Network &#123;
+        +GetBestIP()
+        +type()
+        +GetCost()
+    &#125;
+
+    class PortConfiguration &#123;
+        +StunServers()
+        +AddRelay()
+        +relays
+        +username
+        +password
+    &#125;
+
+    class AsyncPacketSocket &#123;
+        +RegisterReceivedPacketCallback()
+        +SendTo()
+    &#125;
+
+    class UDPPort &#123;
+        +Create()
+        +PrepareAddress()
+        +HandleIncomingPacket()
+    &#125;
+
+    class StunPort &#123;
+        +Create()
+    &#125;
+
+    class TurnPort &#123;
+        +Create()
+    &#125;
+
+    class TCPPort &#123;
+        +Create()
+    &#125;
+
+    BasicPortAllocatorSession *-- AllocationSequence : 创建持有
+    AllocationSequence o-- BasicPortAllocatorSession : 回调session
+    AllocationSequence o-- Network : 持有网络
+    AllocationSequence o-- PortConfiguration : 使用配置
+    AllocationSequence *-- AsyncPacketSocket : 共享UDP socket
+    AllocationSequence --&gt; UDPPort : 创建host和srflx
+    AllocationSequence --&gt; StunPort : 非共享socket时创建
+    AllocationSequence --&gt; TurnPort : 创建relay
+    AllocationSequence --&gt; TCPPort : 创建tcp host
+</code></pre>
+
+<p>重要的成员变量：</p>
+<ul>
+<li><p><strong>network_：一个AllocationSequence持有一个 Network 对象，一一对应</strong></p>
+</li>
+<li><p>session_：<strong>在BasicPortAllocatorSession中创建的AllocationSequence，sequence 创建 port 成功的通知要回调给BasicPortAllocatorSession</strong></p>
+</li>
+<li><p>config_：PortConfiguration，创建 port 需要username、password等一些基本信息</p>
+</li>
+<li><p>udp_socket_：<strong>创建具体的udp socket，并且socket 的数据也会回调到 sequence</strong></p>
+</li>
+<li><p>udp_port_： <strong>每个 AllocationSequence 对象持有一个 UDPPort 对象，一一对应</strong></p>
+</li>
+<li><p>&#x20;state_：<strong>AllocationSequence 有个状态机：kInit –&gt; kRunning –&gt; {kCompleted|kStopped}</strong></p>
+</li>
+<li><p>phase_：M146 中由 <code>Process()</code> 根据 <code>phase_</code> 依次执行 <code>PHASE_UDP -&gt; PHASE_RELAY -&gt; PHASE_TCP</code>。</p>
+</li>
+<li><p>epoch_：<code>Start/Stop/Clear</code> 期间用来丢弃旧 task，避免已经停止的 sequence 继续执行旧的 <code>Process()</code>。</p>
+</li>
+</ul>
+<h3 id="触发堆栈"><a href="#触发堆栈" class="headerlink" title="触发堆栈"></a>触发堆栈</h3><blockquote>
+<p>BasicPortAllocatorSession::DoAllocate 函数遍历 Networks数组，为每一个Network 创建AllocationSequence对象</p>
+<p>之后AllocationSequence创建 udp socket和 udpport</p>
+</blockquote>
+<pre><code class=" mermaid">sequenceDiagram
+    participant S as BasicPortAllocatorSession
+    participant NM as NetworkManager
+    participant Seq as AllocationSequence
+    participant Socket as AsyncPacketSocket
+    participant Port as UDPPort/TurnPort/TCPPort
+
+    S-&gt;&gt;NM: GetNetworks()
+    loop 每个可用 Network
+        S-&gt;&gt;Seq: new AllocationSequence(session, network, config, flags)
+        S-&gt;&gt;Seq: Init()
+        Seq-&gt;&gt;Socket: CreateUdpSocket + RegisterReceivedPacketCallback
+        S-&gt;&gt;Seq: Start()
+        Seq-&gt;&gt;Seq: PostTask(Process)
+        Seq-&gt;&gt;Port: CreateUDPPorts / CreateRelayPorts / CreateTCPPorts
+        Seq--&gt;&gt;S: AddAllocatedPort
+    end
+</code></pre>
+
+<ul>
+<li><p>BasicPortAllocatorSession::OnAllocate</p>
+<ul>
+<li><p>BasicPortAllocatorSession::DoAllocate</p>
+<ul>
+<li><p>new AllocationSequence &#x2F;&#x2F; 构造 sequence</p>
+</li>
+<li><p>AllocationSequence::Init &#x2F;&#x2F; 创建 udp socket。参考<a href=""> webrtc 之物理 socket 的创建</a></p>
+<ul>
+<li><code>PORTALLOCATOR_ENABLE_SHARED_SOCKET</code> 默认开启时，一个 sequence 会优先创建一个共享 UDP socket，并把 socket 收包回调注册到 <code>AllocationSequence::OnReadPacket</code>。</li>
+</ul>
+</li>
+<li><p>AllocationSequence::Start &#x2F;&#x2F; 投递 Process task，分阶段创建 port 对象，尤其是 UDPPort</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="AllocationSequence-Start"><a href="#AllocationSequence-Start" class="headerlink" title="AllocationSequence::Start()"></a>AllocationSequence::Start()</h4><blockquote>
+<p>M146 中该函数直接在 network thread 上投递 <code>Process(epoch)</code> task，用于触发创建 port 对象。</p>
+</blockquote>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">AllocationSequence::Start</span><span class="hljs-params">()</span> </span>&#123;<br>  state_ = kRunning;<br><br>  session_-&gt;<span class="hljs-built_in">network_thread</span>()-&gt;<span class="hljs-built_in">PostTask</span>(<br>      <span class="hljs-built_in">SafeTask</span>(safety_.<span class="hljs-built_in">flag</span>(), [<span class="hljs-keyword">this</span>, epoch = epoch_] &#123; <span class="hljs-built_in">Process</span>(epoch); &#125;));<br>  previous_best_ip_ = network_-&gt;<span class="hljs-built_in">GetBestIP</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="AllocationSequence-Process"><a href="#AllocationSequence-Process" class="headerlink" title="AllocationSequence::Process()"></a>AllocationSequence::Process()</h4><blockquote>
+<p>M146 中阶段推进入口是 <code>Process()</code>。<code>Process()</code> 按照 “Udp”、”Relay”、”Tcp” 的顺序挨个调用创建相应 port 对象。但并不是所有相应的 port 对象都会被创建。</p>
+</blockquote>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">AllocationSequence::Process</span><span class="hljs-params">(<span class="hljs-type">int</span> epoch)</span> </span>&#123;<br>  <span class="hljs-keyword">if</span> (epoch != epoch_) &#123;<br>    <span class="hljs-keyword">return</span>;<br>  &#125;<br><br>  <span class="hljs-keyword">switch</span> (phase_) &#123;<br>    <span class="hljs-keyword">case</span> PHASE_UDP:<br>      <span class="hljs-built_in">CreateUDPPorts</span>();<br>      <span class="hljs-built_in">CreateStunPorts</span>();<br>      <span class="hljs-keyword">break</span>;<br>    <span class="hljs-keyword">case</span> PHASE_RELAY:<br>      <span class="hljs-built_in">CreateRelayPorts</span>();<br>      <span class="hljs-keyword">break</span>;<br>    <span class="hljs-keyword">case</span> PHASE_TCP:<br>      <span class="hljs-built_in">CreateTCPPorts</span>();<br>      state_ = kCompleted;<br>      <span class="hljs-keyword">break</span>;<br>  &#125;<br><br>  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">state</span>() == kRunning) &#123;<br>    ++phase_;<br>    session_-&gt;<span class="hljs-built_in">network_thread</span>()-&gt;<span class="hljs-built_in">PostDelayedTask</span>(<br>        <span class="hljs-built_in">SafeTask</span>(safety_.<span class="hljs-built_in">flag</span>(), [<span class="hljs-keyword">this</span>, epoch = epoch_] &#123; <span class="hljs-built_in">Process</span>(epoch); &#125;),<br>        TimeDelta::<span class="hljs-built_in">Millis</span>(session_-&gt;<span class="hljs-built_in">allocator</span>()-&gt;<span class="hljs-built_in">step_delay</span>()));<br>  &#125; <span class="hljs-keyword">else</span> &#123;<br>    ++epoch_;<br>    <span class="hljs-built_in">port_allocation_complete_callback_</span>();<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>case <strong>PHASE_UDP:</strong></p>
+<ul>
+<li><p><strong>CreateUDPPorts();</strong></p>
+<ul>
+<li><p>UDPPort::Create &#x2F;&#x2F; 创建 UDPPort 对象</p>
+</li>
+<li><p>BasicPortAllocatorSession::AddAllocatedPort &#x2F;&#x2F;  把创建完成的port 对象加入到session的ports数组中</p>
+<ul>
+<li><p>这里主要是设置回调函数，比如 port 收集完 candidate 后回调 session 的 OnCandidateReady 函数</p>
+</li>
+<li><p>UDPPort::PrepareAddress()</p>
+<ul>
+<li><p>UDPPort::OnLocalAddressReady</p>
+<ul>
+<li><p>UDPPort::MaybeSetDefaultLocalAddress</p>
+</li>
+<li><p>Port::AddAddress</p>
+<ul>
+<li><p><strong>Candidate() &#x2F;&#x2F; 构造Candidate对象。参考<a href=""> webrtc 之 ice </a></strong></p>
+</li>
+<li><p>Port::FinishAddingAddress</p>
+<ul>
+<li><p><strong>Port::SignalCandidateReady &#x2F; SubscribeCandidateReadyCallback</strong></p>
+<ul>
+<li><strong>通过 BasicPortAllocatorSession 注册的 callback 调用 OnCandidateReady</strong></li>
+</ul>
+</li>
+<li><p>UDPPort::PostAddAddress</p>
+<ul>
+<li><p>UDPPort::MaybeSetPortCompleteOrError</p>
+<ul>
+<li>发送 port 创建成功或失败的通知给<strong>BasicPortAllocatorSession</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>UDPPort::MaybePrepareStunCandidate</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>CreateStunPorts();</strong></p>
+<ul>
+<li><p>首先会检查是否配置了：PORTALLOCATOR_DISABLE_STUN，即禁止创建 STUN Port</p>
+</li>
+<li><p>再检查是否开启了共享 socket：PORTALLOCATOR_ENABLE_SHARED_SOCKET，也就是使用已存在的 udp socket，这个默认是开启的，则无需再创建 stunport</p>
+</li>
+<li><p>StunPort 继承 UDPPort，构造函数仅仅多了一个 ServerAddresses，也就是stun 服务器的地址，一般都是空的。</p>
+</li>
+</ul>
+</li>
+<li><p>Break;</p>
+</li>
+</ul>
+</li>
+<li><p>case <strong>PHASE_RELAY</strong>:&#x20;</p>
+<ul>
+<li><p><strong>CreateRelayPorts();</strong></p>
+</li>
+<li><p>break;</p>
+</li>
+</ul>
+</li>
+<li><p>case <strong>PHASE_TCP</strong>:</p>
+<ul>
+<li><p><strong>CreateTCPPorts();</strong></p>
+<ul>
+<li><p>该函数内部首先会检查是否配置了：PORTALLOCATOR_DISABLE_TCP，也就是禁用 TCP ports</p>
+</li>
+<li><p>如果没有禁用则创建 TCPPort 对象，在 TCPPort 内部会创建 TCP socket。</p>
+</li>
+</ul>
+</li>
+<li><p>state_ &#x3D; kCompleted;</p>
+</li>
+<li><p>break;</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><ol>
+<li><p><strong>AllocationSequence的作用：</strong></p>
+<ol>
+<li>AllocationSequence 能创建 UDPPort、StunPort、RelayPort 和 TCPPort，而 candidate 又是在这些 port 中创建的。candidate 创建完成后，port 通过 BasicPortAllocatorSession 注册的 callback 回调 session，所以总体来说 AllocationSequence 就是封装了这几类 Port 对象的创建过程，便于 session 调用。</li>
+</ol>
+</li>
+<li><p><strong>何时创建 AllocationSequence？</strong></p>
+<ol>
+<li>M146 中是 <strong>BasicPortAllocatorSession::OnAllocate</strong> 调用 <strong>DoAllocate</strong> 时触发创建，遍历 Networks 数组，依次创建 sequence 对象，每个 sequence 对象持有一个 network 对象，每个 sequence 对象也持有当前的 session 对象。</li>
+</ol>
+</li>
+<li><p><strong>AllocationSequence 有哪些相关类？相互关系是什么？</strong></p>
+<ol>
+<li><p>和 sequence 相关的类是：<strong>BasicPortAllocatorSession 和 UDPPort</strong>。</p>
+</li>
+<li><p>BasicPortAllocatorSession 创建 sequence 对象，创建完后加入到sequences_数组中。</p>
+</li>
+<li><p>sequence 对象又持有该 session，为的是在 sequence 里面创建了 UDPPort 对象后，把 udpport 对象加入到 session 的 ports_ 数组中。</p>
+</li>
+<li><p>sequence 的 start 函数开始触发创建 UDPPort，port 创建完成会回调给 session 的OnPortAllocationComplete</p>
+</li>
+<li><p>UDPPort 类中会创建具体的 candidate 对象，port 对象会把 <strong>OnCandidateReady</strong>、OnPortComplete、OnPortDestroyed、OnPortError回调给 session。</p>
+</li>
+</ol>
+</li>
+<li><p><strong>数据流转方向？</strong></p>
+</li>
+</ol>
+<ul>
+<li><p>SocketDispatcher::OnEvent&#x20;</p>
+<ul>
+<li><p>AsyncUDPSocket::OnReadEvent</p>
+<ul>
+<li><p>AllocationSequence::OnReadPacket</p>
+<ul>
+<li><p>UDPPort::HandleIncomingPacket</p>
+<ul>
+<li><p>UDPPort::OnReadPacket</p>
+<ul>
+<li><p>Connection::OnReadPacket</p>
+<ul>
+<li><p>P2PTransportChannel::OnReadPacket</p>
+<ul>
+<li><p>DtlsTransport::OnReadPacket</p>
+<ul>
+<li><p>RtpTransport::OnReadPacket</p>
+<ul>
+<li><p>RtpTransport::OnRtpPacketReceived RTP 包</p>
+</li>
+<li><p>RtpTransport::OnRtcpPacketReceived RTCP 包</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>webrtc之AllocationSequence详解</div>
+      <div>https://alberthello.github.io/2025/06/13/webrtc/AllocationSequence详解/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年6月13日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年6月23日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/10/webrtc/BasicPortAllocator+BasicPortAllocatorSession/" title="webrtc之BasicPortAllocator+BasicPortAllocatorSession">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">webrtc之BasicPortAllocator+BasicPortAllocatorSession</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/04/23/webrtc/net/" title="webrtc 网络关键类了解">
+                        <span class="hidden-mobile">webrtc 网络关键类了解</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

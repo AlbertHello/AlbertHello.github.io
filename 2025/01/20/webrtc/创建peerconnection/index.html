@@ -1,0 +1,947 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="linear-gradient(to right, #667eea 0%, #764ba2 100%)">
+  <meta name="author" content="fengcheng">
+  <meta name="keywords" content="博客，技术，生活，分享">
+  
+    <meta name="description" content="在创建 peer_connection 之前需要先创建 peer_connection_factory： webrtc 之创建 peer_connection_factory 1、创建PeerConnection的接口接口文件是 api&#x2F;peer_connection_interface.h。 M146 推荐使用 CreatePeerConnectionOrError： 1234567class">
+<meta property="og:type" content="article">
+<meta property="og:title" content="webrtc之PeerConnection创建">
+<meta property="og:url" content="https://alberthello.github.io/2025/01/20/webrtc/%E5%88%9B%E5%BB%BApeerconnection/index.html">
+<meta property="og:site_name" content="我的博客">
+<meta property="og:description" content="在创建 peer_connection 之前需要先创建 peer_connection_factory： webrtc 之创建 peer_connection_factory 1、创建PeerConnection的接口接口文件是 api&#x2F;peer_connection_interface.h。 M146 推荐使用 CreatePeerConnectionOrError： 1234567class">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-01-20T02:17:57.000Z">
+<meta property="article:modified_time" content="2026-06-23T09:29:53.267Z">
+<meta property="article:author" content="fengcheng">
+<meta property="article:tag" content="博客，技术，生活，分享">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>webrtc之PeerConnection创建 - 我的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"alberthello.github.io","root":"/","version":"1.9.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"expand_all":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"openkounter":{"server_url":"https://open-kounter.mintimate.cn","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>冯程</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content (desktop) -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile grid menu overlay -->
+<div id="mobile-grid-menu" class="d-lg-none">
+  <div class="mobile-grid-menu-inner">
+    <div class="container">
+      <div class="row">
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-home-fill"></i>
+                  <span>首页</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/categories/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-category-fill"></i>
+                  <span>分类</span>
+                </div>
+              </a>
+            </div>
+          
+        
+          
+          
+          
+          
+            <div class="col-4 mobile-grid-cell">
+              <a href="/about/" target="_self">
+                <div class="mobile-grid-item">
+                  <i class="iconfont icon-user-fill"></i>
+                  <span>关于</span>
+                </div>
+              </a>
+            </div>
+          
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-search-btn">
+            <a href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-search"></i>
+                <span>搜索</span>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
+               data-label-light="开灯"
+               data-label-dark="关灯">
+            <a href="javascript:;" aria-label="Color Toggle">
+              <div class="mobile-grid-item">
+                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
+                <span id="mobile-color-toggle-label">关灯</span>
+              </div>
+            </a>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="webrtc之PeerConnection创建"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-01-20 10:17" pubdate>
+          2025年1月20日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.4k 字
+        
+      </span>
+    
+
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">webrtc之PeerConnection创建</h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2026-06-23T17:29:53+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <p>在创建 peer_connection 之前需要先创建 peer_connection_factory：<a href=""> webrtc 之创建 peer_connection_factory</a></p>
+<h2 id="1、创建PeerConnection的接口"><a href="#1、创建PeerConnection的接口" class="headerlink" title="1、创建PeerConnection的接口"></a>1、创建PeerConnection的接口</h2><p>接口文件是 <code>api/peer_connection_interface.h</code>。</p>
+<p>M146 推荐使用 <code>CreatePeerConnectionOrError</code>：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">class</span> <span class="hljs-title class_">PeerConnectionFactoryInterface</span> : <span class="hljs-keyword">public</span> RefCountInterface &#123;<br> <span class="hljs-keyword">public</span>:<br>  <span class="hljs-keyword">virtual</span> RTCErrorOr&lt;scoped_refptr&lt;PeerConnectionInterface&gt;&gt;<br>  <span class="hljs-built_in">CreatePeerConnectionOrError</span>(<br>      <span class="hljs-type">const</span> PeerConnectionInterface::RTCConfiguration&amp; configuration,<br>      PeerConnectionDependencies dependencies) = <span class="hljs-number">0</span>;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>其中 <code>RTCConfiguration</code> 和 <code>PeerConnectionObserver</code> 是最重要的两个参数。</p>
+<ul>
+<li><p>RTCConfiguration： PeerConnection的全局配置项。全局配置项是提供给WebRTC内部使用的参数信息，可以通过参数来控制WebRTC的内部逻辑、行为方式</p>
+</li>
+<li><p>PeerConnectionObserver：是 PeerConnection 的事件回调，应用层通过实现这些回调方法来作出自己想要实现的逻辑。</p>
+</li>
+</ul>
+<h2 id="2、创建-PeerConnection-x20"><a href="#2、创建-PeerConnection-x20" class="headerlink" title="2、创建 PeerConnection&#x20;"></a>2、创建 PeerConnection&#x20;</h2><p>触发函数：<code>pc_factory-&gt;CreatePeerConnectionOrError(config, dependencies);</code></p>
+<p>可见是调用的 <strong>pc_factory</strong> 的函数。在<a href=""> webrtc 之创建 peer_connection_factory</a>中已经解释了，pc_factory 其实是一个代理类对象，最终会转到 <code>PeerConnectionFactory::CreatePeerConnectionOrError</code>。</p>
+<pre><code class=" mermaid">sequenceDiagram
+    participant App as 应用层
+    participant Proxy as PeerConnectionFactoryProxy
+    participant Factory as PeerConnectionFactory
+    participant Alloc as BasicPortAllocator
+    participant PC as PeerConnection
+
+    App-&gt;&gt;Proxy: CreatePeerConnectionOrError(config, dependencies)
+    Proxy-&gt;&gt;Factory: 切到 signaling thread
+    Factory-&gt;&gt;Factory: 校验 RTCConfiguration
+    Factory-&gt;&gt;Factory: ParseAndValidateIceServers
+    Factory-&gt;&gt;Alloc: new BasicPortAllocator
+    Factory-&gt;&gt;Factory: worker_thread BlockingCall(CreateCall_w)
+    Factory-&gt;&gt;PC: PeerConnection::Create(...)
+    PC-&gt;&gt;PC: InitializeNetworkThread
+    PC-&gt;&gt;PC: 创建 SdpOfferAnswerHandler
+    Factory--&gt;&gt;App: PeerConnectionProxy
+</code></pre>
+
+<p>其最终实现在peer_connection_factory.cpp中：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs c++">RTCErrorOr&lt;scoped_refptr&lt;PeerConnectionInterface&gt;&gt;<br>PeerConnectionFactory::<span class="hljs-built_in">CreatePeerConnectionOrError</span>(<br>    <span class="hljs-type">const</span> PeerConnectionInterface::RTCConfiguration&amp; configuration,<br>    PeerConnectionDependencies dependencies) &#123;<br>  <span class="hljs-built_in">RTC_DCHECK_RUN_ON</span>(<span class="hljs-built_in">signaling_thread</span>());<br><br>  RTCError err = <span class="hljs-built_in">IceConfig</span>(configuration).<span class="hljs-built_in">IsValid</span>();<br>  <span class="hljs-keyword">if</span> (!err.<span class="hljs-built_in">ok</span>()) &#123;<br>    <span class="hljs-keyword">return</span> err;<br>  &#125;<br><br>  ServerAddresses stun_servers;<br>  std::vector&lt;RelayServerConfig&gt; turn_servers;<br>  err = <span class="hljs-built_in">ParseAndValidateIceServersFromConfiguration</span>(configuration,<br>                                                    stun_servers,<br>                                                    turn_servers);<br>  <span class="hljs-keyword">if</span> (!err.<span class="hljs-built_in">ok</span>()) &#123;<br>    <span class="hljs-keyword">return</span> err;<br>  &#125;<br><br>  <span class="hljs-keyword">if</span> (!dependencies.observer) &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">RTCError</span>(RTCErrorType::INVALID_PARAMETER,<br>                    <span class="hljs-string">&quot;Attempt to create a PeerConnection without an observer&quot;</span>);<br>  &#125;<br><br>  <span class="hljs-type">const</span> Environment env = env_factory.<span class="hljs-built_in">Create</span>();<br><br>  <span class="hljs-keyword">if</span> (!dependencies.allocator) &#123;<br>    dependencies.allocator = std::<span class="hljs-built_in">make_unique</span>&lt;BasicPortAllocator&gt;(<br>        env, context_-&gt;<span class="hljs-built_in">default_network_manager</span>(),<br>        context_-&gt;<span class="hljs-built_in">default_socket_factory</span>(), configuration.turn_customizer);<br>    dependencies.allocator-&gt;<span class="hljs-built_in">SetPortRange</span>(<br>        configuration.port_allocator_config.min_port,<br>        configuration.port_allocator_config.max_port);<br>    dependencies.allocator-&gt;<span class="hljs-built_in">set_flags</span>(<br>        configuration.port_allocator_config.flags);<br>  &#125;<br><br>  dependencies.allocator-&gt;<span class="hljs-built_in">SetNetworkIgnoreMask</span>(<span class="hljs-built_in">options</span>().network_ignore_mask);<br>  dependencies.allocator-&gt;<span class="hljs-built_in">SetVpnList</span>(configuration.vpn_list);<br><br>  std::unique_ptr&lt;Call&gt; call =<br>      <span class="hljs-built_in">worker_thread</span>()-&gt;<span class="hljs-built_in">BlockingCall</span>([<span class="hljs-keyword">this</span>, &amp;env, &amp;configuration] &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-built_in">CreateCall_w</span>(env, std::<span class="hljs-built_in">move</span>(configuration));<br>      &#125;);<br><br>  <span class="hljs-keyword">auto</span> pc = PeerConnection::<span class="hljs-built_in">Create</span>(env, context_, options_, std::<span class="hljs-built_in">move</span>(call),<br>                                   configuration, dependencies, stun_servers,<br>                                   turn_servers);<br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">scoped_refptr</span>&lt;PeerConnectionInterface&gt;(PeerConnectionProxy::<span class="hljs-built_in">Create</span>(<br>      <span class="hljs-built_in">signaling_thread</span>(), <span class="hljs-built_in">network_thread</span>(), std::<span class="hljs-built_in">move</span>(pc)));<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>创建 BasicPortAllocator，用于遍历网卡，收集 ip 和 端口，必须在网络线程创建</p>
+<ul>
+<li>接收两个主要参数：default_network_manager和default_socket_factory，这都是在创建<strong>pc_factory_</strong>&#x65F6;创建的。</li>
+</ul>
+</li>
+<li><p>做一些 BasicPortAllocator的初始化工作，函数是SetNetworkIgnoreMask，参数是network_ignore_mask，默认忽略回还地址。</p>
+<ul>
+<li><p>ADAPTER_TYPE_ETHERNET：以太网</p>
+</li>
+<li><p>ADAPTER_TYPE_WIFI：无线WIFI网络</p>
+</li>
+<li><p>ADAPTER_TYPE_CELLULAR：蜂窝网络(2g,3g,4g,5g)</p>
+</li>
+<li><p>ADAPTER_TYPE_VPN：VPN</p>
+</li>
+<li><p>ADAPTER_TYPE_LOOPBACK：回环地址</p>
+</li>
+</ul>
+</li>
+<li><p><strong>构造 PeerConnection 对象</strong></p>
+</li>
+<li><p>PeerConnection 构造函数里会调用 <code>InitializeNetworkThread</code></p>
+</li>
+<li><p><strong>最终返回 PeerConnection 的代理类对象 PeerConnectionProxy</strong></p>
+</li>
+</ul>
+<h3 id="2-1-、PeerConnection"><a href="#2-1-、PeerConnection" class="headerlink" title="2.1 、PeerConnection"></a>2.1 、PeerConnection</h3><p>核心创建函数如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">scoped_refptr&lt;PeerConnection&gt; <span class="hljs-title">PeerConnection::Create</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> Environment&amp; env,</span></span><br><span class="hljs-params"><span class="hljs-function">    scoped_refptr&lt;ConnectionContext&gt; context,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> PeerConnectionFactoryInterface::Options&amp; options,</span></span><br><span class="hljs-params"><span class="hljs-function">    std::unique_ptr&lt;Call&gt; call,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> PeerConnectionInterface::RTCConfiguration&amp; configuration,</span></span><br><span class="hljs-params"><span class="hljs-function">    PeerConnectionDependencies&amp; dependencies,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> ServerAddresses&amp; stun_servers,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> std::vector&lt;RelayServerConfig&gt;&amp; turn_servers)</span> </span>&#123;<br>  <span class="hljs-type">bool</span> is_unified_plan =<br>      configuration.sdp_semantics == SdpSemantics::kUnifiedPlan;<br>  <span class="hljs-type">bool</span> dtls_enabled = <span class="hljs-built_in">DtlsEnabled</span>(configuration, options, dependencies);<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">make_ref_counted</span>&lt;PeerConnection&gt;(<br>      configuration, env, context, options, is_unified_plan, std::<span class="hljs-built_in">move</span>(call),<br>      dependencies, stun_servers, turn_servers, dtls_enabled);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<p>PeerConnection 是 WebRTC 会话对象的核心。M146 中大量底层状态通过 callback + <code>PostTask</code> 从 network thread 回到 signaling thread。</p>
+<p>上面的英文注释翻译如下：</p>
+<ul>
+<li><p>一方面PeerConnection单独提供如下功能：</p>
+<ul>
+<li><p>管理WebRTC的会话状态（信令状态）；</p>
+</li>
+<li><p>创建和初始化WebRTC内部的低层次对象&#x2F;底层对象，比如PortAllocator、BaseChannels；</p>
+</li>
+<li><p>持有RtpSender&#x2F;RtpReceiver、track对象，并管理它们的生命周期；</p>
+</li>
+<li><p>跟踪当前的local&#x2F;remote sdp。</p>
+</li>
+</ul>
+</li>
+<li><p>一方面PeerConnection与其他对象一起提供如下功能：</p>
+<ul>
+<li><p>解析并翻译sdp</p>
+</li>
+<li><p>根据当前状态生成offer sdp和answer sdp；</p>
+</li>
+<li><p>管理ICE状态机</p>
+</li>
+<li><p>产生统计日志</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-2、PeerConnection-构造函数"><a href="#2-2、PeerConnection-构造函数" class="headerlink" title="2.2、PeerConnection 构造函数"></a>2.2、PeerConnection 构造函数</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs c++">PeerConnection::<span class="hljs-built_in">PeerConnection</span>(...)<br>    : <span class="hljs-built_in">observer_</span>(dependencies.observer),<br>      <span class="hljs-built_in">is_unified_plan_</span>(is_unified_plan),<br>      <span class="hljs-built_in">dtls_enabled_</span>(dtls_enabled),<br>      <span class="hljs-built_in">configuration_</span>(configuration),<br>      <span class="hljs-built_in">port_allocator_</span>(std::<span class="hljs-built_in">move</span>(dependencies.allocator)),<br>      <span class="hljs-built_in">call_</span>(std::<span class="hljs-built_in">move</span>(call)),<br>      <span class="hljs-built_in">session_id_</span>(absl::<span class="hljs-built_in">StrCat</span>(<span class="hljs-built_in">CreateRandomId64</span>() &amp; LLONG_MAX)),<br>      <span class="hljs-built_in">data_channel_controller_</span>(<span class="hljs-keyword">this</span>),<br>      <span class="hljs-built_in">message_handler_</span>(<span class="hljs-built_in">signaling_thread</span>()) &#123;<br>  transport_controller_copy_ =<br>      <span class="hljs-built_in">InitializeNetworkThread</span>(stun_servers, turn_servers);<br><br>  sdp_handler_ = SdpOfferAnswerHandler::<span class="hljs-built_in">Create</span>(<br>      env_, <span class="hljs-keyword">this</span>, configuration_, std::<span class="hljs-built_in">move</span>(dependencies.cert_generator),<br>      std::<span class="hljs-built_in">move</span>(dependencies.video_bitrate_allocator_factory), context_.<span class="hljs-built_in">get</span>(),<br>      codec_lookup_helper_.<span class="hljs-built_in">get</span>());<br><br>  rtp_manager_ = std::<span class="hljs-built_in">make_unique</span>&lt;RtpTransmissionManager&gt;(<br>      env_, call_ptr_, <span class="hljs-built_in">IsUnifiedPlan</span>(), context_.<span class="hljs-built_in">get</span>(),<br>      codec_lookup_helper_.<span class="hljs-built_in">get</span>(), &amp;usage_pattern_, observer_,<br>      legacy_stats_.<span class="hljs-built_in">get</span>(), [<span class="hljs-keyword">this</span>]() &#123;<br>        sdp_handler_-&gt;<span class="hljs-built_in">UpdateNegotiationNeeded</span>();<br>      &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>该函数逻辑比较多，主要逻辑有如下几个：</p>
+<ul>
+<li><p>创建 sdp 会话 session id，也就是 SDP 的 O 行，比如：o&#x3D;- 3875060266275821690 2 IN IP4 127.0.0.1</p>
+</li>
+<li><p>stun&#x2F;turn server 相关处理</p>
+</li>
+<li><p><strong>创建 JsepTransportController，并通过 callback + <code>PostTask</code> 把网络线程上的 ICE、candidate、连接状态回调到 PeerConnection。</strong></p>
+</li>
+<li><p><strong>创建 sdp_handler_，管理所有 sdp 的解析和创建</strong></p>
+</li>
+<li><p><strong>创建 RtpTransmissionManager，管理 transceiver、sender、receiver。</strong></p>
+</li>
+</ul>
+<h3 id="2-3、InitializeNetworkThread"><a href="#2-3、InitializeNetworkThread" class="headerlink" title="2.3、InitializeNetworkThread"></a>2.3、InitializeNetworkThread</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">JsepTransportController* <span class="hljs-title">PeerConnection::InitializeNetworkThread</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> ServerAddresses&amp; stun_servers,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> std::vector&lt;RelayServerConfig&gt;&amp; turn_servers)</span> </span>&#123;<br>  JsepTransportController::Config config;<br>  config.disable_encryption = options_.disable_encryption;<br>  config.bundle_policy = configuration_.bundle_policy;<br>  config.rtcp_mux_policy = configuration_.rtcp_mux_policy;<br>  config.crypto_options = configuration_.crypto_options;<br>  config.transport_observer = <span class="hljs-keyword">this</span>;<br><br>  config.signal_ice_candidates_gathered =<br>      [<span class="hljs-keyword">this</span>](absl::string_view transport,<br>             <span class="hljs-type">const</span> std::vector&lt;Candidate&gt;&amp; candidates) &#123;<br>        <span class="hljs-built_in">signaling_thread</span>()-&gt;<span class="hljs-built_in">PostTask</span>(<br>            <span class="hljs-built_in">SafeTask</span>(signaling_thread_safety_.<span class="hljs-built_in">flag</span>(),<br>                     [<span class="hljs-keyword">this</span>, t = std::<span class="hljs-built_in">string</span>(transport), c = candidates]() &#123;<br>                       <span class="hljs-built_in">OnTransportControllerCandidatesGathered</span>(t, c);<br>                     &#125;));<br>      &#125;;<br><br>  <span class="hljs-keyword">auto</span> transport_controller = std::<span class="hljs-built_in">make_unique</span>&lt;JsepTransportController&gt;(<br>      env_, <span class="hljs-built_in">signaling_thread</span>(), <span class="hljs-built_in">network_thread</span>(), port_allocator_.<span class="hljs-built_in">get</span>(),<br>      async_dns_resolver_factory_.<span class="hljs-built_in">get</span>(), lna_permission_factory_.<span class="hljs-built_in">get</span>(),<br>      std::<span class="hljs-built_in">move</span>(config));<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">network_thread</span>()-&gt;<span class="hljs-built_in">BlockingCall</span>([&amp;] &#123;<br>    <span class="hljs-built_in">InitializePortAllocator_n</span>(stun_servers, turn_servers, configuration_);<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">InitializeTransportController_n</span>(std::<span class="hljs-built_in">move</span>(transport_controller),<br>                                           configuration_);<br>  &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>JsepTransportController</code> 持有 <code>port_allocator_</code>，后面 <code>SetLocalDescription</code> 时会创建 ICE&#x2F;DTLS&#x2F;RTP transport。</p>
+</li>
+<li><p>ICE candidate、ICE 状态、candidate pair 变化等网络线程事件，都会通过 lambda 再 <code>PostTask</code> 回 signaling thread。</p>
+</li>
+</ul>
+<h3 id="2-4、InitializePortAllocator-n"><a href="#2-4、InitializePortAllocator-n" class="headerlink" title="2.4、InitializePortAllocator_n"></a>2.4、InitializePortAllocator_n</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function">PeerConnection::InitializePortAllocatorResult</span><br><span class="hljs-function"><span class="hljs-title">PeerConnection::InitializePortAllocator_n</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> ServerAddresses&amp; stun_servers,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> std::vector&lt;RelayServerConfig&gt;&amp; turn_servers,</span></span><br><span class="hljs-params"><span class="hljs-function">    <span class="hljs-type">const</span> RTCConfiguration&amp; configuration)</span> </span>&#123;<br>  port_allocator_-&gt;<span class="hljs-built_in">Initialize</span>();<br><br>  <span class="hljs-type">int</span> port_allocator_flags = port_allocator_-&gt;<span class="hljs-built_in">flags</span>();<br>  port_allocator_flags |= PORTALLOCATOR_ENABLE_SHARED_SOCKET |<br>                          PORTALLOCATOR_ENABLE_IPV6 |<br>                          PORTALLOCATOR_ENABLE_IPV6_ON_WIFI;<br><br>  <span class="hljs-keyword">if</span> (configuration.tcp_candidate_policy == kTcpCandidatePolicyDisabled) &#123;<br>    port_allocator_flags |= PORTALLOCATOR_DISABLE_TCP;<br>  &#125;<br>  <span class="hljs-keyword">if</span> (configuration.candidate_network_policy ==<br>      kCandidateNetworkPolicyLowCost) &#123;<br>    port_allocator_flags |= PORTALLOCATOR_DISABLE_COSTLY_NETWORKS;<br>  &#125;<br>  <span class="hljs-keyword">if</span> (configuration.disable_link_local_networks) &#123;<br>    port_allocator_flags |= PORTALLOCATOR_DISABLE_LINK_LOCAL_NETWORKS;<br>  &#125;<br><br>  port_allocator_-&gt;<span class="hljs-built_in">set_flags</span>(port_allocator_flags);<br>  port_allocator_-&gt;<span class="hljs-built_in">set_step_delay</span>(kMinimumStepDelay);<br>  port_allocator_-&gt;<span class="hljs-built_in">SetCandidateFilter</span>(<br>      <span class="hljs-built_in">ConvertIceTransportTypeToCandidateFilter</span>(configuration.type));<br>  port_allocator_-&gt;<span class="hljs-built_in">set_max_ipv6_networks</span>(configuration.max_ipv6_networks);<br><br>  <span class="hljs-keyword">auto</span> turn_servers_copy = turn_servers;<br>  port_allocator_-&gt;<span class="hljs-built_in">SetConfiguration</span>(<br>      stun_servers, std::<span class="hljs-built_in">move</span>(turn_servers_copy),<br>      configuration.ice_candidate_pool_size,<br>      configuration.<span class="hljs-built_in">GetTurnPortPrunePolicy</span>(), configuration.turn_customizer,<br>      configuration.stun_candidate_keepalive_interval);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>这里是 BasicPortAllocator 真正初始化的位置。</p>
+</li>
+<li><p>默认开启 shared socket、IPv6、Wi-Fi IPv6；如果配置禁用 TCP、高成本网络、link-local network，就在这里追加对应 flag。</p>
+</li>
+<li><p><code>SetConfiguration</code> 把 STUN&#x2F;TURN server、候选池大小、TURN 裁剪策略等信息保存到 allocator。后面 candidate 收集时，<code>BasicPortAllocatorSession</code> 会读取这些配置。</p>
+</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/webrtc/" class="category-chain-item">webrtc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>webrtc之PeerConnection创建</div>
+      <div>https://alberthello.github.io/2025/01/20/webrtc/创建peerconnection/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>fengcheng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年1月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2026年6月23日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/02/10/webrtc/%E5%88%9B%E5%BB%BApeerconnection_factory/" title="webrtc之PeerConnectionFactory创建">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">webrtc之PeerConnectionFactory创建</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/12/20/webrtc/%E7%89%A9%E7%90%86socket%E5%88%9B%E5%BB%BA/" title="webrtc之物理socket创建">
+                        <span class="hidden-mobile">webrtc之物理socket创建</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    function isExpandAllEnabled() {
+      return CONFIG.toc && CONFIG.toc.expand_all === true;
+    }
+    function expandAllToc() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .tocbot-is-collapsed').removeClass('tocbot-is-collapsed');
+    }
+    function updateTocToggle($li, $childList) {
+      var $toggle = $li.children('.toc-toggle');
+      if ($toggle.length === 0) { return; }
+      var collapsed = $childList.hasClass('tocbot-is-collapsed');
+      $toggle
+        .toggleClass('toc-toggle-collapsed', collapsed)
+        .toggleClass('toc-toggle-expanded', !collapsed);
+    }
+    function bindTocToggle() {
+      if (!isExpandAllEnabled()) { return; }
+      jQuery('#toc-body .toc-list-item').each(function() {
+        var $li = jQuery(this);
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) {
+          if ($li.children('.toc-toggle').length === 0) {
+            $li.prepend('<span class="toc-toggle toc-toggle-placeholder" aria-hidden="true">›</span>');
+          }
+          return;
+        }
+
+        if ($li.children('.toc-toggle').length === 0) {
+          $li.prepend('<span class="toc-toggle toc-toggle-expanded" aria-hidden="true">›</span>');
+        }
+        updateTocToggle($li, $childList);
+      });
+      jQuery('#toc-body').off('click.tocToggle').on('click.tocToggle', '.toc-toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $li = jQuery(this).parent('.toc-list-item');
+        var $childList = $li.children('ol');
+        if ($childList.length === 0) { return; }
+        $childList.toggleClass('tocbot-is-collapsed');
+        updateTocToggle($li, $childList);
+      });
+      if (!window.__tocToggleObserver) {
+        window.__tocToggleObserver = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') { return; }
+            var $list = jQuery(mutation.target);
+            var $li = $list.parent('.toc-list-item');
+            if ($li.length === 0) { return; }
+            updateTocToggle($li, $list);
+          });
+        });
+        jQuery('#toc-body ol').each(function() {
+          window.__tocToggleObserver.observe(this, { attributes: true });
+        });
+      }
+    }
+    var tocConfig = Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc);
+    if (isExpandAllEnabled()) {
+      tocConfig.collapseDepth = 6;
+    }
+    window.tocbot.init(tocConfig);
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+    expandAllToc();
+    bindTocToggle();
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+        expandAllToc();
+        bindTocToggle();
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
